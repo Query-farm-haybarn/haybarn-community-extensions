@@ -136,12 +136,16 @@ jobs:
 
       - name: Deploy
         shell: bash
-        # Same HAYBARN_S3_* credentials as the core bucket; one token,
-        # both buckets — see commit "ci: collapse HAYBARN_COMMUNITY_S3_*".
+        # Reuse the same R2_* org-secret credentials used by haybarn-extensions.yml
+        # for the core bucket. The user granted this token access to the
+        # haybarn-community-extensions bucket too. (Previously I used the wrong
+        # HAYBARN_S3_* names — they don't exist; the upload script silently
+        # bailed with "No AWS key found, skipping..", which is why deploy
+        # jobs showed green but no binaries actually landed on R2.)
         env:
-          AWS_ACCESS_KEY_ID:     ${{ secrets.HAYBARN_S3_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.HAYBARN_S3_SECRET }}
-          AWS_ENDPOINT_URL:      ${{ secrets.HAYBARN_S3_ENDPOINT }}
+          AWS_ACCESS_KEY_ID:     ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_ENDPOINT_URL:      ${{ secrets.R2_ENDPOINT }}
           BUCKET_NAME:           haybarn-community-extensions
           # SAME private key Haybarn uses to sign core extensions. The
           # engine's `community_public_keys[]` and `public_keys[]` both

@@ -76,8 +76,7 @@ Org-level secrets on `Query-farm-haybarn`, all reused from the existing core-ext
 |---|---|
 | `HAYBARN_VCPKG_TOKEN` | Bearer token for the Cloudflare Worker fronting the R2 vcpkg + ccache bucket. Same token works against both the core and community buckets. |
 | `HAYBARN_EXTENSION_SIGNING_PK` | RSA private key (PEM). The cryptographic root. Signs both core and community extensions. |
-| `HAYBARN_S3_ID` / `_SECRET` / `_ENDPOINT` | R2 access for both `haybarn-extensions` and `haybarn-community-extensions` buckets (one key, two buckets — granted via the Cloudflare dashboard). |
-| `HAYBARN_S3_REGION` | "auto" for R2. |
+| `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` / `R2_ENDPOINT` | R2 access for both `haybarn-extensions` and `haybarn-community-extensions` buckets (one key, two buckets — granted via the Cloudflare dashboard). Same names as `haybarn-extensions.yml`. |
 
 No CDN-purge token is needed: every artifact lives at a unique URL (version + git-sha in the path), so new deploys land at new URLs rather than overwriting cached ones. Cloudflare's edge holds onto the old binaries until they age out — there's nothing left referencing them.
 

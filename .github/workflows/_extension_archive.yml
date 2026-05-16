@@ -47,14 +47,12 @@ jobs:
 
       - name: Upload to Haybarn community R2 bucket
         shell: bash
-        # Same HAYBARN_S3_* credentials as the core bucket — the user
-        # granted this token access to haybarn-community-extensions, so a
-        # single key reaches both buckets. No need for a separate
-        # _COMMUNITY_* secret set.
+        # Reuse the same R2_* org-secret credentials used by haybarn-extensions.yml.
+        # Same token, two buckets per the user's R2 grants.
         env:
-          AWS_ACCESS_KEY_ID:     ${{ secrets.HAYBARN_S3_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.HAYBARN_S3_SECRET }}
-          AWS_ENDPOINT_URL:      ${{ secrets.HAYBARN_S3_ENDPOINT }}
+          AWS_ACCESS_KEY_ID:     ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_ENDPOINT_URL:      ${{ secrets.R2_ENDPOINT }}
           BUCKET_NAME:           haybarn-community-extensions
           PIP_BREAK_SYSTEM_PACKAGES: 1
         run: |
