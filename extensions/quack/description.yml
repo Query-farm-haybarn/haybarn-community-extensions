@@ -20,8 +20,11 @@ extension:
     - rustyconover
 
 repo:
+  # The old c7d9ef3 ref (from upstream's UPDATING.md example) is too stale —
+  # uses the duckdb::ExtensionUtil API that v1.5.2 removed (engine PR #17772).
+  # Bumped to current main, which targets the v1.5 API.
   github: duckdb/extension-template
-  ref: c7d9ef3463376dc2b64959abf3a477eae2280142
+  ref: 5df4b9401665d23ec5f9dd08f248df08c9075232
 
 docs:
   hello_world: |
