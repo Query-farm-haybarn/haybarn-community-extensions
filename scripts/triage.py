@@ -179,11 +179,21 @@ def main() -> int:
     known = load_known_issues()
     runs = fetch_recent_runs(args.limit)
 
-    # Keep only the LATEST completed run per extension. Runs are returned in
+    # Restrict to extensions that currently have a descriptor — phantom CI
+    # runs for renamed/deleted extensions (e.g. `quack` → `waddle`) would
+    # otherwise show up as "🔥 NEW FAIL" perpetually.
+    descriptor_root = Path(__file__).resolve().parent.parent / "extensions"
+    live_extensions = {p.name for p in descriptor_root.iterdir() if (p / "description.yml").exists()}
+
+    # Keep only the LATEST meaningful run per extension. Runs are returned in
     # reverse-chronological order so the first one we see for each extension
-    # is the freshest.
+    # is the freshest. Skip `cancelled` runs entirely — user-initiated
+    # cancellation produces partial leg-level "failure" results that the
+    # classifier would otherwise read as regressions.
     latest_run_per_ext: dict[str, dict[str, Any]] = {}
     for run in runs:
+        if run["conclusion"] == "cancelled":
+            continue
         # Display title for dispatched runs is "🐤 <ext>" after recent run-name fix.
         m = re.match(r"🐤\s+(\S+)", run["displayTitle"])
         if m:
@@ -193,6 +203,9 @@ def main() -> int:
             # for runs predating the run-name change.
             ext = extension_for_run(run["databaseId"])
         if not ext or ext in latest_run_per_ext:
+            continue
+        if ext not in live_extensions:
+            # Phantom: descriptor was renamed/removed. Skip.
             continue
         latest_run_per_ext[ext] = run
 
