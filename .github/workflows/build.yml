@@ -149,7 +149,15 @@ jobs:
     #   - vcpkg cache default switched to the readwrite haybarn cache
     #   - retry on transient GHCR "unknown blob" during image push
     uses: Query-farm-haybarn/haybarn-extension-ci-tools/.github/workflows/_extension_distribution.yml@7e4a36f59978199bc0726e252c0bceeb96eb7023
-    secrets: inherit
+    # Cannot use `secrets: inherit` here: the callee expects a secret named
+    # `vcpkg_token` (lowercase), but our org-level secret is HAYBARN_VCPKG_TOKEN.
+    # `inherit` forwards by name only — no renaming — so the callee would see
+    # secrets.vcpkg_token as empty and the {0} placeholder in the vcpkg URL
+    # would substitute to the empty string. Result: 401 on writes to the
+    # readwrite Haybarn vcpkg cache (the exact failure mode observed in macOS
+    # leg 76290732603 of run 25951627266: "curl failed to put file ... http code 401").
+    secrets:
+      vcpkg_token: ${{ secrets.HAYBARN_VCPKG_TOKEN }}
     if: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_NAME != '' }}
     with:
       duckdb_version: ${{ inputs.duckdb_version || 'v1.5.2' }}
