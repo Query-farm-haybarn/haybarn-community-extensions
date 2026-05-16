@@ -10,6 +10,14 @@
 # the catalog grows past ~25 extensions.
 
 name: Build all extensions
+
+# Pull a hint of which extensions a given batch covers into the Actions UI
+# title. Otherwise every batch shows up as the same default name and you
+# have to click in to see scope. With a JSON-list input we just slice the
+# first few entries.
+run-name: >-
+  ${{ inputs.build_extensions && format('🐝 sweep batch ({0})', inputs.build_extensions) || '🐝 sweep (all extensions)' }}
+
 on:
   workflow_dispatch:
     inputs:
