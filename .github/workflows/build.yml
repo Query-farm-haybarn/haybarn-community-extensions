@@ -167,17 +167,11 @@ jobs:
       # it's the canonical "warm me up" extension for vcpkg dependency cache.
       save_cache: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_NAME == 'quack' && github.event_name != 'pull_request' }}
 
-  doc_test:
-    # Disabled the same way upstream has it disabled (placeholder for the
-    # future docs pipeline). Keeping the structure so it's easy to flip on.
-    if: false
-    needs:
-      - prepare
-      - build
-    uses: ./.github/workflows/generate_docs.yml
-    with:
-      extension_name: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_NAME }}
-      duckdb_version: ${{ inputs.duckdb_version || 'v1.5.2' }}
+  # NOTE: upstream has a `doc_test` job here that calls generate_docs.yml.
+  # We've deferred the docs pipeline until the build pipeline is proven —
+  # the workflow file would fail registration with `uses:` pointing at a
+  # non-existent generate_docs.yml even when gated by `if: false`. Wire it
+  # back in once we add generate_docs.yml.
 
   archive:
     needs:
