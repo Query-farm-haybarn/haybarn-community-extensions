@@ -70,17 +70,16 @@ Anything signed with a DuckDB key — core OR community — will be rejected by 
 
 ## Secrets required
 
-Org-level secrets on `Query-farm-haybarn`:
+Org-level secrets on `Query-farm-haybarn`, all reused from the existing core-extensions pipeline:
 
 | Secret | Purpose |
 |---|---|
 | `HAYBARN_VCPKG_TOKEN` | Bearer token for the Cloudflare Worker fronting the R2 vcpkg + ccache bucket. Same token works against both the core and community buckets. |
 | `HAYBARN_EXTENSION_SIGNING_PK` | RSA private key (PEM). The cryptographic root. Signs both core and community extensions. |
-| `HAYBARN_COMMUNITY_S3_ID` | R2 access key for `haybarn-community-extensions` bucket. (May be aliased to a shared `HAYBARN_S3_*` set.) |
-| `HAYBARN_COMMUNITY_S3_SECRET` | Same. |
-| `HAYBARN_COMMUNITY_S3_ENDPOINT` | Cloudflare R2 endpoint URL. |
+| `HAYBARN_S3_ID` / `_SECRET` / `_ENDPOINT` | R2 access for both `haybarn-extensions` and `haybarn-community-extensions` buckets (one key, two buckets — granted via the Cloudflare dashboard). |
 | `HAYBARN_S3_REGION` | "auto" for R2. |
-| `CLOUDFLARE_CACHE_PURGE_TOKEN` | Cloudflare API token, scope `Zone: Cache Purge` for `query.farm`. Used by `clean_caches.yml` after every deploy. |
+
+No CDN-purge token is needed: every artifact lives at a unique URL (version + git-sha in the path), so new deploys land at new URLs rather than overwriting cached ones. Cloudflare's edge holds onto the old binaries until they age out — there's nothing left referencing them.
 
 ## License
 

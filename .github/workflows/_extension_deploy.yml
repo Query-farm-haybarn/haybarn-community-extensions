@@ -122,10 +122,12 @@ jobs:
 
       - name: Deploy
         shell: bash
+        # Same HAYBARN_S3_* credentials as the core bucket; one token,
+        # both buckets — see commit "ci: collapse HAYBARN_COMMUNITY_S3_*".
         env:
-          AWS_ACCESS_KEY_ID:     ${{ secrets.HAYBARN_COMMUNITY_S3_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.HAYBARN_COMMUNITY_S3_SECRET }}
-          AWS_ENDPOINT_URL:      ${{ secrets.HAYBARN_COMMUNITY_S3_ENDPOINT }}
+          AWS_ACCESS_KEY_ID:     ${{ secrets.HAYBARN_S3_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.HAYBARN_S3_SECRET }}
+          AWS_ENDPOINT_URL:      ${{ secrets.HAYBARN_S3_ENDPOINT }}
           BUCKET_NAME:           haybarn-community-extensions
           # SAME private key Haybarn uses to sign core extensions. The
           # engine's `community_public_keys[]` and `public_keys[]` both
@@ -158,14 +160,9 @@ jobs:
             ${{ inputs.deploy_latest || 'true' && 'false' }} \
             ${{ inputs.deploy_versioned || 'true' && 'false' }}
 
-  clean_cache:
-    needs:
-      - deploy
-      - generate_matrix
-    if: ${{ needs.generate_matrix.outputs.deploy_matrix != '{}' && needs.generate_matrix.outputs.deploy_matrix != '' }}
-    strategy:
-      matrix: ${{ fromJson(needs.generate_matrix.outputs.deploy_matrix) }}
-    uses: ./.github/workflows/clean_caches.yml
-    secrets: inherit
-    with:
-      pattern: '*/${{ matrix.duckdb_arch }}/${{ inputs.extension_name }}.duckdb_extension.*'
+# NOTE: upstream has a `clean_cache` job here that purges the Cloudflare CDN
+# for the just-replaced extension's path. We don't need it: every deployed
+# artifact lives at a unique URL (version segment + git-sha segment), so
+# old paths are never re-served — Cloudflare's edge happily holds onto the
+# old binary forever and nothing requests it again. New deploys land at
+# new URLs, no purge required.
