@@ -145,7 +145,12 @@ jobs:
       duckdb_tag: ${{ inputs.duckdb_tag || '' }}
       ci_tools_version: ${{ inputs.ci_tools_version || 'e4647c6862e94866bf957aa971c866f315f808df' }}
       # Build against Haybarn engine (NOT upstream duckdb/duckdb).
-      override_duckdb_repository: 'Query-farm-haybarn/haybarn'
+      # override_duckdb_repository is fed to `git clone` directly inside
+      # haybarn-extension-ci-tools' Makefile (set_duckdb_repository target),
+      # so it must be a full URL. override_repository (extension source) is
+      # fed to actions/checkout, which takes a bare owner/repo slug — the
+      # asymmetry is unfortunate but baked into the existing workflow.
+      override_duckdb_repository: 'https://github.com/Query-farm-haybarn/haybarn'
       override_ci_tools_repository: 'Query-farm-haybarn/haybarn-extension-ci-tools'
       exclude_archs: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_EXCLUDE_PLATFORMS }}
       opt_in_archs: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_OPT_IN_PLATFORMS }}
