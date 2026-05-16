@@ -1,0 +1,56 @@
+# Reusable workflow that archives an extension's source at the descriptor's
+# pinned ref into the Haybarn community-extensions R2 bucket. Useful for
+# reproducibility if an upstream extension's repo ever vanishes — we keep
+# a zipped snapshot of the exact commit we built from.
+#
+# Bucket layout: s3://haybarn-community-extensions/archived_sources/<name>/repo_sources_<sha>.zip
+
+name: Extension Archive Sources
+on:
+  workflow_call:
+    inputs:
+      extension_name:
+        required: true
+        type: string
+      repository:
+        required: false
+        type: string
+        default: ""
+      ref:
+        required: false
+        type: string
+        default: ""
+jobs:
+  fetch_repo:
+    name: Fetch repo and save
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.repository }}
+          ref: ${{ inputs.ref }}
+          submodules: 'true'
+          path: ./repo
+
+      - name: Compress the repository sources
+        run: |
+          # Drop the bundled duckdb submodule — the build will checkout
+          # Haybarn separately. Keeping it bloats archives ~10x for no gain.
+          rm -rf repo/duckdb
+          zip -9 -r compressed.zip repo
+
+      - name: Upload to Haybarn community R2 bucket
+        shell: bash
+        env:
+          AWS_ACCESS_KEY_ID:     ${{ secrets.HAYBARN_COMMUNITY_S3_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.HAYBARN_COMMUNITY_S3_SECRET }}
+          AWS_ENDPOINT_URL:      ${{ secrets.HAYBARN_COMMUNITY_S3_ENDPOINT }}
+          BUCKET_NAME:           haybarn-community-extensions
+          PIP_BREAK_SYSTEM_PACKAGES: 1
+        run: |
+          python3 -m pip install awscli
+          if [ -n "${AWS_SECRET_ACCESS_KEY}" ]; then
+            aws s3 cp compressed.zip "s3://${BUCKET_NAME}/archived_sources/${{ inputs.extension_name }}/repo_sources_${{ inputs.ref }}.zip"
+          else
+            echo "No HAYBARN_COMMUNITY_S3_* secrets configured — skipping archive upload."
+          fi

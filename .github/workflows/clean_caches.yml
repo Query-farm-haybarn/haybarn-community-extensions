@@ -1,0 +1,39 @@
+# Invoke the R2 + CDN cache-purge logic for a specific file pattern.
+# Called from _extension_deploy.yml after every successful deploy so the
+# next user fetch sees the new binary, not the cached old one.
+#
+# CLOUDFLARE_CACHE_PURGE_TOKEN must have Zone:Cache Purge permission for
+# the query.farm zone. See README — secrets section.
+
+name: Caches cleanup
+on:
+  workflow_call:
+    inputs:
+      pattern:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      pattern:
+        required: true
+        type: string
+
+jobs:
+  clean_caches:
+    name: Clean Caches
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Purge R2 + CDN entries for pattern
+        shell: bash
+        env:
+          AWS_ACCESS_KEY_ID:     ${{ secrets.HAYBARN_COMMUNITY_S3_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.HAYBARN_COMMUNITY_S3_SECRET }}
+          AWS_DEFAULT_REGION:    ${{ secrets.HAYBARN_S3_REGION }}
+          AWS_ENDPOINT_URL:      ${{ secrets.HAYBARN_COMMUNITY_S3_ENDPOINT }}
+          CLOUDFLARE_CACHE_PURGE_TOKEN: ${{ secrets.CLOUDFLARE_CACHE_PURGE_TOKEN }}
+          PATTERN: "${{ inputs.pattern }}"
+          DUCKDB_CLEAN_CACHES_SCRIPT_MODE: for_real
+        run: |
+          bash ./scripts/clean_caches.sh haybarn-community-extensions haybarn-community-extensions "$PATTERN"

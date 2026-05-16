@@ -1,0 +1,31 @@
+# Smoke-test descriptor for the Haybarn community-extensions pipeline.
+# Builds the official DuckDB extension-template ("quack") — a hello-world
+# extension whose only purpose is to verify the build → sign → upload →
+# install round trip.
+#
+# Not synced from upstream (upstream's `extensions/quack/` was removed at
+# some point but `build.py`'s fallback path still references it). We keep
+# it here so a no-op PR or workflow_dispatch run still has something to
+# build. sync_from_upstream.py treats this as "haybarn_only" and leaves
+# it alone unless upstream adds back its own quack descriptor.
+
+extension:
+  name: quack
+  description: Hello-world extension used to smoke-test the Haybarn community-extensions pipeline
+  version: 0.0.1
+  language: C++
+  build: cmake
+  license: MIT
+  maintainers:
+    - rustyconover
+
+repo:
+  github: duckdb/extension-template
+  ref: c7d9ef3463376dc2b64959abf3a477eae2280142
+
+docs:
+  hello_world: |
+    SELECT quack('Haybarn');
+  extended_description: |
+    Trivial extension that ships a single SQL scalar function returning
+    "Quack <name>". Used here purely to exercise the full pipeline.

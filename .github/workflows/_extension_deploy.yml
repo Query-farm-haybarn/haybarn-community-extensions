@@ -1,0 +1,171 @@
+# Reusable workflow that deploys a built extension to the Haybarn community
+# R2 bucket and signs it with the Haybarn extension trust root.
+#
+# Differences from upstream's duckdb/community-extensions/_extension_deploy.yml:
+#   - Bucket target:        haybarn-community-extensions (was duckdb-community-extensions)
+#   - Signing key secret:   HAYBARN_EXTENSION_SIGNING_PK (was S3_DUCKDB_ORG_COMMUNITY_SIGNING_PK)
+#   - S3 creds:             HAYBARN_COMMUNITY_S3_* (was DUCKDB_COMMUNITY_EXTENSION_S3_*)
+#   - DuckDB checkout:      Query-farm-haybarn/haybarn (was duckdb/duckdb)
+#   - extension-ci-tools:   Query-farm-haybarn/haybarn-extension-ci-tools (was duckdb/extension-ci-tools)
+#
+# The deploy_script path is `./duckdb/scripts/extension-upload-single.sh`
+# which Haybarn carries unchanged — the script reads bucket name + signing
+# key from env, so we don't need to modify it.
+
+name: Extension Deployment
+on:
+  workflow_call:
+    inputs:
+      extension_name:
+        required: true
+        type: string
+      duckdb_version:
+        required: true
+        type: string
+      duckdb_tag:
+        required: false
+        type: string
+        default: ""
+      ci_tools_version:
+        required: true
+        type: string
+      exclude_archs:
+        required: false
+        type: string
+        default: ""
+      opt_in_archs:
+        required: false
+        type: string
+        default: ""
+      deploy_latest:
+        required: false
+        type: boolean
+        default: false
+      deploy_versioned:
+        required: false
+        type: boolean
+        default: false
+      artifact_postfix:
+        required: false
+        type: string
+        default: ""
+      deploy_script:
+        required: false
+        type: string
+        default: "./duckdb/scripts/extension-upload-single.sh"
+      repository:
+        required: false
+        type: string
+        default: ""
+      ref:
+        required: false
+        type: string
+        default: ""
+      reduced_ci_mode:
+        required: false
+        type: string
+        default: 'auto'
+
+jobs:
+  generate_matrix:
+    name: Generate matrix
+    runs-on: ubuntu-latest
+    outputs:
+      deploy_matrix: ${{ steps.parse-matrices.outputs.deploy_matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: 'Query-farm-haybarn/haybarn-extension-ci-tools'
+          ref: ${{ inputs.ci_tools_version }}
+          path: extension-ci-tools
+
+      - id: parse-matrices
+        run: |
+          python3 ./extension-ci-tools/scripts/modify_distribution_matrix.py \
+            --input ./extension-ci-tools/config/distribution_matrix.json \
+            --deploy_matrix --output deploy_matrix.json \
+            --exclude "${{ inputs.exclude_archs }}" \
+            --opt_in "${{ inputs.opt_in_archs }}" \
+            --pretty --reduced_ci_mode ${{ inputs.reduced_ci_mode }}
+          deploy_matrix=$(cat deploy_matrix.json)
+          echo "deploy_matrix=$deploy_matrix" >> $GITHUB_OUTPUT
+          cat $GITHUB_OUTPUT
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: generate_matrix
+    if: ${{ needs.generate_matrix.outputs.deploy_matrix != '{}' && needs.generate_matrix.outputs.deploy_matrix != '' }}
+    strategy:
+      matrix: ${{ fromJson(needs.generate_matrix.outputs.deploy_matrix) }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.repository }}
+          ref: ${{ inputs.ref }}
+          submodules: 'false'
+
+      # Haybarn engine checkout — supplies the extension-upload-single.sh
+      # script and the version-tag-derivation logic the deploy step uses below.
+      - uses: actions/checkout@v4
+        with:
+          repository: 'Query-farm-haybarn/haybarn'
+          ref: ${{ inputs.duckdb_version }}
+          path: duckdb
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.extension_name }}-${{ inputs.duckdb_version }}-extension-${{ matrix.duckdb_arch }}${{ inputs.artifact_postfix }}${{ startsWith(matrix.duckdb, 'wasm') && '.wasm' || '' }}
+          path: /tmp/extension
+
+      - name: Deploy
+        shell: bash
+        env:
+          AWS_ACCESS_KEY_ID:     ${{ secrets.HAYBARN_COMMUNITY_S3_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.HAYBARN_COMMUNITY_S3_SECRET }}
+          AWS_ENDPOINT_URL:      ${{ secrets.HAYBARN_COMMUNITY_S3_ENDPOINT }}
+          BUCKET_NAME:           haybarn-community-extensions
+          # SAME private key Haybarn uses to sign core extensions. The
+          # engine's `community_public_keys[]` and `public_keys[]` both
+          # reference the matching HAYBARN_TRUST_ROOT constant.
+          DUCKDB_EXTENSION_SIGNING_PK: ${{ secrets.HAYBARN_EXTENSION_SIGNING_PK }}
+          DUCKDB_DEPLOY_SCRIPT_MODE: for_real
+          PIP_BREAK_SYSTEM_PACKAGES: 1
+        run: |
+          python3 -m pip install awscli
+          if [ -n "${{ inputs.duckdb_tag }}" ]; then
+            export DUCKDB_VERSION="${{ inputs.duckdb_tag }}"
+          else
+            git config --global --add safe.directory '*'
+            cd duckdb
+            git fetch --tags
+            DUCKDB_VERSION=$(git tag --points-at HEAD)
+            DUCKDB_VERSION=${DUCKDB_VERSION:=$(git log -1 --format=%h)}
+            export DUCKDB_VERSION
+            cd ..
+          fi
+          git fetch --tags --no-recurse-submodules
+          EXT_VERSION=$(git tag --points-at HEAD)
+          EXT_VERSION=${EXT_VERSION:=$(git log -1 --format=%h)}
+          export EXT_VERSION
+          ${{ inputs.deploy_script }} \
+            ${{ inputs.extension_name }} \
+            "$EXT_VERSION" "$DUCKDB_VERSION" \
+            ${{ matrix.duckdb_arch }} \
+            "$BUCKET_NAME" \
+            ${{ inputs.deploy_latest || 'true' && 'false' }} \
+            ${{ inputs.deploy_versioned || 'true' && 'false' }}
+
+  clean_cache:
+    needs:
+      - deploy
+      - generate_matrix
+    if: ${{ needs.generate_matrix.outputs.deploy_matrix != '{}' && needs.generate_matrix.outputs.deploy_matrix != '' }}
+    strategy:
+      matrix: ${{ fromJson(needs.generate_matrix.outputs.deploy_matrix) }}
+    uses: ./.github/workflows/clean_caches.yml
+    secrets: inherit
+    with:
+      pattern: '*/${{ matrix.duckdb_arch }}/${{ inputs.extension_name }}.duckdb_extension.*'

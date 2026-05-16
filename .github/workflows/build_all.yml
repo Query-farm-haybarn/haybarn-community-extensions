@@ -1,0 +1,59 @@
+# Manual fan-out: rebuild every extension in extensions/ against the current
+# Haybarn engine. Used:
+#   - after a `sync_from_upstream` PR merges (imports many descriptors at once)
+#   - after a Haybarn engine release (force-refresh the catalog)
+#   - to bulk-deploy after a vcpkg pin bump
+#
+# WARNING: with ~150 extensions and a 12-platform matrix, this can fan out
+# to 1800 concurrent jobs and saturate the org's GitHub Actions concurrency.
+# Use scripts/create_build_all_invocation.py to chunk the input list when
+# the catalog grows past ~25 extensions.
+
+name: Build all extensions
+on:
+  workflow_dispatch:
+    inputs:
+      duckdb_version:
+        type: string
+      duckdb_tag:
+        type: string
+      deploy:
+        type: string
+      build_extensions:
+        description: "List of extensions to build, formatted as: `['ext1', 'ext2']`"
+        type: string
+        required: false
+        default: ''
+
+jobs:
+  collect_extensions:
+    outputs:
+      COMMUNITY_EXTENSION_LIST: ${{ steps.generate_list.outputs.EXTENSION_LIST }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate extension list
+        id: generate_list
+        run: |
+          if [[ "${{ inputs.build_extensions }}" == "" ]]; then
+            ./scripts/get_extension_list.sh
+            cat extension_list
+            cat extension_list >> $GITHUB_OUTPUT
+          else
+            echo "EXTENSION_LIST=${{ inputs.build_extensions }}" >> $GITHUB_OUTPUT
+          fi
+
+  build_all:
+    needs: collect_extensions
+    strategy:
+      fail-fast: false
+      matrix:
+        extension_name: ${{ fromJson(needs.collect_extensions.outputs.COMMUNITY_EXTENSION_LIST) }}
+    uses: ./.github/workflows/build.yml
+    secrets: inherit
+    with:
+      extension_name: ${{ matrix.extension_name }}
+      duckdb_version: ${{ inputs.duckdb_version }}
+      duckdb_tag: ${{ inputs.duckdb_tag }}
+      deploy: ${{ inputs.deploy }}

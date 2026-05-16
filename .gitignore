@@ -1,0 +1,15 @@
+# Build artifacts from local script runs
+env.sh
+sync_summary.json
+extension_list
+
+# Temp upstream checkouts (sync workflow uses ./upstream/)
+upstream/
+
+# Editor noise
+.idea/
+.vscode/
+*.swp
+.DS_Store
+__pycache__/
+*.pyc
