@@ -29,13 +29,19 @@ jobs:
         with:
           repository: ${{ inputs.repository }}
           ref: ${{ inputs.ref }}
-          submodules: 'true'
+          # Don't recurse submodules — the archive is meant to be the source
+          # snapshot of the extension itself, NOT its build dependencies.
+          # We used to `rm -rf repo/duckdb` after a recursive clone but git's
+          # tmp_pack files were racing with the zip, causing "file size changed
+          # while zipping" + exit 18 (run 25964378414).
+          submodules: false
           path: ./repo
 
       - name: Compress the repository sources
         run: |
-          # Drop the bundled duckdb submodule — the build will checkout
-          # Haybarn separately. Keeping it bloats archives ~10x for no gain.
+          # Defensively remove any nested duckdb/ in case the extension's
+          # repo ships it pre-populated (rare, but happens). With
+          # submodules:false above, there's usually nothing to remove here.
           rm -rf repo/duckdb
           zip -9 -r compressed.zip repo
 

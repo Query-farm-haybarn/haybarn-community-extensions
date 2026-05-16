@@ -89,15 +89,21 @@ jobs:
             --pretty --reduced_ci_mode ${{ inputs.reduced_ci_mode }}
           # --pretty produces multi-line JSON; GITHUB_OUTPUT can't take a
           # single `name=value` line for that. Heredoc form is required for
-          # any multi-line value. (Run 25963459910's deploy job failed here
-          # with "Invalid format '  \"include\": [' ".)
+          # any multi-line value. (Run 25963459910 failed with "Invalid
+          # format '  \"include\": [' "; run 25964378414 then failed with
+          # "Matching delimiter not found 'HAYBARN_OUTPUT_EOF'" — that one
+          # is because the JSON file lacks a trailing newline, so the
+          # closing delim ends up on the same line as the last `}` and
+          # GH's heredoc parser doesn't see a standalone delimiter line.
+          # `printf '\n'` before the closing delimiter forces the newline.)
           {
-            echo "deploy_matrix<<HAYBARN_OUTPUT_EOF"
+            printf 'deploy_matrix<<HAYBARN_OUTPUT_EOF\n'
             cat deploy_matrix.json
-            echo "HAYBARN_OUTPUT_EOF"
+            printf '\nHAYBARN_OUTPUT_EOF\n'
           } >> "$GITHUB_OUTPUT"
           echo "--- deploy_matrix.json ---"
           cat deploy_matrix.json
+          echo "--- end deploy_matrix.json ---"
 
   deploy:
     name: Deploy
