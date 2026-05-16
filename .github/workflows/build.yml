@@ -17,6 +17,15 @@
 #      `/v1.5.2/<arch>/<name>.duckdb_extension.gz`; the engine looks there.
 name: Community Extension Build
 
+# Make each run's title carry the extension name when we know it, so the
+# Actions UI shows e.g. "🐤 h3" rather than the commit subject. Falls back
+# to the commit subject for path-filtered push triggers (where we don't
+# know which descriptor changed until build.py runs — too late for run-name,
+# which GitHub evaluates BEFORE any job).
+run-name: >-
+  ${{ inputs.extension_name && format('🐤 {0}', inputs.extension_name) ||
+      format('push: {0}', github.event.head_commit.message || github.ref_name) }}
+
 on:
   pull_request:
     paths-ignore:
