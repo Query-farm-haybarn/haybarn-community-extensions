@@ -81,6 +81,25 @@ with open('env.sh', 'w+') as hdl:
     vcpkg_url              = desc['extension'].get('vcpkg_url')
     vcpkg_commit           = desc['extension'].get('vcpkg_commit')
     test_config            = desc['extension'].get('test_config')
+
+    # Haybarn: derive which pre-built Linux build image to pull from GHCR
+    # based on this extension's toolchain needs. Three variants are published:
+    #   base — no extras
+    #   rust — base + Rust
+    #   full — base + Rust + Go + Fortran + parser_tools + unixodbc + multimedia
+    # See publish-build-images.yml in haybarn-extension-ci-tools.
+    #
+    # Format of requires_toolchains varies: "rust", ";rust;", ";rust;parser_tools;",
+    # etc. Strip semicolons and empty entries, then categorize.
+    toolchain_set = {
+        t for t in (requires_toolchains or '').split(';') if t
+    }
+    if not toolchain_set:
+        image_variant = 'base'
+    elif toolchain_set == {'rust'}:
+        image_variant = 'rust'
+    else:
+        image_variant = 'full'
     if excluded_platforms:
         hdl.write(f"COMMUNITY_EXTENSION_EXCLUDE_PLATFORMS={excluded_platforms}\n")
     if opt_in_platforms:
@@ -96,3 +115,4 @@ with open('env.sh', 'w+') as hdl:
     if test_config:
         escaped_config = test_config.replace("\n", "")
         hdl.write(f"COMMUNITY_EXTENSION_TEST_CONFIG={escaped_config}\n")
+    hdl.write(f"COMMUNITY_EXTENSION_IMAGE_VARIANT={image_variant}\n")
