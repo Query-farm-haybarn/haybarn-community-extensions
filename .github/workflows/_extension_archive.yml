@@ -51,7 +51,9 @@ jobs:
         # Same token, two buckets per the user's R2 grants.
         env:
           AWS_ACCESS_KEY_ID:     ${{ secrets.R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          # See _extension_deploy.yml for why this is R2_SECRET_KEY_ID
+          # (not R2_SECRET_ACCESS_KEY).
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_KEY_ID }}
           AWS_ENDPOINT_URL:      ${{ secrets.R2_ENDPOINT }}
           BUCKET_NAME:           haybarn-community-extensions
           PIP_BREAK_SYSTEM_PACKAGES: 1

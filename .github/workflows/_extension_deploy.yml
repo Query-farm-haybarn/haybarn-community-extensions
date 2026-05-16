@@ -144,7 +144,10 @@ jobs:
         # jobs showed green but no binaries actually landed on R2.)
         env:
           AWS_ACCESS_KEY_ID:     ${{ secrets.R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          # The org secret is named R2_SECRET_KEY_ID (not the more
+          # conventional R2_SECRET_ACCESS_KEY). See companion fix in
+          # haybarn/.github/workflows/haybarn-extensions.yml.
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_KEY_ID }}
           AWS_ENDPOINT_URL:      ${{ secrets.R2_ENDPOINT }}
           BUCKET_NAME:           haybarn-community-extensions
           # SAME private key Haybarn uses to sign core extensions. The
