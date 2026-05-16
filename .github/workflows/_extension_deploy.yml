@@ -87,9 +87,17 @@ jobs:
             --exclude "${{ inputs.exclude_archs }}" \
             --opt_in "${{ inputs.opt_in_archs }}" \
             --pretty --reduced_ci_mode ${{ inputs.reduced_ci_mode }}
-          deploy_matrix=$(cat deploy_matrix.json)
-          echo "deploy_matrix=$deploy_matrix" >> $GITHUB_OUTPUT
-          cat $GITHUB_OUTPUT
+          # --pretty produces multi-line JSON; GITHUB_OUTPUT can't take a
+          # single `name=value` line for that. Heredoc form is required for
+          # any multi-line value. (Run 25963459910's deploy job failed here
+          # with "Invalid format '  \"include\": [' ".)
+          {
+            echo "deploy_matrix<<HAYBARN_OUTPUT_EOF"
+            cat deploy_matrix.json
+            echo "HAYBARN_OUTPUT_EOF"
+          } >> "$GITHUB_OUTPUT"
+          echo "--- deploy_matrix.json ---"
+          cat deploy_matrix.json
 
   deploy:
     name: Deploy
