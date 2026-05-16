@@ -1,0 +1,35 @@
+extension:
+  name: crawler
+  description: SQL-native web crawler with HTML extraction and MERGE support
+  version: '2026020501'
+  language: C++
+  build: cmake
+  license: MIT
+  maintainers:
+  - onnimonni
+  requires_toolchains: rust
+  excluded_platforms: windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
+repo:
+  github: midwork-finds-jobs/duckdb-crawler
+  ref: 7725ede99eff1657a2cee770048be33328ae9f02
+docs:
+  hello_world: 'SELECT url, jq(html.document, ''h1'').text as title
+
+    FROM crawl([''https://example.com'']);
+
+    '
+  extended_description: "The crawler extension provides SQL-native web crawling capabilities\
+    \ for DuckDB.\n\nFeatures:\n- `crawl()` table function with automatic rate limiting\
+    \ and robots.txt compliance\n- `crawl_url()` for LATERAL joins\n- `sitemap()`\
+    \ for XML sitemap parsing\n- `read_html()` for Google Sheets-style IMPORTHTML\
+    \ (tables, lists, JS variables)\n- `jq()` and `htmlpath()` functions for CSS selector-based\
+    \ extraction\n- `html.readability` for article extraction\n- `html.schema` for\
+    \ JSON-LD/microdata parsing\n- `CRAWLING MERGE INTO` syntax for upsert operations\n\
+    \nExample with read_html (like Google Sheets =IMPORTHTML):\n```sql\nSELECT * FROM\
+    \ read_html('https://en.wikipedia.org/wiki/...', 'table.wikitable', 1);\nSELECT\
+    \ * FROM read_html('https://example.com/page', 'js=jobs');\n```\n\nExample with\
+    \ extraction:\n```sql\nSELECT\n    url,\n    jq(html.document, '.price', 'data-amount')\
+    \ as price,\n    html.readability.title as article_title\nFROM crawl(['https://example.com/products']);\n\
+    ```\n\nExample with MERGE:\n```sql\nCRAWLING MERGE INTO pages\nUSING crawl(['https://example.com'])\
+    \ AS src\nON (src.url = pages.url)\nWHEN MATCHED THEN UPDATE BY NAME\nWHEN NOT\
+    \ MATCHED THEN INSERT BY NAME;\n```\n\nFor full documentation see: https://github.com/midwork-finds-jobs/duckdb-crawler\n"

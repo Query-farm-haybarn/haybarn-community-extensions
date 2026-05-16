@@ -1,0 +1,39 @@
+extension:
+  name: dicom
+  description: 'DuckDB integration with medical imaging data (DICOM - Digital Imaging
+    and Communication in
+
+    Medicine).
+
+    '
+  version: 0.1.0
+  language: C++
+  build: cmake
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads
+  licence: MIT
+  maintainers:
+  - nmontesg
+repo:
+  github: nmontesg/duck-dicom
+  ref: 91524cf0a885e7f5f236490b0eea02e5d46fa978
+docs:
+  hello_world: 'INSTALL dicom FROM community;
+
+    LOAD dicom;
+
+    FROM read_dicom(''path/to/dicom_file.dcm'');
+
+    '
+  extended_description: "The dicom extension for DuckDB provides functionality to\
+    \ import medical imaging data (DICOM,\nDigital Imaging and Communication in Medicine)\
+    \ directly into DuckDB. It uses the powerful DCMTK\nC++ library to read DICOM\
+    \ files and convert them into JSON format.\n\n-- read one file\nFROM read_dicom('path/to/dicom_file.dcm');\n\
+    \n-- use glob pattern\nFROM read_dicom('path/to/dicoms/**/*.dcm');\n\n-- import\
+    \ pixel data\nFROM read_dicom('path/to/dicom_file.dcm', load_pixel_data=true);\n\
+    \n-- extract series description per series instance\nSELECT\n    dicom_content->'0020000E'->'Value'\
+    \ AS series_instance_uid,\n    any_value(dicom_content->'0008103E'->'Value') AS\
+    \ series_description\nFROM read_dicom('/Users/nmontes/Downloads/slicer_export/**/*.dcm')\n\
+    GROUP BY 1;\n\n-- extract study description per study instance\nSELECT\n    dicom_content->'0020000D'->'Value'\
+    \ AS study_instance_uid,\n    any_value(dicom_content->'00081030'->'Value') AS\
+    \ study_description\nFROM read_dicom('/Users/nmontes/Downloads/slicer_export/**/*.dcm')\n\
+    GROUP BY 1;\n"

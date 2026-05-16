@@ -1,0 +1,16 @@
+docs:
+  extended_description: For more information regarding usage, see the [documentation](https://query.farm/duckdb_extension_shellfs.html).
+extension:
+  build: cmake
+  description: Allow shell commands to be used for input and output
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads
+  language: C++
+  license: MIT
+  maintainers:
+  - rustyconover
+  name: shellfs
+  requires_toolchains: python3
+  version: '2025120401'
+repo:
+  github: query-farm/shellfs
+  ref: c8088a72beea4c6ef3bdb637bfc2799d8944dd90

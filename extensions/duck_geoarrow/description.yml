@@ -1,0 +1,43 @@
+extension:
+  name: duck_geoarrow
+  description: DuckDB extension for converting GEOMETRY/WKB to and from GeoArrow native
+    encodings, powered by geoarrow-c. Built against DuckDB v1.5.2
+  version: 0.1.2
+  language: C++
+  build: cmake
+  license: MIT
+  maintainers:
+  - am2222
+repo:
+  github: am2222/duck_geoarrow
+  ref: 097bb46e9e3da4e17cd5bdefd0bbf035bcbd73ef
+docs:
+  hello_world: "INSTALL duck_geoarrow FROM community;\nLOAD duck_geoarrow;\n\n-- Convert\
+    \ a WKB point to GeoArrow struct\nSELECT st_asgeoarrow('\\x01\\x01\\x00\\x00\\\
+    x00\\x00\\x00\\x00\\x00\\x00\\x00\\xF0\\x3F\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\\
+    x40'::BLOB);\n-- \u2192 {geometry_type: 1, xs: [1.0], ys: [2.0], ring_offsets:\
+    \ [], geom_offsets: []}\n\n-- With the spatial extension loaded, use GEOMETRY\
+    \ directly\nLOAD spatial;\nSELECT st_asgeoarrow(ST_Point(1.0, 2.0)::GEOMETRY);\n\
+    \n-- Convert back: GeoArrow struct \u2192 GEOMETRY (WKB)\nSELECT st_geomfromgeoarrow(st_asgeoarrow(ST_Point(30,\
+    \ 10)::GEOMETRY));\n\n-- Native-typed point extraction (returns STRUCT<x, y>)\n\
+    SELECT st_asgeoarrowpoint(ST_Point(30, 10)::GEOMETRY);\n-- \u2192 {x: 30.0, y:\
+    \ 10.0}\n\n-- Native-typed linestring (returns List<Struct<x, y>>)\nSELECT st_asgeoarrowlinestring(ST_GeomFromText('LINESTRING(0\
+    \ 0, 1 1, 2 2)')::GEOMETRY);\n\n-- Native-typed polygon (returns List<List<Struct<x,\
+    \ y>>>)\nSELECT st_asgeoarrowpolygon(ST_GeomFromText('POLYGON((0 0, 4 0, 4 4,\
+    \ 0 4, 0 0))')::GEOMETRY);\n\n-- Version info\nSELECT duck_geoarrow_version();\n"
+  extended_description: "`duck_geoarrow` converts between DuckDB's WKB-based `GEOMETRY`/`BLOB`\
+    \ type and\n[GeoArrow](https://geoarrow.org) native struct encodings, powered\
+    \ by\n[geoarrow-c](https://github.com/geoarrow/geoarrow-c).\n\n**Generic conversion\
+    \ functions** (accept `GEOMETRY` or `BLOB` containing WKB):\n\n- `st_asgeoarrow(geom)`\
+    \ \u2014 WKB \u2192 GeoArrow struct with geometry_type, xs, ys, ring_offsets,\
+    \ geom_offsets\n- `st_geomfromgeoarrow(struct)` \u2014 GeoArrow struct \u2192\
+    \ WKB `GEOMETRY`\n\n**Native-typed functions** (return Arrow-native nested types\
+    \ for direct columnar use):\n\n| Function | Arrow type |\n|---|---|\n| `st_asgeoarrowpoint`\
+    \ | `Struct<x: DOUBLE, y: DOUBLE>` |\n| `st_asgeoarrowlinestring` | `List<Struct<x,\
+    \ y>>` |\n| `st_asgeoarrowpolygon` | `List<List<Struct<x, y>>>` |\n| `st_asgeoarrowmultipoint`\
+    \ | `List<Struct<x, y>>` |\n| `st_asgeoarrowmultilinestring` | `List<List<Struct<x,\
+    \ y>>>` |\n| `st_asgeoarrowmultipolygon` | `List<List<List<Struct<x, y>>>>` |\n\
+    \n**Utility:**\n\n- `duck_geoarrow_version()` \u2014 returns extension and geoarrow-c\
+    \ version info\n\nAll functions accept both `GEOMETRY` (from the spatial extension)\
+    \ and raw `BLOB`\ncontaining valid WKB. The native-typed functions validate that\
+    \ the input geometry\nmatches the expected type and raise an error on mismatch.\n"

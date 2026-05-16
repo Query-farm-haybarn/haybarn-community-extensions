@@ -1,0 +1,57 @@
+extension:
+  name: hostfs
+  description: Navigate and explore the filesystem using SQL
+  version: 0.0.3
+  language: C++
+  build: cmake
+  license: MIT
+  maintainers:
+  - Gropaul
+repo:
+  github: gropaul/hostFS
+  ref: 29017b23edd9bed0cbd9847c9ba76b84427df1f7
+docs:
+  hello_world: "-- Navigate to the workspace and list the files\nD PRAGMA cd('/Users/paul/workspace');\n\
+    D PRAGMA ls;\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502             path\
+    \              \u2502\n\u2502            varchar            \u2502\n\u251C\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2524\n\u2502 ./duckdb                      \u2502\n\u2502\
+    \ ./playground                  \u2502\n\u2502 ./hostfs                      \u2502\
+    \n-- Find the files you were working on last\nD SELECT path, file_last_modified(path)\
+    \ AS date FROM ls() WHERE 'csv' IN file_extension(path) ORDER BY date LIMIT 1\
+    \ ;\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502\
+    \           path            \u2502        date         \u2502\n\u2502        \
+    \  varchar          \u2502      timestamp      \u2502\n\u251C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 ./sketch_results_join.csv\
+    \ \u2502 2024-07-13 23:25:48 \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2518\n-- List the top 3 file types by total size, with\
+    \ file count, ordered by size.\nD SELECT size, count, file_extension AS \"type\"\
+    \nFROM (\nSELECT SUM(file_size(path)) AS size_raw, format_bytes(size_raw) AS size,\
+    \ COUNT(*) AS count, file_extension(path) AS file_extension\nFROM lsr('/Users/paul/workspace',\
+    \ 10)\nGROUP BY file_extension(path)\n) AS subquery\nORDER BY size_raw DESC LIMIT\
+    \ 3;\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2510\n\u2502   size    \u2502 count \u2502  type\
+    \   \u2502\n\u2502  varchar  \u2502 int64 \u2502 varchar \u2502\n\u251C\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2524\n\u2502 246.95 GB \u2502    29 \u2502 .duckdb \u2502\n\u2502 90.33\
+    \ GB  \u2502  3776 \u2502 .tmp    \u2502\n\u2502 26.17 GB  \u2502 28175 \u2502\
+    \ .csv    \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n"
+  extended_description: The HostFS extension allows you to navigate and explore the
+    filesystem using SQL. It provides a set of functions to list files, get file metadata,
+    and more.  For more information, please see the [HostFS documentation](https://github.com/gropaul/hostFS).

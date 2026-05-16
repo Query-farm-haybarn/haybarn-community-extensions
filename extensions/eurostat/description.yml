@@ -1,0 +1,250 @@
+extension:
+  name: eurostat
+  description: Extension that adds support for reading data from EUROSTAT database
+    using SQL.
+  version: 0.2.1
+  language: C++
+  build: cmake
+  excluded_platforms: windows_amd64_mingw
+  license: MIT
+  maintainers:
+  - ahuarte47
+repo:
+  github: ahuarte47/duckdb-eurostat
+  ref: 53c5570856578e2be8efe22cecd0b23caa709bb6
+docs:
+  hello_world: "SELECT * FROM EUROSTAT_DataStructure('ESTAT', 'DEMO_R_D2JAN', language\
+    \ := 'en');\n\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\
+    \n\u2502 provider_id \u2502 dataflow_id  \u2502 position \u2502  dimension  \u2502\
+    \             concept             \u2502\n\u2502   varchar   \u2502   varchar\
+    \    \u2502  int32   \u2502   varchar   \u2502             varchar           \
+    \  \u2502\n\u251C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502\
+    \ ESTAT       \u2502 DEMO_R_D2JAN \u2502        1 \u2502 freq        \u2502 Time\
+    \ frequency                  \u2502\n\u2502 ESTAT       \u2502 DEMO_R_D2JAN \u2502\
+    \        2 \u2502 unit        \u2502 Unit of measure                 \u2502\n\u2502\
+    \ ESTAT       \u2502 DEMO_R_D2JAN \u2502        3 \u2502 sex         \u2502 Sex\
+    \                             \u2502\n\u2502 ESTAT       \u2502 DEMO_R_D2JAN \u2502\
+    \        4 \u2502 age         \u2502 Age class                       \u2502\n\u2502\
+    \ ESTAT       \u2502 DEMO_R_D2JAN \u2502        5 \u2502 geo         \u2502 Geopolitical\
+    \ entity (reporting) \u2502\n\u2502 ESTAT       \u2502 DEMO_R_D2JAN \u2502   \
+    \    -1 \u2502 geo_level   \u2502 NUTS classification level       \u2502\n\u2502\
+    \ ESTAT       \u2502 DEMO_R_D2JAN \u2502        6 \u2502 time_period \u2502 Time\
+    \                            \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2518\n\nSELECT * FROM EUROSTAT_Read('ESTAT', 'DEMO_R_D2JAN')\
+    \ LIMIT 5;\n\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502  freq   \u2502  unit\
+    \   \u2502   sex   \u2502   age   \u2502   geo   \u2502 geo_level \u2502 TIME_PERIOD\
+    \ \u2502 observation_value \u2502\n\u2502 varchar \u2502 varchar \u2502 varchar\
+    \ \u2502 varchar \u2502 varchar \u2502  varchar  \u2502   varchar   \u2502   \
+    \   double       \u2502\n\u251C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 A       \u2502\
+    \ NR      \u2502 F       \u2502 TOTAL   \u2502 AL      \u2502 country   \u2502\
+    \ 2000        \u2502         1526762.0 \u2502\n\u2502 A       \u2502 NR      \u2502\
+    \ F       \u2502 TOTAL   \u2502 AL      \u2502 country   \u2502 2001        \u2502\
+    \         1535822.0 \u2502\n\u2502 A       \u2502 NR      \u2502 F       \u2502\
+    \ TOTAL   \u2502 AL      \u2502 country   \u2502 2002        \u2502         1532563.0\
+    \ \u2502\n\u2502 A       \u2502 NR      \u2502 F       \u2502 TOTAL   \u2502 AL\
+    \      \u2502 country   \u2502 2003        \u2502         1526180.0 \u2502\n\u2502\
+    \ A       \u2502 NR      \u2502 F       \u2502 TOTAL   \u2502 AL      \u2502 country\
+    \   \u2502 2004        \u2502         1520481.0 \u2502\n\u2514\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2518\n"
+  extended_description: "This is an extension for DuckDB for reading data from EUROSTAT\
+    \ database using SQL.\n\n[Eurostat](https://ec.europa.eu/eurostat/) is the official\
+    \ statistical office of the European Union, responsible for providing high-quality,\
+    \ comparable, and harmonised statistics on Europe\u2019s economy, society, environment,\
+    \ and more.\n\nEurostat develops harmonised definitions, classifications and methodologies\
+    \ for the production of European official statistics, in cooperation with national\
+    \ statistical authorities. It calculates aggregate data for the European Union\
+    \ and eurozone, using data collected by national statistical authorities according\
+    \ to the harmonised standards. Eurostat makes European statistics freely available\
+    \ to decision\u2011makers and citizens via the Eurostat website, social media\
+    \ and other channels.\n\nRun the following query to see the available data providers\
+    \ and their descriptions:\n\n```sql\nSELECT provider_id, organization, description\
+    \ FROM EUROSTAT_Endpoints();\n\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502\
+    \ provider_id \u2502 organization \u2502                     description     \
+    \                 \u2502\n\u2502   varchar   \u2502   varchar    \u2502      \
+    \                 varchar                        \u2502\n\u251C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2524\n\u2502 ECFIN       \u2502 DG ECFIN     \u2502 Economic and\
+    \ Financial Affairs                       \u2502\n\u2502 EMPL        \u2502 DG\
+    \ EMPL      \u2502 Employment, Social Affairs and Inclusion             \u2502\
+    \n\u2502 ESTAT       \u2502 EUROSTAT     \u2502 EUROSTAT database            \
+    \                        \u2502\n\u2502 GROW        \u2502 DG GROW      \u2502\
+    \ Internal Market, Industry, Entrepreneurship and SMEs \u2502\n\u2502 TAXUD  \
+    \     \u2502 DG TAXUD     \u2502 Taxation and Customs Union                  \
+    \         \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n```\n\nEach provider\
+    \ has multiple dataflows (datasets) available, which can be listed with\nthe following\
+    \ query:\n\n```sql\nSELECT * FROM EUROSTAT_Dataflows();\nSELECT * FROM EUROSTAT_Dataflows(providers\
+    \ = ['ESTAT','ECFIN'], language := 'en');\n\n--- You can also filter by specific\
+    \ dataflows:\n\nSELECT\n    provider_id, dataflow_id, class, version, label\n\
+    FROM\n    EUROSTAT_Dataflows(providers = ['ESTAT'], dataflows = ['DEMO_R_D2JAN'],\
+    \ language := 'de')\n;\n\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2510\n\u2502 provider_id \u2502  dataflow_id \u2502\
+    \  class  \u2502 version \u2502                               label          \
+    \                     \u2502\n\u2502   varchar   \u2502   varchar    \u2502 varchar\
+    \ \u2502 varchar \u2502                              varchar                 \
+    \             \u2502\n\u251C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2524\n\u2502 ESTAT       \u2502 DEMO_R_D2JAN \u2502 dataset\
+    \ \u2502 1.0     \u2502 Bev\xF6lkerung am 1. Januar nach Alter, Geschlecht und\
+    \ NUTS-2-Region \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2518\n```\n\nTo return information of the data structure\
+    \ of an EUROSTAT Dataflow, run the following query:\n\n```sql\nSELECT\n    provider_id,\
+    \ dataflow_id, position, dimension, concept\nFROM\n    EUROSTAT_DataStructure('ESTAT',\
+    \ 'DEMO_R_D2JAN', language := 'en')\n;\n\n\u250C\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2510\n\u2502 provider_id \u2502 dataflow_id  \u2502\
+    \ position \u2502  dimension  \u2502             concept             \u2502\n\u2502\
+    \   varchar   \u2502   varchar    \u2502  int32   \u2502   varchar   \u2502  \
+    \           varchar             \u2502\n\u251C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2524\n\u2502 ESTAT       \u2502 DEMO_R_D2JAN \u2502      \
+    \  1 \u2502 freq        \u2502 Time frequency                  \u2502\n\u2502\
+    \ ESTAT       \u2502 DEMO_R_D2JAN \u2502        2 \u2502 unit        \u2502 Unit\
+    \ of measure                 \u2502\n\u2502 ESTAT       \u2502 DEMO_R_D2JAN \u2502\
+    \        3 \u2502 sex         \u2502 Sex                             \u2502\n\u2502\
+    \ ESTAT       \u2502 DEMO_R_D2JAN \u2502        4 \u2502 age         \u2502 Age\
+    \ class                       \u2502\n\u2502 ESTAT       \u2502 DEMO_R_D2JAN \u2502\
+    \        5 \u2502 geo         \u2502 Geopolitical entity (reporting) \u2502\n\u2502\
+    \ ESTAT       \u2502 DEMO_R_D2JAN \u2502       -1 \u2502 geo_level   \u2502 NUTS\
+    \ classification level       \u2502\n\u2502 ESTAT       \u2502 DEMO_R_D2JAN \u2502\
+    \        6 \u2502 time_period \u2502 Time                            \u2502\n\u2514\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n```\n\nFinally,\
+    \ to read the data of an EUROSTAT Dataflow, run:\n\n```sql\nSELECT * FROM EUROSTAT_Read('ESTAT',\
+    \ 'DEMO_R_D2JAN') LIMIT 5;\n\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502  freq\
+    \   \u2502  unit   \u2502   sex   \u2502   age   \u2502   geo   \u2502 geo_level\
+    \ \u2502 TIME_PERIOD \u2502 observation_value \u2502\n\u2502 varchar \u2502 varchar\
+    \ \u2502 varchar \u2502 varchar \u2502 varchar \u2502  varchar  \u2502   varchar\
+    \   \u2502      double       \u2502\n\u251C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502\
+    \ A       \u2502 NR      \u2502 F       \u2502 TOTAL   \u2502 AL      \u2502 country\
+    \   \u2502 2000        \u2502         1526762.0 \u2502\n\u2502 A       \u2502\
+    \ NR      \u2502 F       \u2502 TOTAL   \u2502 AL      \u2502 country   \u2502\
+    \ 2001        \u2502         1535822.0 \u2502\n\u2502 A       \u2502 NR      \u2502\
+    \ F       \u2502 TOTAL   \u2502 AL      \u2502 country   \u2502 2002        \u2502\
+    \         1532563.0 \u2502\n\u2502 A       \u2502 NR      \u2502 F       \u2502\
+    \ TOTAL   \u2502 AL      \u2502 country   \u2502 2003        \u2502         1526180.0\
+    \ \u2502\n\u2502 A       \u2502 NR      \u2502 F       \u2502 TOTAL   \u2502 AL\
+    \      \u2502 country   \u2502 2004        \u2502         1520481.0 \u2502\n\u2514\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2518\n```\n\nExtension supports pushdown of T-SQL filters\
+    \ on dimensions, which are encoded and sent to the\nEUROSTAT API to filter the\
+    \ data before being loaded into DuckDB.\n\nEUROSTAT API only supports filtering\
+    \ on dimensions with equality conditions (e.g. `WHERE geo = 'DE'`)\nor IN conditions\
+    \ (e.g. `WHERE geo IN ('DE', 'FR')`). Other types of filters (e.g. `WHERE geo\
+    \ LIKE 'D%'`)\nare not supported and will be evaluated locally in DuckDB after\
+    \ loading the data.\n\nTime filters (e.g. `WHERE time_period >= '2000' AND time_period\
+    \ <= '2010'`) are also supported\nand will be encoded as range filters in the\
+    \ EUROSTAT API.\n"

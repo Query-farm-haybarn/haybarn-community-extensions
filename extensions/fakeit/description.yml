@@ -1,0 +1,209 @@
+extension:
+  name: fakeit
+  description: The FakeIt Extension enables generation of realistic fake/test data
+    directly in SQL queries
+  version: 0.3.2
+  language: Rust
+  build: cargo
+  license: MIT
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;linux_amd64_musl
+  requires_toolchains: rust;python3
+  maintainers:
+  - tobilg
+repo:
+  github: tobilg/duckdb-fakeit
+  ref: 72ae0caf65f95d3cabccb0f92f71443346b3f8f2
+docs:
+  hello_world: "-- Generate a simple fake name and email\nD SELECT fakeit_name_full()\
+    \ as name, fakeit_contact_email() as email;\n\u250C\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2510\n\u2502      name       \u2502          email           \u2502\n\u2502\
+    \     varchar     \u2502         varchar          \u2502\n\u251C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2524\n\u2502 Jane Doe        \u2502 jane.doe@example.com     \u2502\
+    \n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2518\n\n-- Generate fake address data\n\
+    D SELECT fakeit_address_street() as street, fakeit_address_city() as city, fakeit_address_state()\
+    \ as state, fakeit_address_zip() as zip;\n\u250C\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2510\n\u2502       street        \u2502     city\
+    \     \u2502     state     \u2502   zip   \u2502\n\u2502       varchar       \u2502\
+    \   varchar    \u2502    varchar    \u2502 varchar \u2502\n\u251C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 123 Main St         \u2502\
+    \ New York     \u2502 New York      \u2502 10001   \u2502\n\u2514\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n\n-- Generate fake company and\
+    \ contact information\nD SELECT fakeit_company_company() as company, fakeit_contact_phone_formatted()\
+    \ as phone, fakeit_internet_domain_name() as website;\n\u250C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2510\n\u2502     company      \u2502      phone    \
+    \   \u2502       website       \u2502\n\u2502     varchar      \u2502     varchar\
+    \      \u2502       varchar       \u2502\n\u251C\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2524\n\u2502 Acme Corp        \u2502 (555) 123-4567   \u2502 example.com\
+    \         \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n\n--\
+    \ Generate UUIDs\nD SELECT fakeit_uuid_v4() as id;\n\u250C\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502               \
+    \   id                  \u2502\n\u2502               varchar                \u2502\
+    \n\u251C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2524\n\u2502 a1b2c3d4-e5f6-7890-abcd-ef1234567890 \u2502\n\u2514\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n\n-- Generate\
+    \ fake payment information\nD SELECT fakeit_payment_credit_card_type() as card_type,\
+    \ fakeit_payment_credit_card_number() as card_number, fakeit_payment_credit_card_cvv()\
+    \ as cvv;\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2510\n\u2502 card_type \u2502   card_number    \u2502   cvv\
+    \   \u2502\n\u2502  varchar  \u2502     varchar      \u2502 varchar \u2502\n\u251C\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2524\n\u2502 Visa      \u2502 4532123456789012 \u2502 123     \u2502\n\
+    \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2518\n"
+  extended_description: "This community extension provides over 120 functions for\
+    \ generating realistic fake/test data directly in SQL queries. It's powered by\
+    \ the fakeit Rust library and is perfect for creating test datasets, populating\
+    \ development databases, and prototyping applications.\n\n## Features\n\n- **120+\
+    \ fake data generation functions** across 25+ categories\n- **Pure Rust implementation**\
+    \ with no C++ dependencies\n- **WebAssembly compatible** for DuckDB-WASM environments\n\
+    - **Self-contained** with no external dependencies\n- **Production-ready** with\
+    \ CI/CD automation\n\n## Function Categories\n\nThe extension organizes functions\
+    \ into the following categories:\n\n### Address Functions\n- `fakeit_address_street()`\
+    \ - Full street address\n- `fakeit_address_street_number()` - Street number\n\
+    - `fakeit_address_street_name()` - Street name\n- `fakeit_address_street_prefix()`\
+    \ - Street prefix (e.g., \"N\", \"S\")\n- `fakeit_address_street_suffix()` - Street\
+    \ suffix (e.g., \"Ave\", \"St\")\n- `fakeit_address_city()` - City name\n- `fakeit_address_state()`\
+    \ - State name\n- `fakeit_address_state_abr()` - State abbreviation\n- `fakeit_address_zip()`\
+    \ - ZIP/postal code\n- `fakeit_address_country()` - Country name\n- `fakeit_address_country_abr()`\
+    \ - Country abbreviation\n- `fakeit_address_latitude()` - Random latitude\n- `fakeit_address_longitude()`\
+    \ - Random longitude\n- `fakeit_address_latitude_in_range(min, max)` - Latitude\
+    \ within range\n- `fakeit_address_longitude_in_range(min, max)` - Longitude within\
+    \ range\n\n### Name Functions\n- `fakeit_name_first()` - First name\n- `fakeit_name_last()`\
+    \ - Last name\n- `fakeit_name_full()` - Full name (first + last)\n- `fakeit_name_prefix()`\
+    \ - Name prefix (e.g., \"Mr.\", \"Mrs.\")\n- `fakeit_name_suffix()` - Name suffix\
+    \ (e.g., \"Jr.\", \"Sr.\")\n\n### Contact Functions\n- `fakeit_contact_email()`\
+    \ - Email address\n- `fakeit_contact_phone()` - Phone number (unformatted)\n-\
+    \ `fakeit_contact_phone_formatted()` - Phone number (formatted)\n\n### Company\
+    \ Functions\n- `fakeit_company_company()` - Company name\n- `fakeit_company_company_suffix()`\
+    \ - Company suffix (e.g., \"Inc\", \"LLC\")\n- `fakeit_company_buzzword()` - Business\
+    \ buzzword\n- `fakeit_company_bs()` - Business BS phrase\n\n### Internet Functions\n\
+    - `fakeit_internet_ipv4_address()` - IPv4 address\n- `fakeit_internet_ipv6_address()`\
+    \ - IPv6 address\n- `fakeit_internet_domain_name()` - Domain name\n- `fakeit_internet_domain_suffix()`\
+    \ - Domain suffix (e.g., \".com\", \".org\")\n- `fakeit_internet_username()` -\
+    \ Username\n- `fakeit_internet_mac_address()` - MAC address\n- `fakeit_internet_http_method()`\
+    \ - HTTP method (GET, POST, etc.)\n\n### UUID Functions\n- `fakeit_uuid_v1()`\
+    \ - UUID version 1 (timestamp-based)\n- `fakeit_uuid_v4()` - UUID version 4 (random)\n\
+    \n### Animal Functions\n- `fakeit_animal_pet_name()` - Pet name\n- `fakeit_animal_animal()`\
+    \ - Random animal\n- `fakeit_animal_farm()` - Farm animal\n- `fakeit_animal_cat()`\
+    \ - Cat breed\n- `fakeit_animal_dog()` - Dog breed\n\n### Beer Functions\n- `fakeit_beer_name()`\
+    \ - Beer name\n- `fakeit_beer_style()` - Beer style\n- `fakeit_beer_hop()` - Hop\
+    \ variety\n- `fakeit_beer_yeast()` - Yeast type\n- `fakeit_beer_malt()` - Malt\
+    \ type\n- `fakeit_beer_ibu()` - IBU (International Bitterness Units)\n- `fakeit_beer_alcohol()`\
+    \ - Alcohol percentage\n- `fakeit_beer_blg()` - Degrees Blg (Balling)\n\n### Color\
+    \ Functions\n- `fakeit_color_full()` - Full color name\n- `fakeit_color_hex()`\
+    \ - Hex color code\n- `fakeit_color_safe()` - Web-safe color\n- `fakeit_color_rgb()`\
+    \ - RGB color array\n\n### Currency Functions\n- `fakeit_currency_short()` - Currency\
+    \ code (e.g., \"USD\")\n- `fakeit_currency_long()` - Currency name (e.g., \"US\
+    \ Dollar\")\n- `fakeit_currency_price()` - Random price\n\n### DateTime Functions\n\
+    - `fakeit_datetime_month()` - Month name\n- `fakeit_datetime_day()` - Day number\n\
+    - `fakeit_datetime_week_day()` - Weekday name\n- `fakeit_datetime_year()` - Year\n\
+    - `fakeit_datetime_hour()` - Hour\n- `fakeit_datetime_minute()` - Minute\n- `fakeit_datetime_second()`\
+    \ - Second\n- `fakeit_datetime_nanosecond()` - Nanosecond\n- `fakeit_datetime_timezone()`\
+    \ - Timezone name\n- `fakeit_datetime_timezone_full()` - Full timezone name\n\
+    - `fakeit_datetime_timezone_abv()` - Timezone abbreviation\n- `fakeit_datetime_timezone_offset()`\
+    \ - Timezone offset\n- `fakeit_datetime_date()` - Random date\n\n### File Functions\n\
+    - `fakeit_file_extension()` - File extension\n- `fakeit_file_mime_type()` - MIME\
+    \ type\n\n### Hacker Functions\n- `fakeit_hacker_phrase()` - Hacker phrase\n-\
+    \ `fakeit_hacker_abbreviation()` - Tech abbreviation\n- `fakeit_hacker_adjective()`\
+    \ - Tech adjective\n- `fakeit_hacker_noun()` - Tech noun\n- `fakeit_hacker_verb()`\
+    \ - Tech verb\n- `fakeit_hacker_ingverb()` - Tech verb (present participle)\n\n\
+    ### Hipster Functions\n- `fakeit_hipster_word()` - Hipster word\n- `fakeit_hipster_sentence()`\
+    \ - Hipster sentence\n- `fakeit_hipster_paragraph()` - Hipster paragraph\n\n###\
+    \ Image Functions\n- `fakeit_image_url()` - Random image URL\n\n### Job Functions\n\
+    - `fakeit_job_title()` - Job title\n- `fakeit_job_descriptor()` - Job descriptor\n\
+    - `fakeit_job_level()` - Job level\n\n### Language Functions\n- `fakeit_language_random()`\
+    \ - Random language\n- `fakeit_language_abbreviation()` - Language abbreviation\n\
+    - `fakeit_language_programming()` - Programming language\n\n### Log Level Functions\n\
+    - `fakeit_log_level_general()` - General log level\n- `fakeit_log_level_syslog()`\
+    \ - Syslog level\n- `fakeit_log_level_apache()` - Apache log level\n\n### Password\
+    \ Functions\n- `fakeit_password_generate()` - Random password\n\n### Payment Functions\n\
+    - `fakeit_payment_credit_card_type()` - Credit card type\n- `fakeit_payment_credit_card_number()`\
+    \ - Credit card number\n- `fakeit_payment_credit_card_exp()` - Expiration date\n\
+    - `fakeit_payment_credit_card_cvv()` - CVV code\n- `fakeit_payment_credit_card_luhn_number()`\
+    \ - Luhn-valid number\n\n### Person Functions\n- `fakeit_person_ssn()` - Social\
+    \ Security Number\n- `fakeit_person_gender()` - Gender\n\n### Status Code Functions\n\
+    - `fakeit_status_code_simple()` - Simple HTTP status code\n- `fakeit_status_code_general()`\
+    \ - General HTTP status code\n\n### User Agent Functions\n- `fakeit_user_agent_chrome()`\
+    \ - Chrome user agent\n- `fakeit_user_agent_firefox()` - Firefox user agent\n\
+    - `fakeit_user_agent_safari()` - Safari user agent\n- `fakeit_user_agent_opera()`\
+    \ - Opera user agent\n- `fakeit_user_agent_random_platform()` - Random platform\n\
+    - `fakeit_user_agent_linux_platform_token()` - Linux platform token\n- `fakeit_user_agent_mac_platform_token()`\
+    \ - Mac platform token\n- `fakeit_user_agent_windows_platform_token()` - Windows\
+    \ platform token\n\n### Vehicle Functions\n- `fakeit_vehicle_vehicle_type()` -\
+    \ Vehicle type\n- `fakeit_vehicle_car_maker()` - Car manufacturer\n- `fakeit_vehicle_car_model()`\
+    \ - Car model\n- `fakeit_vehicle_fuel()` - Fuel type\n- `fakeit_vehicle_transmission_gear()`\
+    \ - Transmission type\n\n### Words Functions\n- `fakeit_words_word()` - Random\
+    \ word\n- `fakeit_words_sentence()` - Random sentence\n- `fakeit_words_paragraph()`\
+    \ - Random paragraph\n- `fakeit_words_question()` - Random question\n- `fakeit_words_quote()`\
+    \ - Random quote\n\n### Boolean Functions\n- `fakeit_bool()` - Random boolean\n\
+    \n### Generator Functions\n- `fakeit_generator_generate()` - Custom pattern generator\n\
+    \n## Usage Examples\n\n### Generate Test Users\n```sql\nSELECT\n    row_number()\
+    \ OVER () as id,\n    fakeit_name_full() as name,\n    fakeit_contact_email()\
+    \ as email,\n    fakeit_contact_phone_formatted() as phone,\n    fakeit_address_city()\
+    \ as city,\n    fakeit_address_state() as state\nFROM generate_series(1, 100);\n\
+    ```\n\n### Generate E-commerce Orders\n```sql\nSELECT\n    fakeit_uuid_v4() as\
+    \ order_id,\n    fakeit_name_full() as customer_name,\n    fakeit_company_company()\
+    \ as vendor,\n    fakeit_currency_price() as amount,\n    fakeit_payment_credit_card_type()\
+    \ as payment_method,\n    fakeit_datetime_date() as order_date\nFROM generate_series(1,\
+    \ 1000);\n```\n\n### Generate Log Entries\n```sql\nSELECT\n    fakeit_datetime_date()\
+    \ as timestamp,\n    fakeit_internet_ipv4_address() as ip_address,\n    fakeit_log_level_apache()\
+    \ as log_level,\n    fakeit_internet_http_method() as http_method,\n    fakeit_status_code_general()\
+    \ as status_code,\n    fakeit_user_agent_chrome() as user_agent\nFROM generate_series(1,\
+    \ 10000);\n```\n\n### Generate GeoJSON Data\n```sql\nSELECT json_object(\n   \
+    \ 'type', 'Feature',\n    'geometry', json_object(\n        'type', 'Point',\n\
+    \        'coordinates', json_array(\n            fakeit_address_longitude(),\n\
+    \            fakeit_address_latitude()\n        )\n    ),\n    'properties', json_object(\n\
+    \        'name', fakeit_name_full(),\n        'city', fakeit_address_city(),\n\
+    \        'country', fakeit_address_country()\n    )\n) as geojson\nFROM generate_series(1,\
+    \ 50);\n```\n\n## Use Cases\n\n- **Test Data Generation**: Populate development\
+    \ and test databases with realistic data\n- **Prototyping**: Quickly mock up applications\
+    \ with sample data\n- **Data Masking**: Replace sensitive production data with\
+    \ fake data for testing\n- **Load Testing**: Generate large datasets for performance\
+    \ testing\n- **Demos and Presentations**: Create compelling demo data for showcasing\
+    \ features\n\n> This extension is experimental and actively being developed. See\
+    \ the repository for the latest updates and examples.\n"

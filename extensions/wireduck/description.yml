@@ -1,0 +1,45 @@
+extension:
+  name: wireduck
+  description: Read and dissect PCAP files from DuckDB
+  version: 0.0.2
+  language: c++
+  build: cmake
+  license: MIT
+  excluded_platforms: osx_amd64;osx_arm64;windows_amd64;wasm
+  maintainers:
+  - hyehudai
+repo:
+  github: hyehudai/wireduck
+  ref: 19c4018cc8ebad08547d621bcdc25df86294ca2b
+docs:
+  hello_world: "-- Basic PCAP reader for local files.\nD select count(*) , sum (\"\
+    tcp.len\") , \"tcp.srcport\" ,\"tcp.dstport\"   from read_pcap('~/wireduck/fix.pcap',\
+    \ protocols:=['ip','tcp'],climit:=100)  group by  \"tcp.srcport\" ,\"tcp.dstport\"\
+    \ ;;\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502 count_star()\
+    \ \u2502 sum(\"tcp.len\") \u2502 tcp.srcport \u2502 tcp.dstport \u2502\n\u2502\
+    \    int64     \u2502     int128     \u2502    int64    \u2502    int64    \u2502\
+    \n\u251C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502          429 \u2502\
+    \         259678 \u2502       11001 \u2502       53867 \u2502\n\u2502        \
+    \   56 \u2502          19702 \u2502       53867 \u2502       11001 \u2502\n\u2514\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n"
+  extended_description: "### pcap dissector extention\nWireduck runs tshark behind\
+    \ the scenes utilizing wireshark's glossary to be able to parse any packet from\
+    \ any supported protocol to its fields. \nenabeling network data analysis and\
+    \ analytics.\n\n### Features\n- read_pcap table function.\n- support any protocol\
+    \ supported by wireshark.\n- allow push down filters to wireshark using cfilter\
+    \ climit  parameters\n\n### Prerequities\ntshark (installed as part of wireshark)\
+    \ should be installed.\nvalidate its exists via\n```\ntshark --version\n```\n\
+    > For examples and instructions check out [Readme](https://github.com/hyehudai/wireduck)\n\
+    \n    \n> Note: Wireduck is still experimental.\n"

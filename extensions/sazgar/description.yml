@@ -1,0 +1,296 @@
+extension:
+  name: sazgar
+  description: System monitoring & SQL query routing for DuckDB - 25+ table functions
+    for CPU, memory, disk, network, processes, Docker, GPU. Execute queries on remote
+    databases via PostgreSQL wire protocol with SQLGlot dialect translation (PostgreSQL,
+    MySQL, ClickHouse, Snowflake, BigQuery).
+  version: 1.1.0
+  language: Rust
+  build: cargo
+  license: MIT
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_rtools;windows_amd64_mingw;linux_amd64_musl
+  requires_toolchains: rust;python3
+  maintainers:
+  - Angelerator
+repo:
+  github: Angelerator/Sazgar
+  ref: e1bc94605ad475dc137f6a8227392497140d2767
+docs:
+  hello_world: "-- \u2554\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2557\n-- \u2551                    SAZGAR QUICK START\
+    \ GUIDE                      \u2551\n-- \u255A\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u255D\n\n-- \u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \n-- 1. SYSTEM OVERVIEW\n-- \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\n\n-- Get complete system information\n\
+    SELECT * FROM sazgar_system();\n-- Returns: os_name, os_version, hostname, kernel_version,\
+    \ architecture\n\n-- System uptime\nSELECT * FROM sazgar_uptime();\n-- Returns:\
+    \ uptime_seconds, uptime_formatted, boot_time\n\n-- \u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n-- 2. MEMORY\
+    \ MONITORING\n-- \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\n\n-- Memory in gigabytes (supports: bytes, KB,\
+    \ KiB, MB, MiB, GB, GiB, TB, TiB)\nSELECT * FROM sazgar_memory(unit := 'GB');\n\
+    -- Returns: total_memory, used_memory, available_memory, usage_percent\n\n-- Check\
+    \ if system is under memory pressure\nSELECT \n    CASE WHEN usage_percent > 90\
+    \ THEN 'CRITICAL'\n         WHEN usage_percent > 70 THEN 'WARNING'\n         ELSE\
+    \ 'OK' END as status,\n    available_memory || ' GB available' as available\n\
+    FROM sazgar_memory(unit := 'GB');\n\n-- \u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n-- 3. CPU MONITORING\n\
+    -- \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\n\n-- CPU information per core\nSELECT * FROM sazgar_cpu();\n\
+    -- Returns: core_id, frequency_mhz, usage_percent, vendor, brand\n\n-- Average\
+    \ CPU usage across all cores\nSELECT \n    COUNT(*) as num_cores,\n    ROUND(AVG(usage_percent),\
+    \ 2) as avg_usage,\n    MAX(usage_percent) as max_core_usage\nFROM sazgar_cpu();\n\
+    \n-- System load averages (1, 5, 15 minutes)\nSELECT * FROM sazgar_load();\n--\
+    \ Returns: load_1min, load_5min, load_15min\n\n-- \u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n-- 4. DISK\
+    \ MONITORING\n-- \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\n\n-- Disk space with unit conversion\nSELECT *\
+    \ FROM sazgar_disks(unit := 'GB');\n-- Returns: name, mount_point, file_system,\
+    \ total_space, used_space, available_space, usage_percent\n\n-- Find disks running\
+    \ low on space\nSELECT name, mount_point, \n       ROUND(usage_percent, 1) ||\
+    \ '%' as used,\n       available_space || ' GB free' as free_space\nFROM sazgar_disks(unit\
+    \ := 'GB')\nWHERE usage_percent > 80\nORDER BY usage_percent DESC;\n\n-- \u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\n-- 5. NETWORK MONITORING\n-- \u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n\n-- Network interface\
+    \ statistics\nSELECT * FROM sazgar_network();\n-- Returns: interface, mac_address,\
+    \ rx_bytes, tx_bytes, rx_packets, tx_packets, rx_errors, tx_errors\n\n-- Network\
+    \ traffic in MB\nSELECT \n    interface,\n    ROUND(rx_bytes / 1048576.0, 2) as\
+    \ rx_mb,\n    ROUND(tx_bytes / 1048576.0, 2) as tx_mb\nFROM sazgar_network()\n\
+    WHERE rx_bytes > 0\nORDER BY rx_bytes DESC;\n\n-- \u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n-- 6. PROCESS\
+    \ MONITORING\n-- \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\n\n-- All running processes\nSELECT * FROM sazgar_processes();\n\
+    -- Returns: pid, name, cpu_usage, memory_usage, status, user, command\n\n-- Top\
+    \ 10 memory-hungry processes\nSELECT pid, name, \n       ROUND(memory_usage, 2)\
+    \ || ' MB' as memory,\n       ROUND(cpu_usage, 2) || '%' as cpu\nFROM sazgar_processes()\n\
+    ORDER BY memory_usage DESC\nLIMIT 10;\n\n-- Find specific process\nSELECT * FROM\
+    \ sazgar_processes()\nWHERE name LIKE '%postgres%' OR name LIKE '%duckdb%';\n\n\
+    -- \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\n-- 7. NETWORK PORTS (Linux/macOS)\n-- \u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n\n--\
+    \ All open ports\nSELECT * FROM sazgar_ports();\n-- Returns: protocol, local_addr,\
+    \ local_port, remote_addr, remote_port, state, pid, process_name\n\n-- Find what's\
+    \ listening on common ports\nSELECT protocol, local_port, process_name, state\n\
+    FROM sazgar_ports()\nWHERE local_port IN (80, 443, 5432, 3306, 8080, 22)\nORDER\
+    \ BY local_port;\n\n-- Filter by port range\nSELECT * FROM sazgar_ports(filter\
+    \ := '8000-9000');\n\n-- \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\n-- 8. DOCKER MONITORING\n-- \u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\n\n-- Docker container status\nSELECT * FROM sazgar_docker();\n--\
+    \ Returns: container_id, name, image, status, state, ports, created, command\n\
+    \n-- Running containers only\nSELECT name, image, status, ports\nFROM sazgar_docker()\n\
+    WHERE state = 'running';\n\n-- \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n-- 9. SYSTEM SERVICES\n-- \u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\n\n-- List system services (systemd on Linux, launchctl on macOS)\n\
+    SELECT * FROM sazgar_services();\n-- Returns: name, status, pid, description\n\
+    \n-- Find database services\nSELECT name, status, pid\nFROM sazgar_services()\n\
+    WHERE name LIKE '%postgres%' OR name LIKE '%mysql%' OR name LIKE '%mongo%';\n\n\
+    -- \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\n-- 10. ADDITIONAL MONITORING FUNCTIONS\n-- \u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \n\n-- Logged-in users\nSELECT * FROM sazgar_users();\n-- Returns: username, terminal,\
+    \ host, login_time\n\n-- Environment variables\nSELECT * FROM sazgar_environment();\n\
+    -- Returns: name, value\n\n-- Hardware temperatures (where available)\nSELECT\
+    \ * FROM sazgar_components();\n-- Returns: label, temperature, max_temp, critical_temp\n\
+    \n-- NVIDIA GPU monitoring (requires nvidia feature)\nSELECT * FROM sazgar_gpu();\n\
+    -- Returns: gpu_id, name, memory_total, memory_used, temperature, utilization\n\
+    \n-- \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\n-- 11. SQL QUERY ROUTING (v1.0.0 Feature)\n-- \u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\n\n-- Step 1: Register a PostgreSQL-compatible database target\nSELECT\
+    \ * FROM sazgar_target(\n    'analytics',                    -- target name\n\
+    \    'host=db.example.com port=5432 user=analyst password=*** dbname=warehouse\
+    \ sslmode=require'\n);\n-- Returns: name, dialect, provider, status\n\n-- Step\
+    \ 2: Execute query on remote database, get results in DuckDB!\nSELECT * FROM sazgar_route(\n\
+    \    '',                             -- local_query (ignored when remote_query\
+    \ provided)\n    'analytics',                    -- target name\n    'TRUE', \
+    \                        -- condition (always route)\n    'SELECT customer_id,\
+    \ order_date, amount FROM orders LIMIT 1000'\n);\n-- Returns: Dynamic columns\
+    \ matching your query!\n\n-- Conditional routing based on system resources\nSELECT\
+    \ * FROM sazgar_route(\n    'SELECT * FROM local_cache',    -- Use this if condition\
+    \ is FALSE\n    'analytics',\n    '(SELECT usage_percent FROM sazgar_memory())\
+    \ > 80',  -- Route if memory > 80%\n    'SELECT * FROM remote_data'\n);\n\n--\
+    \ Join local DuckDB data with remote query results\nWITH remote_orders AS (\n\
+    \    SELECT * FROM sazgar_route('', 'analytics', 'TRUE', \n        'SELECT customer_id,\
+    \ SUM(amount) as total FROM orders GROUP BY customer_id')\n)\nSELECT c.*, r.total\n\
+    FROM local_customers c\nJOIN remote_orders r ON c.id = r.customer_id;\n\n-- \u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\n-- 12. DEVOPS DASHBOARD EXAMPLE\n-- \u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\
+    \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n\n-- Create\
+    \ a comprehensive system health view\nSELECT \n    (SELECT hostname FROM sazgar_system())\
+    \ as host,\n    (SELECT ROUND(usage_percent, 1) FROM sazgar_memory(unit := 'GB'))\
+    \ as mem_pct,\n    (SELECT ROUND(AVG(usage_percent), 1) FROM sazgar_cpu()) as\
+    \ cpu_pct,\n    (SELECT load_1min FROM sazgar_load()) as load_1m,\n    (SELECT\
+    \ COUNT(*) FROM sazgar_processes()) as processes,\n    (SELECT COUNT(*) FROM sazgar_docker()\
+    \ WHERE state = 'running') as containers;\n"
+  extended_description: "# \U0001F6E0\uFE0F Sazgar - System Monitoring & SQL Routing\
+    \ for DuckDB\n\n**Sazgar** (Persian: \u0633\u0627\u0632\u06AF\u0627\u0631, meaning\
+    \ \"compatible/harmonious\") is a comprehensive DuckDB extension that combines\
+    \ powerful real-time system monitoring with intelligent SQL query routing capabilities.\
+    \ Built in pure Rust for maximum performance and reliability.\n\n---\n\n## \U0001F4CA\
+    \ System Monitoring Functions\n\n### Core System Information\n| Function | Description\
+    \ | Key Columns |\n|----------|-------------|-------------|\n| `sazgar_system()`\
+    \ | OS and host info | os_name, hostname, kernel_version |\n| `sazgar_uptime()`\
+    \ | System uptime | uptime_seconds, boot_time |\n| `sazgar_load()` | Load averages\
+    \ | load_1min, load_5min, load_15min |\n| `sazgar_users()` | Logged-in users |\
+    \ username, terminal, login_time |\n| `sazgar_environment()` | Environment vars\
+    \ | name, value |\n\n### Resource Monitoring\n| Function | Description | Key Columns\
+    \ |\n|----------|-------------|-------------|\n| `sazgar_memory(unit)` | RAM usage\
+    \ | total, used, available, usage_percent |\n| `sazgar_cpu()` | Per-core CPU stats\
+    \ | core_id, frequency, usage_percent |\n| `sazgar_disks(unit)` | Disk space |\
+    \ mount_point, total, used, available |\n| `sazgar_components()` | Hardware temps\
+    \ | label, temperature, max_temp |\n| `sazgar_gpu()` | NVIDIA GPU info | memory,\
+    \ temperature, utilization |\n\n### Process & Network Monitoring\n| Function |\
+    \ Description | Key Columns |\n|----------|-------------|-------------|\n| `sazgar_processes()`\
+    \ | Running processes | pid, name, cpu_usage, memory_usage |\n| `sazgar_network()`\
+    \ | Network interfaces | interface, rx_bytes, tx_bytes |\n| `sazgar_ports(filter)`\
+    \ | Open ports | protocol, port, state, process |\n| `sazgar_docker()` | Docker\
+    \ containers | name, image, status, ports |\n| `sazgar_services()` | System services\
+    \ | name, status, pid |\n\n### Unit Conversion\nAll size-related functions support:\
+    \ `bytes`, `KB`, `KiB`, `MB`, `MiB`, `GB`, `GiB`, `TB`, `TiB`\n\n---\n\n## \U0001F500\
+    \ SQL Query Routing (v1.0.0)\n\nExecute queries on remote PostgreSQL-compatible\
+    \ databases and retrieve results directly into DuckDB with **dynamic schema discovery**.\n\
+    \n### Key Features\n- \u2705 **Returns actual data** - Query results come back\
+    \ to DuckDB\n- \u2705 **Dynamic schema** - Columns are discovered from your query\n\
+    - \u2705 **PostgreSQL wire protocol** - Connection layer for all backends\n- \u2705\
+    \ **SQLGlot dialect translation** - Auto-converts DuckDB SQL to MySQL, ClickHouse,\
+    \ Snowflake, BigQuery syntax\n- \u2705 **Supported backends** - PostgreSQL, Tavana,\
+    \ MySQL*, ClickHouse*, Snowflake*, BigQuery*\n- \u2705 **Conditional routing**\
+    \ - Route based on system resources\n- \u2705 **JOIN support** - Combine remote\
+    \ data with local DuckDB tables\n- \u2705 **Built-in TLS** - Secure connections\
+    \ enabled by default (rustls, no OpenSSL needed)\n\n> *Non-PostgreSQL backends\
+    \ require PostgreSQL-compatible interface (e.g., protocol adapter)\n\n### Routing\
+    \ Functions\n| Function | Description |\n|----------|-------------|\n| `sazgar_target(name,\
+    \ conn_string)` | Register a named database target |\n| `sazgar_route(local_q,\
+    \ target, condition, remote_q)` | Execute and return remote query data |\n| `sazgar_targets()`\
+    \ | List all registered targets |\n\n### Connection String Format\n```\nhost=hostname\
+    \ port=5432 user=username password=*** dbname=database sslmode=require\n```\n\n\
+    ---\n\n## \U0001F3AF Use Cases\n\n1. **DevOps Dashboards** - Query system metrics\
+    \ with familiar SQL\n2. **Resource Monitoring** - Real-time CPU, memory, disk\
+    \ tracking\n3. **Process Management** - Find resource-hungry processes\n4. **Network\
+    \ Troubleshooting** - Analyze ports, connections, traffic\n5. **Container Monitoring**\
+    \ - Track Docker container status\n6. **Federated Queries** - Pull data from remote\
+    \ databases\n7. **Hybrid Analytics** - JOIN local and remote data sources\n8.\
+    \ **Conditional Execution** - Route queries based on system load\n9. **Cost Optimization**\
+    \ - Route to different backends based on query size\n\n---\n\n## \U0001F527 Platform\
+    \ Support\n\n| Platform | Status | Notes |\n|----------|--------|-------|\n| Linux\
+    \ x64 | \u2705 Full | All features including ports |\n| Linux ARM64 | \u2705 Full\
+    \ | All features including ports |\n| macOS x64 | \u2705 Full | All features including\
+    \ ports |\n| macOS ARM64 | \u2705 Full | All features including ports |\n| Windows\
+    \ x64 | \u2705 Partial | Ports function not available |\n\n---\n\n## \U0001F4DA\
+    \ Resources\n\n- **GitHub Repository:** https://github.com/Angelerator/Sazgar\n\
+    - **License:** MIT\n- **Language:** Pure Rust \U0001F980\n- **DuckDB Version:**\
+    \ 1.5.0+\n\n---\n\n## \U0001F4A1 Quick Example\n\n```sql\n-- Monitor system health\n\
+    SELECT \n    (SELECT hostname FROM sazgar_system()) as server,\n    (SELECT ROUND(usage_percent,\
+    \ 1) FROM sazgar_memory()) as mem_pct,\n    (SELECT ROUND(AVG(usage_percent),\
+    \ 1) FROM sazgar_cpu()) as cpu_pct,\n    (SELECT COUNT(*) FROM sazgar_docker()\
+    \ WHERE state='running') as containers;\n\n-- Federated query\nSELECT * FROM sazgar_target('warehouse',\
+    \ 'host=db.prod.com port=5432 ...');\nSELECT * FROM sazgar_route('', 'warehouse',\
+    \ 'TRUE', 'SELECT * FROM sales');\n```\n"

@@ -1,0 +1,38 @@
+extension:
+  name: quackfix
+  description: Allows the consumption FIX protocol format logs, from all supported
+    duckdb filesystems.
+  version: 0.0.3
+  language: c++
+  build: cmake
+  license: MIT
+  maintainers:
+  - hyehudai
+repo:
+  github: hyehudai/quackfix
+  ref: faadfea6a8f4760c967f44902974cceabaa1bf8e
+docs:
+  hello_world: "-- Basic FIX parsing - from http location\nD SELECT OrderID, ExecID,\
+    \ LastQty FROM read_fix('https://raw.githubusercontent.com/hyehudai/QuackFIX/refs/heads/main/testdata/sample.fix')\
+    \ WHERE MsgType = '8' ORDER BY OrderID;\n   \u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n  \u2502\
+    \ OrderID \u2502  ExecID  \u2502 LastQty \u2502\n  \u2502 varchar \u2502 varchar\
+    \  \u2502 double  \u2502\n  \u251C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n  \u2502 EXEC001\
+    \ \u2502 TRADE001 \u2502   100.0 \u2502\n  \u2502 EXEC002 \u2502 TRADE002 \u2502\
+    \    50.0 \u2502\n  \u2502 EXEC003 \u2502 TRADE003 \u2502   200.0 \u2502\n  \u2514\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2518\n"
+  extended_description: "\nQuackFIX is a DuckDB extension that lets you query FIX\
+    \ logs directly with SQL. It parses raw FIX messages into a structured, queryable\
+    \ format, making FIX log analysis faster and more intuitive for trading, compliance,\
+    \ and financial operations.\n\n\n**Native DuckDB Integration** \nQuery FIX logs\
+    \ directly in DuckDB\u2014no pre-parsing, no pandas round-trips.\nNo Glue code!\n\
+    \n**Dialect-Aware** \nSupports custom FIX dialects via XML dictionaries, so venue-specific\
+    \ tags just work.\n\n**Fast and Scalable** \nBuilt on DuckDB\u2019s in-memory,\
+    \ columnar engine to efficiently handle large log volumes.\n\n**Support multiple\
+    \ FIX dialects**\n\n> For examples and instructions check out [User Guide](https://github.com/hyehudai/QuackFIX/blob/main/USERGUIDE.md)\
+    \ \n"

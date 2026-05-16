@@ -1,0 +1,83 @@
+extension:
+  name: ducktinycc
+  description: "DuckDB C extension for in-process JIT compiled C UDFs via TinyCC \u2014\
+    \ self-contained, no external runtime required"
+  version: 0.2.0
+  language: C
+  build: cmake
+  license: MIT
+  requires_toolchains: python3
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64;windows_arm64
+  maintainers:
+  - sounkou-bioinfo
+repo:
+  github: sounkou-bioinfo/DuckTinyCC
+  ref: 5ab6fa819a3e250d0c62a2d7ac19788ae13b6ce7
+docs:
+  hello_world: "-- Load the extension\nLOAD ducktinycc;\n\n-- Compile and register\
+    \ a simple C function as a SQL UDF\nSELECT ok, mode, code\nFROM tcc_module(\n\
+    \  mode := 'quick_compile',\n  source := 'const char *hello_from_c(void){ return\
+    \ \"hello from C\"; }',\n  symbol := 'hello_from_c',\n  sql_name := 'hello_from_c',\n\
+    \  return_type := 'varchar',\n  arg_types := []\n);\n\n-- Call the registered\
+    \ C UDF \nSELECT hello_from_c() AS msg;\n"
+  extended_description: "DuckTinyCC compiles and registers C scalar UDFs from SQL\
+    \ using TinyCC (libtcc), in-process.\n\nMain SQL entrypoints:\n\n| Function |\
+    \ Purpose |\n|---|---|\n| tcc_module(...) | Session config, build staging, codegen,\
+    \ compile, registration |\n| tcc_system_paths(...) | Show effective TinyCC include/library\
+    \ search paths |\n| tcc_library_probe(...) | Probe candidate library files and\
+    \ normalized link names |\n\nCompile/codegen and C-type helper modes (via tcc_module):\n\
+    \n| Mode | Purpose |\n|---|---|\n| quick_compile | One-shot source + codegen +\
+    \ compile + register |\n| compile | Compile/register from staged session sources/bindings\
+    \ |\n| codegen_preview | Emit generated wrapper C source without compile/load\
+    \ |\n| c_struct | Generate + register struct helper UDFs from field specs |\n\
+    | c_union | Generate + register union helper UDFs from field specs |\n| c_bitfield\
+    \ | Generate + register bitfield struct helper UDFs |\n| c_enum | Generate + register\
+    \ enum constant helper UDFs |\n\nGenerated helper naming:\n\n| Helper mode | Generated\
+    \ SQL function pattern |\n|---|---|\n| c_struct | struct_<name>_new/free/get_*/set_*/off_*/addr/sizeof/alignof\
+    \ |\n| c_union | union_<name>_new/free/get_*/set_*/off_*/addr/sizeof/alignof |\n\
+    | c_bitfield | struct_<name>_get_*/set_*/sizeof/alignof |\n| c_enum | enum_<name>_<CONST>,\
+    \ enum_<name>_sizeof |\n\nType signature support (return_type / arg_types):\n\n\
+    | Token family | Examples |\n|---|---|\n| Scalars | void (return only), bool,\
+    \ i8/u8/i16/u16/i32/u32/i64/u64, f32/f64, ptr, varchar, blob, uuid, date, time,\
+    \ timestamp, interval, decimal |\n| Composites (recursive) | list<type>, type[],\
+    \ type[N], struct<name:type;...>, map<key_type;value_type>, union<name:type;...>\
+    \ |\n\nSQL <-> C bridge correspondences:\n\n| SQL token family | C bridge type\
+    \ |\n|---|---|\n| varchar | const char * |\n| blob | ducktinycc_blob_t |\n| list<...>,\
+    \ type[] | ducktinycc_list_t |\n| type[N] | ducktinycc_array_t |\n| struct<...>\
+    \ | ducktinycc_struct_t |\n| map<...> | ducktinycc_map_t |\n| union<...> | ducktinycc_union_t\
+    \ |\n| decimal | ducktinycc_decimal_t (DuckDB DECIMAL(18,3) at registration) |\n\
+    \nFunction result schemas:\n\n| Function | Result columns |\n|---|---|\n| tcc_module(...)\
+    \ | ok BOOLEAN, mode VARCHAR, phase VARCHAR, code VARCHAR, message VARCHAR, detail\
+    \ VARCHAR, sql_name VARCHAR, symbol VARCHAR, artifact_id VARCHAR, connection_scope\
+    \ VARCHAR |\n| tcc_system_paths(...) | kind VARCHAR, key VARCHAR, value VARCHAR,\
+    \ exists BOOLEAN, detail VARCHAR |\n| tcc_library_probe(...) | kind VARCHAR, key\
+    \ VARCHAR, value VARCHAR, exists BOOLEAN, detail VARCHAR |\n\nCodegen/runtime\
+    \ model:\n  - wrappers are generated from return_type/arg_types and registered\
+    \ through ducktinycc_register_signature(...)\n  - wrapper_mode supports row and\
+    \ batch execution paths\n  - code is compiled + relocated in-memory (no separate\
+    \ shared-library artifact)\n  - registering the same sql_name twice in a session\
+    \ returns false/E_INIT_FAILED (consistent across platforms); use tcc_new_state\
+    \ to reset before re-registering\n\nScalar UDF stability:\n  - compile, quick_compile,\
+    \ and codegen_preview accept stability := 'consistent' | 'volatile'\n  - tinycc_bind\
+    \ can stage stability for a later compile; an explicit compile/quick_compile/codegen_preview\
+    \ stability value overrides the staged value\n  - use volatile for RNGs, counters,\
+    \ clocks, allocation, I/O, callbacks, or reads from mutable external memory so\
+    \ DuckDB re-runs the function and avoids constant-folding side effects\n  - generated\
+    \ helper modes set explicit helper stability internally: pure metadata/enum helpers\
+    \ are consistent, while allocation/free/setter/mutable-memory getter helpers are\
+    \ volatile\n\nEmbedded runtime (self-contained):\n  - libtcc1.a and all TinyCC\
+    \ include headers (stdarg.h, stddef.h, tccdefs.h, etc.) are baked into the extension\
+    \ binary at build time\n  - on the first compile or quick_compile call, tcc_ensure_embedded_runtime()\
+    \ extracts them to a content-hash-keyed temp directory (e.g. /tmp/ducktinycc_<hash>/)\n\
+    \  - subsequent calls in the same process reuse that directory without re-extracting\n\
+    \  - no separate TinyCC installation or runtime path configuration is needed after\
+    \ deployment\n  - tcc_system_paths() shows the active runtime path and whether\
+    \ it resolved from the embedded extraction\n\nProject details and examples: https://github.com/sounkou-bioinfo/DuckTinyCC\n\
+    \nCommunity package excludes WASM targets.\n\nAdditional Notes:\nGenerated and\
+    \ helper functions are SQL scalar UDFs; only tcc_module(...), tcc_system_paths(...),\
+    \ and tcc_library_probe(...) are table functions. \nFor library linking, we can\
+    \ pass short names (m, z, c), explicit filenames (libfoo.so, foo.dll, .a, .lib),\
+    \ or path-like values. \nBecause DuckTinyCC uses -nostdlib by default, use library\
+    \ := 'c' when generated code needs libc symbols that are not otherwise injected.\
+    \ \nPointer helpers are low-level interop tools; for most workflows, handle-based\
+    \ access is safer than raw tcc_dataptr\n"

@@ -1,40 +1,24 @@
-# Smoke-test descriptor for the Haybarn community-extensions pipeline.
-# Builds the official DuckDB extension-template — a hello-world extension
-# whose only purpose is to verify the build → sign → upload → install
-# round trip.
-#
-# Naming note: the upstream extension-template at SHA 5df4b94 renamed itself
-# from "quack" to "waddle". The CMakeLists.txt produces waddle.duckdb_extension
-# and the test target is test/sql/waddle.test — `EXTENSION_NAME=...` passed by
-# the reusable workflow doesn't override the CMake-side name. So our descriptor
-# uses `name: waddle` to match. (Run 25963202846 caught this with an
-# upload-artifact error: built `waddle.duckdb_extension`, tried to upload
-# `quack.duckdb_extension`.)
-#
-# Not synced from upstream (upstream's own extensions/ has no entry for either
-# name). sync_from_upstream.py treats this as "haybarn_only" and leaves it
-# alone unless upstream adds back its own descriptor.
-
 extension:
   name: waddle
-  description: Hello-world extension used to smoke-test the Haybarn community-extensions pipeline
-  version: 0.0.1
+  description: Provides a hello world example demo
+  version: 0.0.2
   language: C++
   build: cmake
   license: MIT
   maintainers:
-    - rustyconover
-
+  - hannes
+  requires_toolchains: rust
+  vcpkg_commit: ce613c41372b23b1f51333815feb3edd87ef8a8b
+  custom_toolchain_script: true
+  opt_in_platforms: windows_arm64;
 repo:
-  # The old c7d9ef3 ref (from upstream's UPDATING.md example) is too stale —
-  # uses the duckdb::ExtensionUtil API that v1.5.2 removed (engine PR #17772).
-  # Bumped to current main, which targets the v1.5 API.
   github: duckdb/extension-template
   ref: 5df4b9401665d23ec5f9dd08f248df08c9075232
-
 docs:
-  hello_world: |
-    SELECT waddle('Haybarn');
-  extended_description: |
-    Trivial extension that ships a single SQL scalar function returning
-    "Waddle <name>". Used here purely to exercise the full pipeline.
+  hello_world: 'SELECT waddle(''DuckDB!'');
+
+    '
+  extended_description: 'The waddle extension is based on DuckDB''s [Extension Template](https://github.com/duckdb/extension-template/),
+    and it''s a great starting point to get started building more advanced extensions.
+
+    '

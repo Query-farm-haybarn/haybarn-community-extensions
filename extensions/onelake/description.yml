@@ -1,0 +1,55 @@
+extension:
+  name: onelake
+  description: This extension allows you to connect DuckDB to Microsoft Fabric OneLake
+    workspaces and lakehouses, enabling you to query data stored in OneLake directly
+    from DuckDB.
+  version: 1.1.0
+  language: C++
+  build: cmake
+  license: MIT
+  maintainers:
+  - achrafcei
+  excluded_platforms: windows_amd64_mingw
+  requires_toolchains: rust
+repo:
+  github: datumnova/duckdb_onelake
+  ref: 59c131bc6e81f2edc5d08f71a4cc521f1c51d39e
+  canonical_name: onelake
+docs:
+  hello_world: "-- First, create a secret to authenticate with OneLake.\n-- You can\
+    \ use either a service principal or the credential chain (e.g., Azure CLI).\n\
+    -- Uncomment the desired method and provide the necessary credentials.\nset azure_transport_option_type\
+    \ = 'curl';\nCREATE SECRET  (\n    TYPE azure,\n    PROVIDER service_principal,\n\
+    \    TENANT_ID '<your_tenant_id>',\n    CLIENT_ID '<your_client_id>',\n    CLIENT_SECRET\
+    \ '<your_client_secret>'\n);\n-- CREATE SECRET  (\n--     TYPE azure,\n--    \
+    \ PROVIDER credential_chain,\n--     CHAIN 'cli'\n-- );\n\nCREATE SECRET onelake\
+    \ (\n    TYPE ONELAKE,\n    TENANT_ID '<your_tenant_id>',\n    CLIENT_ID '<your_client_id>',\n\
+    \    CLIENT_SECRET '<your_client_secret>'\n);\n\n-- CREATE SECRET  onelake(\n\
+    --     TYPE ONELAKE,\n--     PROVIDER credential_chain,\n--     CHAIN 'cli'\n\
+    -- );\n\n-- Optional: use preissued tokens stored in env variables (defaults shown)\n\
+    --SET onelake_env_fabric_token_variable = 'FABRIC_API_TOKEN';\n--SET onelake_env_storage_token_variable\
+    \ = 'AZURE_STORAGE_TOKEN';\n--CREATE SECRET onelake_env (\n--    TYPE ONELAKE,\n\
+    --    PROVIDER credential_chain,\n--    CHAIN 'env'\n--);\n\n-- Attach to your\
+    \ OneLake workspace and lakehouse\nATTACH '<your_workspace_name>/<your_lakehouse_name>.Lakehouse'\n\
+    \    AS <your_connection_name>\n    (TYPE ONELAKE);\n\nUSE <your_connection_name>.<your_schema_name>;\
+    \ -- e.g., dbo\n\nSHOW TABLES;\n\n-- Query tables (Delta or Iceberg)\nSELECT *\
+    \ FROM <your_table_name> LIMIT 10;\n\n-- Create a new Delta table\nCREATE TABLE\
+    \ new_table (\n    id INT,\n    name VARCHAR\n);\n\n-- Create a new Delta table\
+    \ with partitioning\nCREATE TABLE new_table_partitioned (\n    id INT,\n    name\
+    \ VARCHAR,\n    region VARCHAR\n) PARTITION BY (region);\n\n-- Write to Delta\
+    \ tables (INSERT)\nINSERT INTO new_table VALUES (1, 'New Data');\n\n-- SET write\
+    \ mode to overwrite (default is append)\nSET onelake_delta_write_mode = 'overwrite';\n\
+    INSERT INTO new_table VALUES (2, 'Overwritten Data');\n\n-- Perform destructive\
+    \ operations (UPDATE, DELETE, DROP)\n-- These require explicit opt-in per session\n\
+    SET onelake_allow_destructive_operations = true;\n\nUPDATE new_table \nSET name\
+    \ = 'Updated Value' \nWHERE id = 1;\n\nDELETE FROM new_table WHERE id = 1;\n\n\
+    DROP TABLE new_table;\n"
+  extended_description: "This extension enables DuckDB to connect to Microsoft Fabric\
+    \ OneLake workspaces and lakehouses, allowing users to query and modify data stored\
+    \ in OneLake directly from DuckDB. \nIt supports authentication via service principals,\
+    \ credential chains (e.g., Azure CLI), or environment tokens and provides seamless\
+    \ integration with OneLake's data storage capabilities.\n\nKey Features:\n- Read\
+    \ support for both Delta and Iceberg tables.\n- Full write support for Delta tables\
+    \ including CREATE TABLE, INSERT, UPDATE, DELETE, and DROP.\n- Configurable write\
+    \ modes (append, overwrite) and schema evolution.\n- ALTER TABLE support is planned\
+    \ for future releases.\n"

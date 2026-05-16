@@ -1,0 +1,212 @@
+extension:
+  name: dns
+  description: The DNS Extension enables DNS lookups and reverse DNS lookups from
+    within DuckDB
+  version: 0.4.2
+  language: Rust
+  build: cargo
+  license: MIT
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;linux_amd64_musl;
+  requires_toolchains: rust;python3
+  maintainers:
+  - tobilg
+repo:
+  github: tobilg/duckdb-dns
+  ref: 5103550383cb70ca6279bbcfe68cb6e3c15a28c6
+docs:
+  hello_world: "-- Performs a forward DNS lookup to resolve a hostname to its first\
+    \ IPv4 address.\nD SELECT dns_lookup('google.com') as ip;\n\u250C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2510\n\u2502       ip        \u2502\n\u2502     varchar     \u2502\n\u251C\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2524\n\u2502 142.251.209.142 \u2502\n\u2514\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2518\n\n-- Performs a DNS lookup to resolve all TXT records for\
+    \ a hostname.\nD SELECT unnest(dns_lookup_all('google.com', 'TXT')) as txt_record\
+    \ order by txt_record ASC LIMIT 5;\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502\
+    \                                          txt_record                        \
+    \                   \u2502\n\u2502                                           \
+    \ varchar                                            \u2502\n\u251C\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2524\n\u2502 MS=E4A68B9AB2BB9670BCE15412F62916164C0B20BB       \
+    \                                            \u2502\n\u2502 apple-domain-verification=30afIBcvSuDV2PLX\
+    \                                                    \u2502\n\u2502 cisco-ci-domain-verification=47c38bc8c4b74b7233e9053220c1bbe76bcc1cd33c7acf7acd36cd6a5332004b\
+    \ \u2502\n\u2502 docusign=05958488-4752-4ef2-95eb-aa7ba8a3bd0e               \
+    \                                  \u2502\n\u2502 docusign=1b0a6754-49b1-4db5-8540-d2c12664b289\
+    \                                                 \u2502\n\u2514\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2518\n\n-- Performs a reverse DNS lookup to resolve an IP address to its\
+    \ hostname.\nD SELECT reverse_dns_lookup('8.8.8.8') as hostname;\n\u250C\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502\
+    \  hostname  \u2502\n\u2502  varchar   \u2502\n\u251C\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 dns.google \u2502\n\u2514\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\
+    \n\n-- Returns all TXT records for a hostname as a table.\nD SELECT * FROM corey('lastweekinaws.com')\
+    \ order by txt_record ASC;\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502                           \
+    \       txt_record                                   \u2502\n\u2502          \
+    \                          varchar                                    \u2502\n\
+    \u251C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2524\n\u2502 google-site-verification=2cfGboK6oBt4GlzI62WGmKWI_SjoDEKRSaAgmZsQZlo\
+    \          \u2502\n\u2502 google-site-verification=FRrs1UZEfmPke4kYWmYH0wcOPwcMLM0pphvpyhGCa2w\
+    \          \u2502\n\u2502 google-site-verification=FuHv5niDbZdqLlXOlvyqokvFJDso9WtDAE3-zHJgz40\
+    \          \u2502\n\u2502 google-site-verification=VE5d97aE3ZCw4GzBHIKKeUGKaCYs2evsGq3QCM0t87I\
+    \          \u2502\n\u2502 v=spf1 include:_spf.google.com include:sendgrid.net\
+    \ include:spf.revue.co ~all \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n\n-- Sets the DNS resolver\
+    \ to use for lookups (e.g. 'google' or 'cloudflare').\n-- Hint: The C-API doesn't\
+    \ currently support using SET commands. The usage of a SELECT is a workaround.\n\
+    D SELECT set_dns_config('google');\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502       set_dns_config('google')\
+    \        \u2502\n\u2502                varchar                \u2502\n\u251C\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\
+    \n\u2502 DNS configuration updated to 'google' \u2502\n\u2514\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n\n-- Set concurrency\
+    \ limit to 250 (default: 50)\nD SELECT set_dns_concurrency_limit(250);\n\u250C\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2510\n\u2502    set_dns_concurrency_limit(250)     \u2502\n\u2502          \
+    \      varchar                \u2502\n\u251C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 DNS concurrency limit\
+    \ updated to 250  \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2518\n\n-- Set DNS cache size to 8192 (default:\
+    \ 1000)\nD SELECT set_dns_cache_size(8192);\n\u250C\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2510\n\u2502    set_dns_cache_size(8192)    \u2502\n\u2502           \
+    \ varchar             \u2502\n\u251C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\
+    \n\u2502 DNS cache size updated to 8192 \u2502\n\u2514\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2518\n"
+  extended_description: "This community extension implements DNS (reverse) lookup\
+    \ functions for DuckDB.\n\n## Functions\n\n### `dns_lookup(hostname, [record_type])`\n\
+    \nPerforms a forward DNS lookup to resolve a hostname to its first IPv4 address,\
+    \ or to the first record of a specified DNS record type.\n\n**Parameters:**\n\
+    - `hostname` (VARCHAR): The hostname to resolve\n- `record_type` (VARCHAR, optional):\
+    \ The DNS record type to query. Supported types: `A`, `AAAA`, `CNAME`, `MX`, `NS`,\
+    \ `PTR`, `SOA`, `SRV`, `TXT`, `CAA`\n\n**Returns:** VARCHAR - The first resolved\
+    \ record (IPv4 address if no record_type specified, or first record of specified\
+    \ type), or NULL on error\n\n**Examples:**\n```sql\n-- Get first IPv4 address\
+    \ (default behavior)\nSELECT dns_lookup('google.com');\n-- Returns: 142.250.181.206\
+    \ (or similar)\n\n-- Get TXT record\nSELECT dns_lookup('_dmarc.google.com', 'TXT');\n\
+    -- Returns: v=DMARC1; p=reject; rua=mailto:mailauth-reports@google.com\n\n-- Get\
+    \ MX record\nSELECT dns_lookup('google.com', 'MX');\n-- Returns: 10 smtp.google.com.\n\
+    \n-- Get CNAME record\nSELECT dns_lookup('www.github.com', 'CNAME');\n-- Returns:\
+    \ github.com.\n```\n\n### `dns_lookup_all(hostname, [record_type])`\n\nPerforms\
+    \ a forward DNS lookup to resolve a hostname to all its IPv4 addresses, or to\
+    \ all records of a specified DNS record type.\n\n**Parameters:**\n- `hostname`\
+    \ (VARCHAR): The hostname to resolve\n- `record_type` (VARCHAR, optional): The\
+    \ DNS record type to query. Supported types: `A`, `AAAA`, `CNAME`, `MX`, `NS`,\
+    \ `PTR`, `SOA`, `SRV`, `TXT`, `CAA`\n\n**Returns:** VARCHAR[] - An array of all\
+    \ resolved records (all IPv4 addresses if no record_type specified, or all records\
+    \ of specified type), or NULL on error\n\n**Examples:**\n```sql\n-- Get all IPv4\
+    \ addresses (default behavior)\nSELECT dns_lookup_all('cloudflare.com');\n-- Returns:\
+    \ [104.16.132.229, 104.16.133.229] (or similar)\n\n-- Get all MX records\nSELECT\
+    \ dns_lookup_all('google.com', 'MX');\n-- Returns: [10 smtp.google.com.]\n\n--\
+    \ Get all TXT records\nSELECT dns_lookup_all('google.com', 'TXT');\n-- Returns:\
+    \ [v=spf1 include:_spf.google.com ~all, google-site-verification=..., ...]\n\n\
+    -- Unnest to get individual records\nSELECT unnest(dns_lookup_all('google.com',\
+    \ 'TXT')) as txt_record;\n```\n\n### `reverse_dns_lookup(ip_address)`\n\nPerforms\
+    \ a reverse DNS lookup to resolve an IPv4 address to a hostname.\n\n**Parameters:**\n\
+    - `ip_address` (VARCHAR): The IPv4 address to resolve (must be valid IPv4 format)\n\
+    \n**Returns:** VARCHAR - The resolved hostname, or NULL on error\n\n**Example:**\n\
+    ```sql\nSELECT reverse_dns_lookup('8.8.8.8');\n-- Returns: dns.google\n```\n\n\
+    ### `set_dns_config(preset)`\n\nUpdates the DNS resolver configuration for all\
+    \ subsequent DNS queries.\n\n**Parameters:**\n- `preset` (VARCHAR): The DNS resolver\
+    \ preset to use. Supported presets:\n- `'default'`: System default DNS servers\n\
+    - `'google'`: Google Public DNS (8.8.8.8, 8.8.4.4)\n- `'cloudflare'`: Cloudflare\
+    \ DNS (1.1.1.1, 1.0.0.1)\n- `'quad9'`: Quad9 DNS (9.9.9.9, 149.112.112.112)\n\n\
+    **Returns:** VARCHAR - A success or error message\n\n**Examples:**\n```sql\n--\
+    \ Switch to Google Public DNS\nSELECT set_dns_config('google');\n-- Returns: DNS\
+    \ configuration updated to 'google'\n\n-- Switch to Cloudflare DNS\nSELECT set_dns_config('cloudflare');\n\
+    -- Returns: DNS configuration updated to 'cloudflare'\n\n-- All subsequent queries\
+    \ use the new configuration\nSELECT dns_lookup('example.com');\n\n-- Reset to\
+    \ system default\nSELECT set_dns_config('default');\n-- Returns: DNS configuration\
+    \ updated to 'default'\n\n-- Invalid preset returns error\nSELECT set_dns_config('invalid');\n\
+    -- Returns: Unknown preset 'invalid'. Supported: default, google, cloudflare,\
+    \ quad9\n```\n\n### `set_dns_concurrency_limit(limit)`\n\nUpdates the concurrency\
+    \ limit for DNS lookup operations to prevent TCP connection exhaustion. This controls\
+    \ the maximum number of concurrent DNS requests that can run simultaneously across\
+    \ all DNS operations.\n\n**Parameters:**\n- `limit` (BIGINT): The maximum number\
+    \ of concurrent DNS requests (must be greater than 0)\n\n**Returns:** VARCHAR\
+    \ - A success or error message\n\n**Default:** 50 concurrent requests\n\n**Examples:**\n\
+    ```sql\n-- Set concurrency limit to 500 for high-throughput scenarios\nSELECT\
+    \ set_dns_concurrency_limit(500);\n-- Returns: Concurrency limit updated to 500\n\
+    ```\n\n### `set_dns_cache_size(size)`\n\nUpdates the DNS cache size for the resolver.\
+    \ The cache stores DNS query results to improve performance by avoiding repeated\
+    \ lookups for the same queries. Each cache entry stores the results for a unique\
+    \ DNS query (hostname + record type combination).\n\n**Parameters:**\n- `size`\
+    \ (BIGINT): The maximum number of cached DNS queries (must be greater than 0)\n\
+    \n**Returns:** VARCHAR - A success or error message\n\n**Default:** 4096 cached\
+    \ queries\n\n**Examples:**\n```sql\n-- Set cache size to 8192 for larger workloads\n\
+    SELECT set_dns_cache_size(8192);\n-- Returns: DNS cache size updated to 8192\n\
+    \n-- Set cache size to 2048 for smaller memory footprint\nSELECT set_dns_cache_size(2048);\n\
+    -- Returns: DNS cache size updated to 2048\n```\n\n### `corey(hostname)` - Table\
+    \ Function\n\nQueries all TXT records for a hostname and returns them as a table\
+    \ with one row per TXT record. This is useful for advanced filtering, aggregation,\
+    \ and analysis of TXT records. \n\nFinally [Route 53 can be a real database](https://www.lastweekinaws.com/blog/route-53-amazons-premier-database/)!\n\
+    \n**Parameters:**\n- `hostname` (VARCHAR): The hostname to query for TXT records\n\
+    \n**Returns:** A table with a single column:\n- `txt_record` (VARCHAR): Each TXT\
+    \ record as a separate row\n\n**Examples:**\n```sql\n-- Get all TXT records for\
+    \ a domain\nSELECT * FROM corey('google.com');\n\n-- Filter TXT records\nSELECT\
+    \ * FROM corey('google.com')\nWHERE txt_record LIKE '%spf%';\n\n-- Count TXT records\n\
+    SELECT COUNT(*) as record_count\nFROM corey('google.com');\n\n-- Query multiple\
+    \ domains using UNION ALL\nSELECT 'google.com' as domain, * FROM corey('google.com')\n\
+    UNION ALL\nSELECT 'github.com' as domain, * FROM corey('github.com')\nUNION ALL\n\
+    SELECT 'cloudflare.com' as domain, * FROM corey('cloudflare.com');\n\n-- Find\
+    \ domains with DMARC records\nSELECT '_dmarc.google.com' as domain, * FROM corey('_dmarc.google.com')\n\
+    WHERE txt_record LIKE 'v=DMARC%'\nUNION ALL\nSELECT '_dmarc.github.com' as domain,\
+    \ * FROM corey('_dmarc.github.com')\nWHERE txt_record LIKE 'v=DMARC%';\n\n-- Alternative:\
+    \ Use dns_lookup_all for dynamic queries with columns\nSELECT\n    domain,\n \
+    \   dns_lookup_all(domain, 'TXT') as txt_records\nFROM (VALUES ('google.com'),\
+    \ ('github.com')) AS domains(domain)\nWHERE dns_lookup_all(domain, 'TXT') IS NOT\
+    \ NULL;\n```\n\n> This extension is experimental and potentially unstable. See\
+    \ README for full examples.\n"

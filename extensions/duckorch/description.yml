@@ -1,0 +1,49 @@
+extension:
+  name: duckorch
+  description: DAG orchestration with side-product lineage for DuckDB - SQL-file tasks,
+    parallel execution, Mermaid graphs, OpenLineage emission
+  version: 0.1.0
+  language: C++
+  build: cmake
+  license: MIT
+  maintainers:
+  - nkwork9999
+repo:
+  github: nkwork9999/duck-orch
+  ref: 00b8fc4ab5d8cbbd9c683359102907fff92af325
+docs:
+  hello_world: "LOAD duckorch;\n\n-- Set up state schema\nPRAGMA orch_init;\n\n--\
+    \ Register a task directly (in real use, prefer .sql files via PRAGMA orch_register('./tasks/'))\n\
+    INSERT INTO __orch__.tasks (name, sql, inputs, outputs, retries) VALUES\n  ('clean_users',\n\
+    \   'CREATE OR REPLACE TABLE clean_users AS SELECT id FROM raw_users WHERE deleted_at\
+    \ IS NULL',\n   ['raw_users']::VARCHAR[],\n   ['clean_users']::VARCHAR[],\n  \
+    \ 0);\n\n-- Run the DAG (topological order, parallel within each layer)\nSET orch_max_parallel\
+    \ = 4;\nPRAGMA orch_run;\n\n-- Inspect run history\nSELECT task_name, status,\
+    \ retry_count FROM __orch__.runs ORDER BY started_at;\n\n-- Get a Mermaid lineage\
+    \ graph\nPRAGMA orch_visualize('lineage');\n\n-- Pure helpers (auto-extract I/O\
+    \ from a SQL string)\nSELECT orch_extract_io('INSERT INTO out SELECT * FROM a\
+    \ JOIN b ON a.id = b.id');\n-- {\"inputs\":[\"a\",\"b\"],\"outputs\":[\"out\"\
+    ]}\n"
+  extended_description: "duckorch is a DuckDB extension for **DAG-based task orchestration**,\
+    \ with\ntable-level lineage emerging as a side product of each task's declared\n\
+    inputs and outputs.\n\n**Task definition (SQLMesh-style headers in plain .sql\
+    \ files):**\n\n    -- @task name=user_stats\n    -- @outputs analytics.user_stats\n\
+    \    -- @retries 2\n    -- @incremental_by updated_at\n    -- @test \"SELECT COUNT(*)\
+    \ FROM analytics.user_stats WHERE users < 0\" expect 0\n\n    CREATE OR REPLACE\
+    \ TABLE analytics.user_stats AS\n    SELECT country, COUNT(*) AS users\n    FROM\
+    \ analytics.clean_users\n    GROUP BY country;\n\nInputs are auto-extracted from\
+    \ the SQL via `sqlparser-rs`, so writing\n`@inputs` is optional in most cases.\n\
+    \n**Capabilities:**\n- Directory-loaded task files (`PRAGMA orch_register('./tasks/')`)\n\
+    - Topological execution with per-layer parallelism (`SET orch_max_parallel`)\n\
+    - Exponential backoff retry, downstream skip on failure\n- Incremental processing\
+    \ with `{{ last_processed_at }}` / `{{ now }}` / `{{ run_id }}` placeholders\n\
+    - Per-task assertions via `@test \"<sql>\" expect|expect_gt|expect_lt|expect_empty|expect_non_empty\
+    \ <n>`\n- Mermaid output (lineage / dag / combined modes) \u2014 `PRAGMA orch_visualize`\n\
+    - OpenLineage event emission to Marquez / DataHub / etc.\n  (`SET orch_openlineage_url`)\n\
+    - State tables: `__orch__.tasks` / `runs` / `lineage_edges` / `task_edges`\n \
+    \ `tests` / `schedules`\n\n**Companion CLI:** `duck-orch` provides `register /\
+    \ run / status / graph /\ntest / validate / impact / lineage / schedule` subcommands,\
+    \ all with\n`--json` for agent integration.\n\n**Architecture:** thin C++ shim\
+    \ plus a Rust workspace\n(orch_common / orch_dag / orch_lineage / orch_runtime\
+    \ / orch_ol /\norch_core), keeping all logic in Rust while the C++ layer handles\n\
+    DuckDB-internal calls (PRAGMAs, scalar functions, parallel dispatch).\n"

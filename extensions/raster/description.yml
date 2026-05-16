@@ -1,0 +1,243 @@
+extension:
+  name: raster
+  description: DuckDB extension for reading and writing geospatial raster data using
+    SQL.
+  version: 1.0.0
+  language: C++
+  build: cmake
+  excluded_platforms: windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
+  license: MIT
+  maintainers:
+  - ahuarte47
+repo:
+  github: ahuarte47/duckdb-raster
+  ref: 6eab8f18cce95d9f9ffef97cb7d75eeeef4905d3
+docs:
+  hello_world: "-- List available GDAL raster drivers and formats:\nSELECT short_name,\
+    \ long_name, help_url FROM RT_Drivers();\n\n\u250C\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502   short_name   \u2502\
+    \                        long_name                         \u2502            \
+    \          help_url                       \u2502\n\u2502    varchar     \u2502\
+    \                         varchar                          \u2502            \
+    \           varchar                       \u2502\n\u251C\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 VRT           \
+    \ \u2502 Virtual Raster                                           \u2502 https://gdal.org/drivers/raster/vrt.html\
+    \            \u2502\n\u2502 GTiff          \u2502 GeoTIFF                    \
+    \                              \u2502 https://gdal.org/drivers/raster/gtiff.html\
+    \          \u2502\n\u2502 COG            \u2502 Cloud optimized GeoTIFF generator\
+    \                        \u2502 https://gdal.org/drivers/raster/cog.html     \
+    \       \u2502\n\u2502  \xB7             \u2502          \xB7                \
+    \                               \u2502                    \xB7               \
+    \                 \u2502\n\u2502  \xB7             \u2502          \xB7      \
+    \                                         \u2502                    \xB7     \
+    \                           \u2502\n\u2502  \xB7             \u2502          \xB7\
+    \                                               \u2502                    \xB7\
+    \                                \u2502\n\u2502 ENVI           \u2502 ENVI .hdr\
+    \ Labelled                                       \u2502 https://gdal.org/drivers/raster/envi.html\
+    \           \u2502\n\u2502 Zarr           \u2502 Zarr                        \
+    \                             \u2502 NULL                                    \
+    \            \u2502\n\u2502 HTTP           \u2502 HTTP Fetching Wrapper      \
+    \                              \u2502 NULL                                   \
+    \             \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2518\n\n-- Read a raster file \u2014 one row per tile, one\
+    \ datacube column per band:\nSELECT * FROM RT_Read('path/to/raster/file.tif');\n\
+    \n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2510\n\u2502  id   \u2502     x     \u2502     y   \
+    \   \u2502              bbox              \u2502        geometry         \u2502\
+    \ level \u2502 tile_x \u2502 tile_y \u2502 cols  \u2502 rows  \u2502  metadata\
+    \  \u2502 databand_1 \u2502\n\u2502 int64 \u2502  double   \u2502   double   \u2502\
+    \ struct(xmin, ymin, xmax, ymax) \u2502 geometry('epsg:25830')  \u2502 int32 \u2502\
+    \ int32  \u2502 int32  \u2502 int32 \u2502 int32 \u2502    JSON    \u2502    BLOB\
+    \    \u2502\n\u251C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502     0 \u2502 545619.75 \u2502\
+    \ 4724508.25 \u2502 {xmin: 545539.75, ...}         \u2502 POLYGON ((...))    \
+    \     \u2502     0 \u2502      0 \u2502      0 \u2502   320 \u2502     8 \u2502\
+    \ {...}      \u2502 ...        \u2502\n\u2502     1 \u2502 545619.75 \u2502 4724504.25\
+    \ \u2502 {xmin: 545539.75, ...}         \u2502 POLYGON ((...))         \u2502\
+    \     0 \u2502      0 \u2502      1 \u2502   320 \u2502     8 \u2502 {...}   \
+    \   \u2502 ...        \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n\n-- Compute NDVI\
+    \ directly in SQL using band algebra:\nWITH __input AS (\n    SELECT\n       \
+    \ databand_1 AS red,\n        databand_2 AS nir\n    FROM\n        RT_Read('path/to/raster/file.tif',\
+    \ blocksize_x := 512, blocksize_y := 512)\n)\nSELECT\n    RT_Cube2TypeFloat((nir\
+    \ - red) / (nir + red)) AS ndvi\nFROM\n    __input\n;\n\n-- Extract pixel values\
+    \ into SQL arrays for aggregate analysis:\nWITH __input AS (\n    SELECT RT_Cube2ArrayFloat(databand_1,\
+    \ true) AS band\n    FROM RT_Read('path/to/raster/file.tif', blocksize_x := 512,\
+    \ blocksize_y := 512)\n)\nSELECT\n    list_min(band.values)        AS band_min,\n\
+    \    list_stddev_pop(band.values) AS band_stddev,\n    list_max(band.values) \
+    \       AS band_max\nFROM __input\n;\n\n-- Write a raster file using COPY ...\
+    \ FORMAT RASTER:\nCOPY (\n    SELECT geometry, databand_1, databand_2, databand_3\n\
+    \    FROM RT_Read('path/to/raster/file.tif')\n)\nTO 'path/to/output/file.tif'\n\
+    WITH (\n    FORMAT RASTER,\n    DRIVER 'COG',\n    CREATION_OPTIONS ('COMPRESS=LZW'),\n\
+    \    RESAMPLING 'nearest',\n    COMPUTE_VALID_ENVELOPE true,\n    SRS 'EPSG:25830',\n\
+    \    GEOMETRY_COLUMN 'geometry',\n    DATABAND_COLUMNS ['databand_3', 'databand_2',\
+    \ 'databand_1']\n);\n\n-- Clip raster tiles to a polygon geometry and write to\
+    \ a new file:\nLOAD spatial;\nLOAD json;\n\nCOPY (\n    WITH __clip_layer AS (\n\
+    \        SELECT geom FROM ST_Read('./test/data/CATAST_Pol_Township-PNA.geojson')\n\
+    \    ),\n    __dataset AS (\n        SELECT id, x, y, tile_x, tile_y, cols, rows,\
+    \ geometry, databand_1, metadata\n        FROM\n            __clip_layer,\n  \
+    \          RT_Read([\n                './test/data/mosaic/SCL.tif-land-clip00.tiff',\n\
+    \                './test/data/mosaic/SCL.tif-land-clip01.tiff',\n            \
+    \    './test/data/mosaic/SCL.tif-land-clip10.tiff',\n                './test/data/mosaic/SCL.tif-land-clip11.tiff'\n\
+    \            ])\n        WHERE ST_Intersects(__clip_layer.geom, geometry)\n  \
+    \  ),\n    __clipped AS (\n        SELECT\n            RT_CubeClip(databand_1,\n\
+    \                        tile_x,\n                        tile_y,\n          \
+    \             (metadata->'blocksize_x')::INTEGER,\n                       (metadata->'blocksize_y')::INTEGER,\n\
+    \                       (metadata->'transform')::DOUBLE[],\n                 \
+    \       __clip_layer.geom,\n                       (metadata->'bands'->0->'nodata')::DOUBLE\n\
+    \            ) AS databand,\n            * EXCLUDE(databand_1)\n        FROM __clip_layer,\
+    \ __dataset\n    )\n    SELECT geometry, databand FROM __clipped\n)\nTO 'path/to/output/clipped.tiff'\n\
+    WITH (\n    FORMAT RASTER,\n    DRIVER 'GTiff',\n    CREATION_OPTIONS ('COMPRESS=LZW'),\n\
+    \    RESAMPLING 'nearest',\n    SRS 'EPSG:32630',\n    GEOMETRY_COLUMN 'geometry',\n\
+    \    DATABAND_COLUMNS ['databand']\n);\n"
+  extended_description: 'Extension for DuckDB for reading and writing raster files
+    using SQL.
+
+
+    The main purpose with this extension is to be able to read raster files as tables
+    in DuckDB, and then perform band algebra operations on the raster data using SQL.
+
+    A raster is just a datacube, and the idea is to be able to manipulate it as such.
+
+
+    The extension uses the [GDAL library](https://gdal.org/) to read raster files,
+    and it supports a wide range of raster formats.
+
+
+    The `RT_Read` function is the main function to read raster files, extract metadata,
+    and perform basic operations on the raster data before returning a geoparquet-like
+
+    DuckDB table. The function takes the path to the raster file as an argument, and
+    other optional parameters, and returns a table with the following columns:
+
+
+    - `id`: A unique identifier for each tile.
+
+    - `x`: The center x coordinate of the tile.
+
+    - `y`: The center y coordinate of the tile.
+
+    - `bbox`: The bounding box of the tile, represented as a struct with the following
+    fields: `xmin`, `ymin`, `xmax`, `ymax`.
+
+    - `geometry`: The geometry of the tile, represented as a polygon.
+
+    - `level`: The zoom level of the tile.
+
+    - `tile_x`: The x coordinate of the tile in the zoom level.
+
+    - `tile_y`: The y coordinate of the tile in the zoom level.
+
+    - `cols`: The number of columns in the tile.
+
+    - `rows`: The number of rows in the tile.
+
+    - `metadata`: A JSON object with the metadata of the tile.
+
+    - `databand_x`: A BLOB with the data of the x-th band of the tile. The number
+    of bands and their names can be obtained from the `metadata` column.
+
+
+    The `RT_Read` function provides a `datacube` option that allows to return a single
+    `datacube` BLOB column with the N-dimensional array with the
+
+    data of all the bands of the tile, instead of one BLOB per band.
+
+
+    `RT_Read` supports filter pushdown on the non-BLOB columns, which allows you to
+    prefilter the tiles that are loaded based on their metadata or
+
+    spatial location. For example, you can filter the tiles that intersect with a
+    certain geometry or that have a certain value in the metadata.
+
+
+    `COPY TO` with `FORMAT RASTER` allows to export a table with the same structure
+    as the one returned by `RT_Read` to a new raster file.
+
+    You can specify the driver and several creation options:
+
+
+    - `DRIVER`: The GDAL driver to use for writing the raster file. For example, `GTiff`
+    or `COG`.
+
+    - `CREATION_OPTIONS`: A list of creation options to pass to the GDAL driver, specified
+    as strings in the format `KEY=VALUE`.
+
+    - `RESAMPLING`: The resampling method to use when writing the raster file. For
+    example, `nearest`, `bilinear`, `cubic`, etc.
+
+    - `ENVELOPE`: The spatial extent of the raster file, specified as a list of four
+    values: `[xmin, ymin, xmax, ymax]`.
+
+    - `SRS`: The spatial reference system of the raster file, specified as an EPSG
+    code (e.g. `EPSG:4326`) or a WKT string.
+
+    - `GEOMETRY_COLUMN`: The name of the column that contains the geometry of the
+    tiles. This column will be used to determine the spatial location and the resolution
+    of the tiles in the output raster file.
+
+    - `DATABAND_COLUMNS`: A list with the names of the columns that contain the data
+    of the bands. The order of the columns in the list will determine the order of
+    the bands in the output raster file.
+
+    '

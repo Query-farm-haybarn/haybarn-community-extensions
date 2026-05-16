@@ -1,0 +1,91 @@
+extension:
+  name: finetype
+  description: "Semantic type classification \u2014 detects 250 data types (emails,\
+    \ URLs, dates, UUIDs, currencies, etc.) from raw strings"
+  version: 0.2.0
+  language: Rust
+  build: cargo
+  license: MIT
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;linux_amd64_musl
+  requires_toolchains: rust;python3
+  maintainers:
+  - hughcameron
+repo:
+  github: meridian-online/duckdb-finetype
+  ref: 2b4574495b8deef84a00bce8a40570b9c248f55b
+docs:
+  hello_world: "-- Classify a value into one of 250 semantic types\nD SELECT finetype('user@example.com')\
+    \ AS detected_type;\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2510\n\u2502     detected_type     \u2502\n\u2502        varchar     \
+    \   \u2502\n\u251C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2524\n\u2502 identity.person.email \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2518\n\n-- Get detailed classification with confidence\
+    \ and recommended DuckDB type\nD SELECT finetype_detail('192.168.1.1') AS detail;\n\
+    \u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2510\n\u2502                                    detail         \
+    \                            \u2502\n\u2502                                  \
+    \  varchar                                    \u2502\n\u251C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502\
+    \ {\"type\":\"technology.internet.ip_v4\",\"confidence\":0.9998,\"duckdb_type\"\
+    :\"INET\"} \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2518\n\n-- Normalize values for safe TRY_CAST\
+    \ to detected types\nD SELECT finetype_cast('2024-01-15') AS normalized;\n\u250C\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\
+    \n\u2502 normalized \u2502\n\u2502  varchar   \u2502\n\u251C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 2024-01-15\
+    \ \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2518\n\n-- Classify all scalar values in a JSON document\nD SELECT finetype_unpack('{\"\
+    email\":\"user@example.com\",\"active\":true}') AS annotated;\n"
+  extended_description: "FineType is a tiered CharCNN semantic type classifier that\
+    \ detects 250 data types from raw string values.\nIt uses a hierarchical architecture\
+    \ of 34 character-level convolutional neural networks to classify values\ninto\
+    \ a three-level taxonomy: `domain.category.type`.\n\n## Functions\n\n### `finetype(value\
+    \ VARCHAR) \u2192 VARCHAR`\nClassify a single value. Returns the full semantic\
+    \ type label.\n\n```sql\nSELECT finetype('https://example.com');  -- technology.internet.url\n\
+    SELECT finetype('2024-01-15');           -- datetime.date.iso\nSELECT finetype('true');\
+    \                 -- representation.boolean.terms\n```\n\n### `finetype_detail(value\
+    \ VARCHAR) \u2192 VARCHAR`\nClassify with full detail \u2014 returns JSON with\
+    \ type, confidence (0.0\u20131.0), and recommended DuckDB type.\n\n```sql\nSELECT\
+    \ finetype_detail('user@example.com');\n-- {\"type\":\"identity.person.email\"\
+    ,\"confidence\":0.9992,\"duckdb_type\":\"VARCHAR\"}\n```\n\n### `finetype_cast(value\
+    \ VARCHAR) \u2192 VARCHAR`\nNormalize a value for safe `TRY_CAST()` to its detected\
+    \ DuckDB type.\nHandles date format conversion (US/EU \u2192 ISO), boolean normalization,\
+    \ UUID lowercasing, numeric cleanup.\n\n```sql\nSELECT finetype_cast('01/15/2024');\
+    \  -- 2024-01-15 (US date \u2192 ISO)\nSELECT finetype_cast('true');        --\
+    \ true (boolean normalization)\n```\n\n### `finetype_unpack(json VARCHAR) \u2192\
+    \ VARCHAR`\nRecursively classify all scalar values in a JSON document. Returns\
+    \ annotated JSON with type/confidence/duckdb_type for each field.\n\n### `finetype_version()\
+    \ \u2192 VARCHAR`\nReturns the extension version string.\n\n## Type Taxonomy\n\
+    \n250 types organized into 7 domains:\n- **container**: JSON, XML, CSV, arrays,\
+    \ key-value (12 types)\n- **datetime**: dates, times, timestamps, epochs, durations,\
+    \ offsets (84 types)\n- **finance**: currencies, accounting, market identifiers,\
+    \ transactions (31 types)\n- **geography**: coordinates, locations, addresses,\
+    \ transportation (25 types)\n- **identity**: names, emails, phones, payments,\
+    \ medical (34 types)\n- **representation**: booleans, numbers, text, files, scientific\
+    \ (36 types)\n- **technology**: URLs, IPs, UUIDs, booleans, versions, codes (28\
+    \ types)\n\n## Use Cases\n\n**Data profiling** \u2014 Detect column types in messy\
+    \ CSV/Parquet data:\n```sql\nSELECT column_name, finetype(value) AS detected_type,\
+    \ count(*) AS cnt\nFROM my_table UNPIVOT (value FOR column_name IN (*))\nGROUP\
+    \ BY column_name, detected_type\nORDER BY column_name, cnt DESC;\n```\n\n**Schema\
+    \ inference** \u2014 Get DuckDB-native type recommendations:\n```sql\nSELECT column_name,\n\
+    \       finetype_detail(value)::JSON->>'duckdb_type' AS recommended_type\nFROM\
+    \ my_table UNPIVOT (value FOR column_name IN (*))\nGROUP BY ALL;\n```\n\nFor more\
+    \ information, see the [FineType documentation](https://github.com/meridian-online/finetype).\n"

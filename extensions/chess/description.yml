@@ -1,0 +1,33 @@
+extension:
+  name: chess
+  description: A DuckDB extension for parsing and analyzing chess games in PGN format.
+  version: 0.6.2
+  language: Rust
+  build: cmake
+  license: MIT
+  requires_toolchains: rust
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;linux_amd64_musl
+  maintainers:
+  - dotneB
+repo:
+  github: dotneB/duckdb-chess
+  ref: v0.6.2
+docs:
+  hello_world: "-- Read a pgn file\nSELECT Event, White, Black, Result, Termination,\
+    \ TimeControl FROM read_pgn('test/pgn_files/sample.pgn');\n\n-- Read multiple\
+    \ pgn files\nSELECT COUNT(*) FROM read_pgn('test/pgn_files/*.pgn');\n\n-- Read\
+    \ zstd-compressed pgn files\nSELECT COUNT(*) FROM read_pgn('test/pgn_files/sample.pgn.zst',\
+    \ compression := 'zstd');\n\n-- How many games started with 1. e4 e5\nSELECT COUNT_IF(chess_moves_subset('1.\
+    \ e4 e5', movetext))  FROM read_pgn('test/pgn_files/sample.pgn');\n\n-- Removes\
+    \ comments/variations/NAGs and normalizes move numbers\nSELECT chess_moves_normalize(movetext)\
+    \ FROM read_pgn('test/pgn_files/sample.pgn');\n\n-- Zobrist hash of the final\
+    \ mainline position\nSELECT chess_moves_hash('1. e4 e5 2. Nf3 Nc6') AS hash;\n\
+    \n-- Ply count\nSELECT chess_ply_count('1. e4 e5 2. Nf3') AS ply;\n\n-- Normalize\
+    \ Time control notation\nSELECT chess_timecontrol_normalize('90min./40 + 30min.\
+    \ + 30s./move'); -- 40/5400+30:1800+30\n\n-- Converts FEN to EPD\nSELECT chess_fen_epd('rnbq1rk1/1pp1bppp/p3pn2/8/2pP4/2N2NP1/PP2PPBP/R1BQ1RK1\
+    \ w - - 0 8') AS epd;\n\n-- Get the first 40 moves of a game as ply, san and epd\n\
+    WITH g AS (\n  SELECT movetext\n  FROM read_pgn('test/pgn_files/sample.pgn')\n\
+    \  WHERE parse_error IS NULL\n  LIMIT 1\n)\nSELECT\n  json_extract(m.value, '$.ply')::INT\
+    \ AS ply,\n  json_extract_string(m.value, '$.move') AS san,\n  json_extract_string(m.value,\
+    \ '$.epd') AS epd\nFROM g,\n    json_each(CAST(chess_moves_json(g.movetext, 40)\
+    \ AS JSON)) m;\n"

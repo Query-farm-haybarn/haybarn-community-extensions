@@ -1,0 +1,46 @@
+extension:
+  name: read_stat
+  description: Read data sets from SAS, Stata, and SPSS with ReadStat
+  version: 0.2.3
+  language: C
+  build: cmake
+  license: MIT
+  requires_toolchains: python3
+  maintainers:
+  - mettekou
+repo:
+  github: mettekou/duckdb-read-stat
+  ref: d66821b3626caddbc8da7794617747e079f2ff64
+docs:
+  hello_world: "-- Read a SAS `.sas7bdat` or `.xpt` file\nFROM read_stat('sas_data.sas7bdat');\n\
+    FROM read_stat('sas_data.xpt');\n-- Read an SPSS `.sav`, `.zsav`, or `.por` file\n\
+    FROM read_stat('spss_data.sav');\nFROM read_stat('compressed_spss_data.zsav');\n\
+    FROM read_stat('portable_spss_data.por');\n-- Read a Stata .dta file\nFROM read_stat('stata_data.dta');\n\
+    \n-- If the file extension is not `.sas7bdat`, `.xpt`, `.sav`, `.zsav`, `.por`,\
+    \ or `.dta`,\n-- use the `read_stat` function for the right file type with the\
+    \ `format` parameter:\nFROM read_stat('sas_data.other_extension', format = 'sas7bdat');\n\
+    FROM read_stat('sas_data.other_extension', format = 'xpt');\n-- SPSS `.sav` and\
+    \ `.zsav` can both be read through the format `'sav'`\nFROM read_stat(\n    'spss_data_possibly_compressed.other_extension',\n\
+    \    format = 'sav'\n);\nFROM read_stat('portable_spss_data.other_extension',\
+    \ format = 'por');\nFROM read_stat('stata_data.other_extension', format = 'dta');\n\
+    \n-- Override the character encoding with an `iconv`` encoding name,\n-- see https://www.gnu.org/software/libiconv/\n\
+    CREATE TABLE other_data AS FROM read_stat('latin1_encoded.sas7bdat', encoding\
+    \ = 'iso-8859-1');\n"
+  extended_description: '## Usage
+
+
+    ### Parameters
+
+
+    | Name | Description | Type | Default |
+
+    |:----|:-----------|:----:|:-------|
+
+    | `format` | The format of the input file, when its extension does not indicate
+    it, either `''sas7bdat''`, `''xpt''`, `''sav''`, `''por''`, or `''dta''` | `VARCHAR`
+    | `NULL` |
+
+    | `encoding` | The character encoding of the input file, as defined by `iconv`,
+    see https://www.gnu.org/software/libiconv/ | `VARCHAR` | `NULL` |
+
+    '

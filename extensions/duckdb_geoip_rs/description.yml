@@ -1,0 +1,74 @@
+extension:
+  name: duckdb_geoip_rs
+  description: Retrieve geo ip data from MMDB database
+  version: 0.2.1
+  language: Rust
+  build: cmake
+  license: MIT
+  excluded_platforms: windows_amd64_rtools;windows_amd64_mingw;linux_amd64_musl;wasm_mvp;wasm_eh;wasm_threads
+  requires_toolchains: rust;python3
+  maintainers:
+  - william-billaud
+repo:
+  github: william-billaud/duckdb-geoip-rs
+  ref: 73681891f4f1de1df0fc892f4dfc6cf3c69eb2b9
+docs:
+  hello_world: "-- Before, export mmdb path : export MAXMIND_MMDB_DIR=\"`pwd`\"\n\n\
+    INSTALL 'duckdb_geoip_rs' FROM community;\nLOAD 'duckdb_geoip_rs';\n\n-- Create\
+    \ sample data\nCREATE TABLE ip_list (ip VARCHAR);\nINSERT INTO ip_list VALUES\
+    \ ('1.1.1.1'), ('8.8.8.8'), ('80.8.8.8'), ('90.9.250.1'), ('not_anip');\n\n--\
+    \ Get associated geo ip data\nSELECT ip, geoip_asn_org(ip),geoip_asn_num(ip),geoip_city(ip),\
+    \ geoip_country_iso(ip) from ip_list;\n\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502     ip  \
+    \   \u2502 geoip_asn_org(ip) \u2502 geoip_asn_num(ip) \u2502 geoip_city(ip) \u2502\
+    \ geoip_country_iso(ip) \u2502\n\u2502  varchar   \u2502      varchar      \u2502\
+    \      varchar      \u2502    varchar     \u2502        varchar        \u2502\n\
+    \u251C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2524\n\u2502 1.1.1.1    \u2502 CLOUDFLARENET     \u2502 13335\
+    \             \u2502                \u2502                       \u2502\n\u2502\
+    \ 8.8.8.8    \u2502 GOOGLE            \u2502 15169             \u2502        \
+    \        \u2502 US                    \u2502\n\u2502 80.8.8.8   \u2502 Orange\
+    \            \u2502 3215              \u2502                \u2502 RE        \
+    \            \u2502\n\u2502 90.9.250.1 \u2502 Orange            \u2502 3215  \
+    \            \u2502 Lyon           \u2502 FR                    \u2502\n\u2502\
+    \ not_anip   \u2502                   \u2502                   \u2502        \
+    \        \u2502                       \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n"
+  extended_description: 'Path to a directory containing GeoLite2-City.mmdb and GeoLite2-ASN.mmdb
+    files must be exported to MAXMIND_MMDB_DIR environment variable. Defaulting to
+    /usr/share/GeoIP.
+
+
+    This extension export 4 function using MaxminDB database:
+
+
+    * geoip_asn_org(ip : VARCHAR)-> VARCHAR
+
+    * geoip_asn_num(ip : VARCHAR)-> VARCHAR
+
+    * geoip_city(ip : VARCHAR)-> VARCHAR
+
+    * geoip_country_iso(ip : VARCHAR) -> VARCHAR
+
+
+    All the function will return an empty value on empty/non found value
+
+    '

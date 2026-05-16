@@ -1,0 +1,59 @@
+extension:
+  name: sitemap
+  description: Parse XML sitemaps from websites with automatic discovery via robots.txt
+  version: '2026020501'
+  language: C++
+  build: cmake
+  license: MIT
+  excluded_platforms: windows_amd64_mingw
+  requires_toolchains: libxml2;zlib
+  maintainers:
+  - onnimonni
+repo:
+  github: midwork-finds-jobs/duckdb-sitemap
+  ref: 15e96dfd6e5dfb6d70a9b7cc5a2675b3969e16b3
+docs:
+  hello_world: "-- Get all URLs from a sitemap (auto-prepends https://)\nSELECT *\
+    \ FROM sitemap_urls('example.com');\n\n-- Direct sitemap URL (skips discovery)\n\
+    SELECT * FROM sitemap_urls('https://example.com/sitemap.xml');\n\n-- Get URLs\
+    \ from multiple sites\nSELECT * FROM sitemap_urls(['example.com', 'google.com']);\n\
+    \n-- Filter specific URLs\nSELECT * FROM sitemap_urls('example.com')\nWHERE url\
+    \ LIKE '%/blog/%';\n\n-- Bruteforce find sitemap (tries 587+ patterns)\nSELECT\
+    \ bruteforce_find_sitemap('example.com') as sitemap_url;\n\n-- Ignore errors for\
+    \ invalid domains\nSELECT * FROM sitemap_urls(['valid.com', 'invalid.com'], ignore_errors\
+    \ := true);\n\n-- Set custom user agent\nSET sitemap_user_agent = 'MyBot/1.0';\n\
+    \n-- Count URLs by type\nSELECT\n    CASE\n        WHEN url LIKE '%/product/%'\
+    \ THEN 'product'\n        WHEN url LIKE '%/blog/%' THEN 'blog'\n        ELSE 'other'\n\
+    \    END as type,\n    count(*) as count\nFROM sitemap_urls('https://example.com')\n\
+    GROUP BY type;\n"
+  extended_description: "The sitemap extension provides a table function for parsing\
+    \ XML sitemaps from websites.\nIt automatically discovers sitemaps via multiple\
+    \ fallback methods and supports recursive sitemap index traversal.\n\nFeatures:\n\
+    - Multi-fallback sitemap discovery (robots.txt, /sitemap.xml, /sitemap_index.xml,\
+    \ HTML meta tags)\n- Session caching for discovered sitemap locations\n- Bruteforce\
+    \ finder (bruteforce_find_sitemap) - tries 587+ common sitemap URL patterns\n\
+    - Custom user agent via SET sitemap_user_agent\n- Direct sitemap URL support (skips\
+    \ discovery)\n- Sitemap index support (nested sitemaps)\n- Array support for processing\
+    \ multiple domains\n- Retry logic with exponential backoff\n- Respects Retry-After\
+    \ header on 429 responses\n- Gzip decompression for .xml.gz files\n- Multiple\
+    \ namespace support (standard + Google schemas)\n- SQL filtering with WHERE clauses\n\
+    - Optional error ignoring for batch processing\n\nThe function returns a table\
+    \ with columns:\n- url: Page URL (VARCHAR)\n- lastmod: Last modification date\
+    \ (VARCHAR, optional)\n- changefreq: Change frequency hint (VARCHAR, optional)\n\
+    - priority: Priority hint 0.0-1.0 (VARCHAR, optional)\n\nOptions:\n- follow_robots\
+    \ (BOOLEAN): Parse robots.txt first (default: true)\n- max_depth (INTEGER): Max\
+    \ sitemap index nesting (default: 3)\n- max_retries (INTEGER): Max retry attempts\
+    \ (default: 5)\n- backoff_ms (INTEGER): Initial backoff in ms (default: 100)\n\
+    - max_backoff_ms (INTEGER): Max backoff cap in ms (default: 30000)\n- ignore_errors\
+    \ (BOOLEAN): Don't throw on failed fetches (default: false)\n\nExample with options:\n\
+    ```sql\nSELECT * FROM sitemap_urls(\n    'https://example.com',\n    follow_robots\
+    \ := true,\n    max_depth := 5,\n    max_retries := 10\n) WHERE url LIKE '%/product/%';\n\
+    ```\n\nBruteforce sitemap discovery (scalar function):\n```sql\n-- Find sitemap\
+    \ by trying 587+ common patterns\nSELECT bruteforce_find_sitemap('https://example.com')\
+    \ as sitemap_url;\n-- Returns first working sitemap URL or NULL\n\n-- Patterns\
+    \ tested include:\n-- /sitemap.xml, /sitemap_index.xml\n-- /sitemap/sitemap.xml,\
+    \ /sitemaps/sitemap-index.xml\n-- /en/sitemap.xml, /de/sitemap.xml\n-- /pub/media/sitemap.xml\n\
+    -- And 580+ more variations\n```\n\nCompose with http_request to fetch page content:\n\
+    ```sql\nSELECT s.url, h.body\nFROM sitemap_urls('https://example.com') s\nJOIN\
+    \ LATERAL (SELECT * FROM http_get(s.url)) h ON true\nWHERE s.url LIKE '%/product/%'\n\
+    LIMIT 10;\n```\n"

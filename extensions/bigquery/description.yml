@@ -1,0 +1,62 @@
+extension:
+  name: bigquery
+  description: Integrates DuckDB with Google BigQuery, allowing direct querying and
+    management of BigQuery datasets
+  version: 0.9.0
+  language: C++
+  build: cmake
+  license: MIT
+  vcpkg_commit: ef7dbf94b9198bc58f45951adcf1f041fcbc5ea0
+  requires_toolchains: parser_tools
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_mingw
+  maintainers:
+  - hafenkran
+repo:
+  github: hafenkran/duckdb-bigquery
+  ref: c18ffbd5063b1b20ff71943dbcf3997ea3134b25
+docs:
+  hello_world: "-- Attach to your BigQuery Project\nD ATTACH 'project=my_gcp_project'\
+    \ AS bq (TYPE bigquery, READ_ONLY);\n\n-- Show all tables in all datasets in the\
+    \ attached BigQuery project\nD SHOW ALL TABLES;\n\u250C\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2510\n\u2502 database \u2502      schema     \
+    \ \u2502   name   \u2502 column_names \u2502   column_types    \u2502 temporary\
+    \ \u2502\n\u2502 varchar  \u2502     varchar      \u2502  varchar \u2502  varchar[]\
+    \   \u2502     varchar[]     \u2502  boolean  \u2502\n\u251C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 bq       \u2502 quacking_dataset\
+    \ \u2502 duck_tbl \u2502 [i, s]       \u2502 [BIGINT, VARCHAR] \u2502 false  \
+    \   \u2502\n| bq       | barking_dataset  | dog_tbl  | [i, s]       | [BIGINT,\
+    \ VARCHAR] \u2502 false     \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2518\n\n-- Select data from a specific table in BigQuery\n\
+    D SELECT * FROM bq.quacking_dataset.duck_tbl;\n\u250C\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502   i   \u2502       s      \
+    \  \u2502\n\u2502 int32 \u2502    varchar     \u2502\n\u251C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502    12 \u2502 quack\
+    \ \U0001F986       \u2502\n\u2502    13 \u2502 quack quack \U0001F986 \u2502\n\
+    \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\
+    \n"
+  extended_description: "This community-maintained extension allows DuckDB to connect\
+    \ to Google BigQuery using the BigQuery Storage (read/write) and REST APIs. \n\
+    It enables users to read, write, and manage their BigQuery datasets/tables directly\
+    \ from DuckDB using standard SQL queries.\nFor detailed setup and usage instructions,\
+    \ visit the [extension repository](https://github.com/hafenkran/duckdb-bigquery).\n"

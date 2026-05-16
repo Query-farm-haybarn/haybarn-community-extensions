@@ -1,0 +1,107 @@
+extension:
+  name: dqtest
+  description: Define and run data-quality tests inside DuckDB
+  version: 0.1.1
+  language: C++
+  build: cmake
+  license: MIT
+  maintainers:
+  - vhe74
+repo:
+  github: vhe74/duckdb-dataquality-extension
+  ref: 72640ababe51c90daa5383467a8e14e12db85d6c
+docs:
+  hello_world: "-- Initialize the data quality testing framework\nCALL dq_init();\n\
+    \n-- Create a sample table\nCREATE TABLE customers (\n    id INTEGER PRIMARY KEY,\n\
+    \    name VARCHAR,\n    email VARCHAR,\n    status VARCHAR,\n    age INTEGER\n\
+    );\n\nCREATE TABLE orders (\n    order_id INTEGER PRIMARY KEY,\n    customer_id\
+    \ INTEGER,\n    amount DECIMAL(10,2),\n    status VARCHAR\n);\n\n-- Insert sample\
+    \ data\nINSERT INTO customers VALUES\n    (1, 'Alice', 'alice@example.com', 'active',\
+    \ 25),\n    (2, 'Bob', NULL, 'active', 30),\n    (3, 'Charlie', 'charlie@example.com',\
+    \ 'inactive', 35);\n\nINSERT INTO orders VALUES\n    (1, 1, 100.00, 'pending'),\n\
+    \    (2, 1, 200.00, 'shipped'),\n    (3, 2, 150.00, 'delivered'),\n    (4, 99,\
+    \ 50.00, 'pending');\n\n-- Define and run data quality tests\n-- To pass a test\
+    \ should not return any lines\n-- (Test definition syntax depends on your implementation)\n\
+    INSERT INTO dq_tests (test_name, table_name, column_name, test_type)\nVALUES ('customers_id_unique',\
+    \ 'customers', 'id', 'unique');\n\nINSERT INTO dq_tests (test_name, table_name,\
+    \ column_name, test_type)\n  VALUES ('customers_email_not_null', 'customers',\
+    \ 'email', 'not_null');\n\nINSERT INTO dq_tests (test_name, table_name, column_name,\
+    \ test_type, test_params)\nVALUES ('customers_status_valid', 'customers', 'status',\
+    \ 'accepted_values',\n        '{\"values\": [\"active\", \"inactive\", \"suspended\"\
+    ]}');\n\nINSERT INTO dq_tests (test_name, table_name, column_name, test_type,\
+    \ test_params)\nVALUES ('customers_email_format', 'customers', 'email', 'regex',\n\
+    \        '{\"pattern\": \"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\\\\\\\.[a-zA-Z]{2,}$\"\
+    }');\n\nINSERT INTO dq_tests (test_name, table_name, column_name, test_type, test_params)\n\
+    VALUES ('customers_age_range', 'customers', 'age', 'range',\n        '{\"min\"\
+    : 18, \"max\": 100}');\n\nINSERT INTO dq_tests (test_name, table_name, column_name,\
+    \ test_type, test_params)\nVALUES ('orders_customer_fk', 'orders', 'customer_id',\
+    \ 'relationship',\n        '{\"to_table\": \"customers\", \"to_column\": \"id\"\
+    }');\n\nINSERT INTO dq_tests (test_name, table_name, test_type, test_params)\n\
+    VALUES ('customers_min_rows', 'customers', 'row_count',\n        '{\"min\": 1,\
+    \ \"max\": 1000}');\n\nINSERT INTO dq_tests (test_name, table_name, test_type,\
+    \ test_params)\nVALUES ('orders_orphan_check', 'orders', 'custom_sql',\n     \
+    \   '{\"sql\": \"SELECT * FROM {table} WHERE customer_id NOT IN (SELECT id FROM\
+    \ customers)\"}');\n\n-- Run all tests\nCALL dq_run_tests();\n\n-- View test results\n\
+    SELECT t.test_name, r.status, r.executed_at\n  FROM dq_tests t \n  LEFT JOIN dq_test_results\
+    \ r ON t.test_id = r.test_id;\n\n-- View test results of the last execution \n\
+    SELECT t.test_name, r.status, r.executed_at\n  FROM dq_tests t \n  LEFT JOIN dq_test_results\
+    \ r ON t.test_id = r.test_id\n  QUALIFY ROW_NUMBER() OVER (PARTITION BY t.test_name\
+    \ ORDER BY r.executed_at DESC NULLS LAST) = 1;\n\n-- view all compiled sql of\
+    \ the last execution \nSELECT t.test_name, r.status, r.compiled_sql  FROM dq_tests\
+    \ t \n  LEFT JOIN dq_test_results r ON t.test_id = r.test_id\n  QUALIFY ROW_NUMBER()\
+    \ OVER (PARTITION BY t.test_name ORDER BY r.executed_at DESC NULLS LAST) = 1;\n"
+extended_description: '# DuckDB Data Quality Extension
+
+
+  A DuckDB extension for defining, running, and tracking data quality tests directly
+  within your database.
+
+
+  ## Description
+
+
+  The Data Quality Extension (`dqtest`) enables you to implement comprehensive data
+  quality testing in DuckDB. Define tests using SQL expressions, run them against
+  your data, and track results over time - all without leaving your database environment.
+
+
+  ### Key Features
+
+
+  - **SQL-based test definitions**: Write data quality tests using familiar SQL syntax
+
+  - **Flexible test framework**: Define expectations, assertions, and validations
+  on any table or query
+
+  - **Test execution engine**: Run individual tests or entire test suites
+
+  - **Results tracking**: View test results, failure details, and execution history
+
+  - **Built-in reporting**: Access test summaries and identify failing tests through
+  convenient views
+
+
+  ### Core Functions
+
+
+  - `dq_init()` - Initialize the data quality testing schema
+
+  - `dq_run_tests()` - Execute all defined data quality tests
+
+  - `dq_run_tests(test_id)` - Run a specific test by id
+
+  - `dq_run_tests(table_name)` - Run a specific test for a specific table
+
+
+  ### Use Cases
+
+
+  - Validate data integrity after ETL pipelines
+
+  - Monitor data quality in production databases
+
+  - Enforce data contracts and expectations
+
+  - Track data quality metrics over time
+
+  - Catch data anomalies and schema changes early'

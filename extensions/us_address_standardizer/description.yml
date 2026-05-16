@@ -1,0 +1,29 @@
+extension:
+  name: us_address_standardizer
+  description: US address parsing and standardization (PAGC + Rust addrust)
+  version: 0.2.0
+  language: C/Rust
+  build: cmake
+  license: MIT
+  maintainers:
+  - ericmanning
+  - sj-io
+  excluded_platforms: osx_amd64;wasm_mvp;wasm_eh;wasm_threads
+  requires_toolchains: python3;rust
+repo:
+  github: ericmanning/duckdb-address-standardizer
+  ref: 8da70a76d3ade131a094a0e746aa5d06605e3f80
+docs:
+  hello_world: "-- addrust parser (no reference tables required)\nSELECT addrust_parse('123\
+    \ N Main St Apt 4, Springfield IL 62704');\n\n-- PAGC (Postgis) standardizer (loads\
+    \ reference tables from embedded data)\nSELECT load_us_address_data();\nSELECT\
+    \ standardize_address('us_lex', 'us_gaz', 'us_rules',\n    '123 Main Street',\
+    \ 'Kansas City, MO 45678');\n"
+  extended_description: "Provides two US address parsers:\n\n- `addrust_parse` \u2014\
+    \ Rust-based parser from the\n  [addrust](https://github.com/EvictionLab/addrust)\
+    \ project, with\n  optional TOML configuration for customizable parsing pipelines.\n\
+    - `parse_address` / `standardize_address` \u2014 PAGC rule-based parsers\n  ported\
+    \ from the\n  [PostGIS address_standardizer](https://github.com/postgis/address_standardizer).\n\
+    \  Call `load_us_address_data()` first to populate the reference tables\n  from\
+    \ data embedded in the extension binary.\n- For more information, visit the [GitHub\
+    \ repository](https://github.com/ericmanning/duckdb-address-standardizer).\n"

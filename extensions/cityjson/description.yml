@@ -1,0 +1,33 @@
+extension:
+  name: cityjson
+  description: Read, write, and query CityJSON, CityJSONSeq, and FlatCityBuf 3D city
+    model files.
+  version: 0.1.0
+  language: C++
+  build: cmake
+  license: MIT
+  maintainers:
+  - HideBa
+repo:
+  github: cityjson/duckdb-cityjson
+  ref: 0df88f9fb023e272b0fd3208e0f55445714b278c
+docs:
+  hello_world: "-- Read a CityJSON file\nSELECT * FROM read_cityjson('buildings.city.json');\n\
+    \n-- Read a CityJSONSeq (line-delimited) file\nSELECT * FROM read_cityjsonseq('buildings.city.jsonl');\n\
+    \n-- Read a FlatCityBuf file\nSELECT * FROM read_flatcitybuf('buildings.fcb');\n\
+    \n-- Extract geometries as WKB at a specific Level of Detail\nSELECT * FROM read_cityjson('buildings.city.json',\
+    \ lod=>'1.2');\n\n-- Write query results to CityJSONSeq\nCOPY (SELECT * FROM read_cityjson('buildings.city.json'))\n\
+    \  TO 'output.city.jsonl' (FORMAT cityjsonseq);\n\n-- Inspect file metadata\n\
+    SELECT * FROM cityjson_metadata('buildings.city.json');\n"
+  extended_description: "The CityJSON extension provides table functions for reading\
+    \ and writing 3D city model files\nin CityJSON (.city.json), CityJSONSeq (.city.jsonl),\
+    \ and FlatCityBuf (.fcb) formats.\nCityJSON is a JSON-based encoding for 3D city\
+    \ models (buildings, terrain, vegetation, etc.)\nbased on the CityGML data model.\n\
+    \nSupported functions:\n- `read_cityjson`, `read_cityjsonseq`, `read_flatcitybuf`\
+    \ \u2014 table functions for querying city objects\n- `cityjson_metadata`, `cityjsonseq_metadata`,\
+    \ `flatcitybuf_metadata` \u2014 inspect file headers\n- `COPY ... TO` with formats\
+    \ `cityjson`, `cityjsonseq`, and `flatcitybuf` \u2014 write query results\n\n\
+    Additional features:\n- Automatic schema inference from CityJSON attributes\n\
+    - LOD-based geometry extraction as WKB blobs via the `lod` parameter\n- Support\
+    \ for CityJSON v2.0 and CityJSONSeq formats\n\nFor more information on the CityJSON\
+    \ format, see https://www.cityjson.org/.\n"

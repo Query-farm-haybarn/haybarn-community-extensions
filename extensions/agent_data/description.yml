@@ -1,0 +1,58 @@
+extension:
+  name: agent_data
+  description: A DuckDB extension written in Rust for querying, analysing and inspecting
+    AI coding agents history. Read conversations, plans, todos, history, and usage
+    stats directly from your local agent data directories.
+  version: 0.1.0
+  language: Rust
+  build: cargo
+  license: MIT
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;linux_amd64_musl
+  requires_toolchains: rust
+  maintainers:
+  - axsaucedo
+repo:
+  github: axsaucedo/agent_data_duckdb
+  ref: 41993629dfdd259055327213f119b9b83a4a5826
+docs:
+  hello_world: "-- How many conversations have I had with Claude?\nSELECT COUNT(DISTINCT\
+    \ session_id) AS sessions,\n       COUNT(*) AS total_messages\n-- Calling the\
+    \ functions without params defaults to Claude folder.\nFROM read_conversations();\n\
+    \n-- What did I work on this week?\nSELECT date, message_count, tool_call_count\n\
+    FROM read_stats()\nORDER BY date DESC\nLIMIT 7;\n\n-- Which tools does github\
+    \ copilot use most?\nSELECT tool_name, COUNT(*) AS uses\nFROM read_conversations('~/.copilot')\n\
+    WHERE tool_name IS NOT NULL\nGROUP BY tool_name\nORDER BY uses DESC\nLIMIT 10;\n\
+    \n-- What are my active todos in my custom claude path?\nSELECT content, status\n\
+    FROM read_todos('~/work_folder/.claude')\nWHERE status != 'completed'\nORDER BY\
+    \ item_index;\n\n-- Compare activity across Claude and Copilot\nSELECT source,\
+    \ COUNT(DISTINCT session_id) AS sessions, COUNT(*) AS messages\nFROM (\n    SELECT\
+    \ * FROM read_conversations(path='~/.claude')\n    UNION ALL\n    SELECT * FROM\
+    \ read_conversations(path='~/.copilot')\n)\nGROUP BY source;\n"
+  extended_description: "\n**Supported agents:** [Claude Code](https://docs.anthropic.com/en/docs/claude-code)\
+    \ (`~/.claude`) and [GitHub Copilot CLI](https://docs.github.com/en/copilot/github-copilot-in-the-cli)\
+    \ (`~/.copilot`).\n\n> OpenAI Codex and Gemini CLI Coming Soon\u2122.\n\nWritten\
+    \ in \U0001F980 Rust.\n\n### Default Behavior\n\nWhen called **without arguments**,\
+    \ each function reads from its provider's default path:\n\n| Function | Default\
+    \ path | Detected as |\n|----------|-------------|-------------|\n| `read_conversations()`\
+    \ | `~/.claude` | Claude Code |\n| `read_plans()` | `~/.claude` | Claude Code\
+    \ |\n| `read_todos()` | `~/.claude` | Claude Code |\n| `read_history()` | `~/.claude`\
+    \ | Claude Code |\n| `read_stats()` | `~/.claude` | Claude Code |\n\nTo read Copilot\
+    \ data, pass the path explicitly:\n\n```sql\nFROM read_conversations(path='~/.copilot');\n\
+    ```\n\n### Available Functions\n\nAll functions accept two optional parameters:\n\
+    - **`path`** \u2014 data directory path (default: `~/.claude`). Auto-detected\
+    \ from folder structure (`projects/` \u2192 Claude, `session-state/` \u2192 Copilot).\n\
+    - **`source`** \u2014 explicit provider override: `'claude'` or `'copilot'`. Use\
+    \ when auto-detection fails or for non-standard directory layouts.\n\nEvery table\
+    \ includes a **`source`** column (`'claude'` or `'copilot'`) as the first column.\n\
+    \n> `read_conversations([path (opt)], [source (opt)])`\n\n## Join Keys\n\nTables\
+    \ can be joined within the same source:\n\n```sql\n-- Conversations \u2194 History\
+    \ (via session_id)\nSELECT c.*, h.display\nFROM read_conversations(path='~/.claude')\
+    \ c\nJOIN read_history(path='~/.claude') h ON c.session_id = h.session_id;\n\n\
+    -- Cross-source: always filter by source\nSELECT * FROM (\n    SELECT * FROM read_conversations(path='~/.claude')\n\
+    \    UNION ALL\n    SELECT * FROM read_conversations(path='~/.copilot')\n) WHERE\
+    \ source = 'copilot';\n```\n\n| Join | Left Key | Right Key | Notes |\n|------|----------|-----------|-------|\n\
+    | conversations <-> history | `session_id` | `session_id` | Same source only |\n\
+    | conversations <-> todos | `session_id` | `session_id` | Same source only |\n\
+    | conversations <-> plans | `slug` | `plan_name` | Claude only |\n| conversations\
+    \ <-> history | `project_path` | `project` | Claude only |\n\nFor full documentation,\
+    \ see the [GitHub repository](https://github.com/axsaucedo/duckdb-claude-ext).\n"

@@ -1,0 +1,146 @@
+extension:
+  name: chsql
+  description: ClickHouse SQL Macros for DuckDB
+  version: 1.4.0
+  language: SQL & C++
+  build: cmake
+  license: MIT
+  maintainers:
+  - lmangani
+  - akvlad
+  excluded_platforms: windows_amd64_rtools;windows_amd64_mingw;windows_amd64;
+repo:
+  github: Query-farm/clickhouse-sql
+  ref: 7c871adf7990631ecdca77fb2cd0fc7e5c5b5665
+docs:
+  hello_world: "-- Use 100+ boring ClickHouse SQL function macros in DuckDB SQL queries.\n\
+    \nD SELECT toString('world') AS hello, toInt8OrZero('world') AS zero;\n\u250C\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2510\n\u2502  hello  \u2502 zero  \u2502\n\u2502 varchar \u2502\
+    \ int64 \u2502\n\u251C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 world   \u2502     0\
+    \ \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2518\n\nD SELECT IPv4NumToString(167772161),\
+    \ IPv4StringToNum('10.0.0.1');\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\
+    \n\u2502 ipv4numtostring(167772161) \u2502 ipv4stringtonum('10.0.0.1') \u2502\n\
+    \u2502          varchar           \u2502            int32            \u2502\n\u251C\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 10.0.0.1                  \
+    \ \u2502                   167772161 \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2518\n\n-- Query a remote ClickHouse instance via HTTP/S API using multiple\
+    \ formats\n\nD SELECT * FROM ch_scan(\"SELECT number * 100 FROM numbers(3)\",\"\
+    https://play.clickhouse.com\", format := 'Parquet');\n\u250C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502 multiply(number, 100)\
+    \ \u2502\n\u2502        varchar        \u2502\n\u251C\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 0                     \u2502\n\u2502\
+    \ 100                   \u2502\n\u2502 200                   \u2502\n\u2514\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n\n-- Query the emulated\
+    \ system tables to explore columns, rows, types, storage, etc\nD SELECT * FROM\
+    \ system.tables;\nD SELECT * FROM system.columns;\nD SELECT * FROM system.functions;\n\
+    D SELECT * FROM system.uptime;\nD SELECT * FROM system.disks;\n\u250C\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502   name\
+    \   \u2502     path     \u2502 free_space \u2502 total_space \u2502 unreserved_space\
+    \ \u2502 keep_free_space \u2502  type   \u2502 object_storage_type \u2502 metadata_type\
+    \ \u2502 is_encrypted \u2502 is_read_only \u2502 is_write_once \u2502 is_remote\
+    \ \u2502 is_broken \u2502 cache_path \u2502\n\u2502 varchar  \u2502   varchar\
+    \    \u2502   int64    \u2502    int64    \u2502      int64       \u2502     \
+    \ int64      \u2502 varchar \u2502       varchar       \u2502    varchar    \u2502\
+    \   boolean    \u2502   boolean    \u2502    boolean    \u2502  boolean  \u2502\
+    \  boolean  \u2502  varchar   \u2502\n\u251C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 localdb  \u2502 test.db   \
+    \   \u2502          0 \u2502      262144 \u2502                0 \u2502      \
+    \         0 \u2502 Local   \u2502 None                \u2502 None          \u2502\
+    \ false        \u2502 false        \u2502 false         \u2502 false     \u2502\
+    \ false     \u2502            \u2502\n\u2502 memory   \u2502 NULL         \u2502\
+    \          0 \u2502           0 \u2502                0 \u2502               0\
+    \ \u2502 Local   \u2502 None                \u2502 None          \u2502 false\
+    \        \u2502 false        \u2502 false         \u2502 false     \u2502 false\
+    \     \u2502            \u2502\n\u2502 testduck \u2502 /tmp/duck.db \u2502   \
+    \  262144 \u2502      786432 \u2502           262144 \u2502               0 \u2502\
+    \ Local   \u2502 None                \u2502 None          \u2502 false       \
+    \ \u2502 false        \u2502 false         \u2502 false     \u2502 false     \u2502\
+    \            \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2518\n"
+  extended_description: "\n## DuckDB ClickHouse SQL extension    \nThe DuckDB chsql\
+    \ community extension implements 100+ popular [ClickHouse SQL Macros](https://duckdb.org/community_extensions/extensions/chsql#added-functions),\
+    \ functions and helpers making it easier for users to transition between OLAP\
+    \ systems \u2B50 \n\n### Motivation\nDuckDB is our favourite OLAP engine but ClickHouse\
+    \ has lots of integrations and users. This extension is dedicated to ClickHouse\
+    \ refugeess.\n\n```\n\u2714 DuckDB SQL is awesome and full of great functions.<br>\n\
+    \u2714 ClickHouse SQL is awesome and full of great functions.\n\n\u2714 The DuckDB\
+    \ library is ~51M and modular. Can LOAD extensions.<br>\n\u274C The ClickHouse\
+    \ monolith is ~551M and growing. No extensions.\n\n\u2714 DuckDB is open source\
+    \ and protected by a no-profit foundation.<br>\n\u274C ClickHouse is open core\
+    \ and controlled by for-profit corporation.\n\n\u2714 DuckDB embedded is fast,\
+    \ mature and elegantly integrated in many languages.<br>\n\u274C chdb is still\
+    \ experimental, unstable and currently only supports Python.\n``` \n\n### Extensions\n\
+    - [chsql_native](https://duckdb.org/community_extensions/extensions/chsql_native)\
+    \ provides a native clickhouse client (binary) and a reader for ClickHouse Native\
+    \ format files\n\n#### Legal Disclaimer\n> DuckDB \xAE is a trademark of DuckDB\
+    \ Foundation. ClickHouse\xAE is a trademark of ClickHouse Inc. All trademarks,\
+    \ service marks, and logos mentioned or depicted are the property of their respective\
+    \ owners. The use of any third-party trademarks, brand names, product names, and\
+    \ company names is purely informative or intended as parody and does not imply\
+    \ endorsement, affiliation, or association with the respective owners.\n"

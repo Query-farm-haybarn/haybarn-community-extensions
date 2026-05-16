@@ -1,0 +1,69 @@
+extension:
+  name: snowflake
+  description: Snowflake data source extension - query Snowflake databases directly
+    from DuckDB
+  version: 0.4.0
+  language: C++
+  build: cmake
+  license: MIT
+  maintainers:
+  - iqea-ai
+repo:
+  github: iqea-ai/duckdb-snowflake
+  ref: be9f4cd25beec33556a3ae6f6d267c6acbd4710e
+install_notes: '**Important:** This extension requires DuckDB 1.5.2 and the Apache
+  Arrow ADBC Snowflake driver to function properly.
+
+
+  **You must install the ADBC driver separately after installing this extension.**
+  The extension will not work without the driver.
+
+
+  For complete installation instructions, platform-specific setup, and troubleshooting,
+  please refer to the official documentation:
+
+
+  **[ADBC Driver Installation Guide](https://github.com/iqea-ai/duckdb-snowflake#adbc-driver-setup)**
+
+
+  The documentation includes:
+
+  - Step-by-step installation instructions for all platforms
+
+  - Automated setup scripts
+
+  - Manual installation procedures
+
+  - Driver location requirements
+
+  - Troubleshooting common issues
+
+
+  Please visit the [extension repository](https://github.com/iqea-ai/duckdb-snowflake)
+  for installation instructions and setup options.
+
+  '
+docs:
+  hello_world: "-- Install and load the extension\nINSTALL snowflake FROM community;\n\
+    LOAD snowflake;\n\n-- Create a Snowflake secret with password authentication\n\
+    CREATE SECRET my_snowflake (\n    TYPE snowflake,\n    ACCOUNT 'your-account',\n\
+    \    USER 'your-username',\n    PASSWORD 'your-password',\n    DATABASE 'your-database'\n\
+    );\n\n-- Query Snowflake data using pass-through query function\nSELECT * FROM\
+    \ snowflake_query(\n    'SELECT * FROM customers WHERE state = ''CA''',\n    'my_snowflake'\n\
+    );\n\n-- Attach Snowflake database for direct SQL access\nATTACH '' AS sf (TYPE\
+    \ snowflake, SECRET my_snowflake, READ_ONLY);\nSELECT * FROM sf.schema.customers\
+    \ WHERE state = 'CA';\n"
+  extended_description: "This community-maintained extension allows DuckDB to connect\
+    \ to Snowflake using Arrow ADBC drivers. \nIt provides seamless connectivity between\
+    \ DuckDB and Snowflake, supporting multiple authentication methods \n(password,\
+    \ key pair, OAuth, external browser/SSO, Okta), predicate pushdown optimization,\
+    \ and comprehensive SQL operations.\n\n**Features:**\n- Multiple authentication\
+    \ methods (Password, Key Pair, OAuth, External Browser/SSO, Okta)\n- Direct SQL\
+    \ passthrough via `snowflake_query()` function\n- ATTACH support for mounting\
+    \ Snowflake databases as DuckDB catalogs\n- Predicate pushdown optimization (optional)\n\
+    - Hybrid queries: join Snowflake tables with local DuckDB tables\n- Full DML read\
+    \ operations: SELECT with WHERE, JOIN, aggregations, subqueries\n\n**Prerequisites:**\
+    \ The Apache Arrow ADBC Snowflake driver must be installed separately. \n**See\
+    \ the [ADBC Driver Installation Guide](https://github.com/iqea-ai/duckdb-snowflake#adbc-driver-setup)\
+    \ \nfor complete setup instructions.** For comprehensive usage examples, authentication\
+    \ methods, and \nadvanced features, visit the [extension repository](https://github.com/iqea-ai/duckdb-snowflake).\n"

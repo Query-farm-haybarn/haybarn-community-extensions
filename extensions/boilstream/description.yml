@@ -1,0 +1,121 @@
+extension:
+  name: boilstream
+  description: Secure remote secrets storage with OPAQUE PAKE authentication, email/password
+    registration, MFA login, and automatic ducklake mounting
+  version: 0.6.0
+  language: C++, Rust
+  build: cmake
+  license: MIT
+  maintainers:
+  - dforsber
+  requires_toolchains: rust
+repo:
+  github: dforsber/boilstream-extension
+  ref: bd3c28def8d92921728729f499471cd165b90dc4
+docs:
+  hello_world: "-- Setup: Install and load boilstream extension\nINSTALL httpfs; LOAD\
+    \ httpfs;\nINSTALL boilstream FROM community;\nLOAD boilstream;\n\n-- Option 1:\
+    \ Login with email/password/MFA (establishes OPAQUE session)\n--     NOTE: Remember\
+    \ to clean up your ~/.duckdb/history\nPRAGMA boilstream_login('https://api.example.com/user@example.com',\
+    \ 'password', '123456');\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502         status      \
+    \   \u2502     expires_at      \u2502 ducklakes_attached \u2502\n\u251C\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2524\n\u2502 Session token obtained \u2502 2025-11-21 10:30:00 \u2502      \
+    \            2 \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2518\n\n-- Option 2: Authenticate with bootstrap\
+    \ token (from SSO/web UI)\nPRAGMA boilstream_bootstrap_session('https://api.example.com/secrets:TOKEN');\n\
+    \u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2510\n\u2502         status         \u2502     expires_at\
+    \      \u2502 ducklakes_attached \u2502\n\u251C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 Session token\
+    \ obtained \u2502 2025-11-21 10:30:00 \u2502                  2 \u2502\n\u2514\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2518\n\n-- List all available ducklakes\nFROM boilstream_ducklakes();\n\
+    \u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502 catalog_id\
+    \   \u2502 catalog_name \u2502   description   \u2502\n\u251C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 5a805647-... \u2502 my_analytics\
+    \ \u2502 Sales analytics \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2518\n\n-- List all cached secrets with expiration\nFROM boilstream_secrets();\n\
+    \u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2510\n\u2502        name         \u2502   type   \u2502  \
+    \   expires_at      \u2502\n\u251C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 my_analytics        \u2502\
+    \ ducklake \u2502 2026-11-19 20:00:00 \u2502\n\u2502 my_analytics_s3     \u2502\
+    \ s3       \u2502 2026-11-19 20:00:00 \u2502\n\u2502 my_analytics_pg     \u2502\
+    \ postgres \u2502 2026-11-19 20:00:00 \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n\n-- Create\
+    \ new ducklake\nPRAGMA boilstream_create_ducklake('new_catalog', 'My new ducklake');\n\
+    \n-- Query ducklake (automatically attached)\nUSE my_analytics;\nSHOW TABLES;\n\
+    \n-- Create persistent secret onto BoilStream server\nCREATE PERSISTENT SECRET\
+    \ s3_minio IN boilstream (\n    TYPE S3,\n    KEY_ID 'minioadmin',\n    SECRET\
+    \ 'minioadmin',\n    REGION 'eu-west-1',\n    ENDPOINT 'localhost:9000',\n   \
+    \ USE_SSL false,\n    URL_STYLE 'path',\n    SCOPE 's3://ingestion-data/'\n);\n"
+  extended_description: "Boilstream extension provides enterprise-grade remote secrets\
+    \ storage for multi-tenant DuckDB deployments.\n\n**Features:**\n- \U0001F510\
+    \ **OPAQUE PAKE Authentication** - Password-less authentication (IETF RFC 9807)\n\
+    - \U0001F512 **End-to-end Encryption** - AES-256-GCM/ChaCha20-Poly1305 for secrets\
+    \ and responses\n- \U0001F511 **Cryptographic Key Derivation** - HKDF-SHA256 with\
+    \ domain separation\n- \U0001F6E1\uFE0F **Defense in Depth** - HMAC verification\
+    \ before AEAD decryption\n- \U0001F3AF **Session Protection** - Lock-step sequence\
+    \ protocol prevents hijacking\n- \U0001F5C4\uFE0F **Ducklake Support** - Auto-attach\
+    \ multi-tenant data catalogs\n- \U0001F310 **SSO Integration** - Bootstrap token\
+    \ exchange for web environments\n\n**Security:**\n- Facebook's audited OPAQUE\
+    \ implementation (Rust + C++ FFI)\n- Protects against MITM attacks even if TLS\
+    \ is compromised\n- One-time bootstrap tokens with anonymous authentication\n\
+    - Session resumption with encrypted refresh tokens\n- Comprehensive test vectors\
+    \ and security specification\n\n**API Functions:**\n- `PRAGMA boilstream_register_user(url_with_email,\
+    \ password)` - Register new user with MFA (displays QR code)\n- `PRAGMA boilstream_verify_mfa(totp_code)`\
+    \ - Complete registration and get backup codes\n- `PRAGMA boilstream_login(url_with_email,\
+    \ password, mfa_code)` - Email/password/MFA login\n- `PRAGMA boilstream_bootstrap_session(url_with_token)`\
+    \ - Authenticate with bootstrap token\n- `boilstream_ducklakes()` - List available\
+    \ ducklakes\n- `boilstream_secrets()` - List cached secrets with expiration\n\
+    - `boilstream_buckets()` - List available storage buckets\n- `PRAGMA boilstream_create_ducklake(name,\
+    \ description)` - Create new ducklake\n- `PRAGMA boilstream_help` - Show all available\
+    \ commands\n\n**Requirements:**\n- httpfs extension (auto-loaded)\n- postgres_scanner\
+    \ extension (auto-loaded)\n- ducklake extension (auto-loaded)\n- Compatible REST\
+    \ API server (see [API specification](https://github.com/dforsber/boilstream-extension/blob/main/src/README.md))\n\
+    \nFor detailed documentation, security specification, and setup instructions,\
+    \ visit the [extension repository](https://github.com/dforsber/boilstream-extension).\n"

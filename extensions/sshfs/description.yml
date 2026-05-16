@@ -1,0 +1,33 @@
+extension:
+  name: sshfs
+  description: Allows reading and writing files over SSH
+  version: '2026021601'
+  language: C++
+  build: cmake
+  license: MIT
+  excluded_platforms: windows_amd64_rtools;windows_amd64_mingw;windows_amd64;wasm_threads;wasm_eh;wasm_mvp;linux_amd64_musl;
+  requires_toolchains: vcpkg
+  maintainers:
+  - onnimonni
+  vcpkg_commit: dd3097e305afa53f7b4312371f62058d2e665320
+repo:
+  github: midwork-finds-jobs/duckdb-sshfs
+  ref: 8c4216e8f33d7f7c3d7c3a8f171856eb7a5ac8e6
+docs:
+  hello_world: "-- Install & load the extension\nINSTALL sshfs FROM community;\nLOAD\
+    \ sshfs;\n\n-- Authenticate with SSH key file\nCREATE SECRET my_hetzner_storagebox\
+    \ (\n    TYPE SSH,\n    USERNAME 'user',\n    KEY_PATH '/Users/' || getenv('USER')\
+    \ || '/.ssh/storagebox_key',\n    PORT 23\n    SCOPE 'sshfs://u123456.your-storagebox.de'\n\
+    );\n\n-- or with password\nCREATE SECRET my_server (\n  TYPE SSH,\n  USERNAME\
+    \ 'user',\n  PASSWORD 'password',\n  SCOPE 'sshfs://your-server.example.com'\n\
+    );\n\n-- Write data to remote server\nCOPY (SELECT * FROM large_table)\nTO 'sshfs://your-server.example.com/data.parquet';\n\
+    \n-- Read The uploaded parquet file using WebDAV\nSELECT * FROM 'sshfs://your-server.example.com/data.parquet';\n"
+  extended_description: 'DuckDB sshfs extension enables seamless integration with
+    servers through ssh, allowing users to read from and write to remote file systems
+    directly within DuckDB.
+
+
+    See: https://github.com/midwork-finds-jobs/duckdb-sshfs/blob/main/README.md for
+    more examples and details.
+
+    '

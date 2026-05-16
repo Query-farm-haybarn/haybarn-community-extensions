@@ -1,0 +1,45 @@
+extension:
+  name: talib
+  description: Technical Analysis Library (TA-Lib) functions for DuckDB -- 100+ indicators
+    for financial market analysis
+  version: 0.1.1
+  language: C++
+  build: cmake
+  license: MIT
+  maintainers:
+  - neuesql
+  - wuqunfei
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_rtools;windows_amd64_mingw
+repo:
+  github: neuesql/atm_talib
+  ref: 53c4312814729d037f865126025cc4235aa4afea
+docs:
+  hello_world: "-- Scalar form: operate on a pre-collected list\nSELECT t_sma([1.0,\
+    \ 2.0, 3.0, 4.0, 5.0], 3);\n\n-- Aggregate/window form: use OVER() for row-by-row\
+    \ SMA\nSELECT date, close, ta_sma(close, 14) OVER (ORDER BY date ROWS BETWEEN\
+    \ 13 PRECEDING AND CURRENT ROW) AS sma_14 FROM ohlc;\n\n-- Multi-output indicators\
+    \ return structs (MACD, Bollinger Bands)\nSELECT t_macd(list(close ORDER BY date),\
+    \ 12, 26, 9) FROM ohlc;\nSELECT t_bbands(list(close ORDER BY date), 20, 2.0, 2.0,\
+    \ 0) FROM ohlc;\n\n-- Candlestick pattern recognition\nSELECT t_cdldoji(list(open\
+    \  ORDER BY date), list(high  ORDER BY date),\n                 list(low   ORDER\
+    \ BY date), list(close ORDER BY date))\nFROM ohlc;\n"
+  extended_description: "100+ TA-Lib indicators as native DuckDB functions: overlap\
+    \ studies\n| Category | Count | Examples |\n|----------|-------|---------|\n|\
+    \ \U0001F500 Overlap Studies | 8+ | `t_sma`, `t_ema`, `t_wma`, `t_dema`, `t_tema`\
+    \ |\n| \U0001F3C3 Momentum | 15+ | `t_rsi`, `t_macd`, `t_willr`, `t_cci`, `t_adx`\
+    \ |\n| \U0001F50A Volume | 1+ | `t_ad` |\n| \U0001F30A Volatility | 2+ | `t_atr`,\
+    \ `t_natr` |\n| \U0001F56F\uFE0F Pattern Recognition | 49+ | `t_cdldoji`, `t_cdlhammer`,\
+    \ `t_cdlengulfing` |\n| \U0001F4B0 Price Transform | 2+ | `t_avgprice`, `t_bop`\
+    \ |\n| \U0001F504 Cycle Indicators | 4+ | `t_ht_dcperiod`, `t_ht_trendline`, `t_ht_trendmode`\
+    \ |\n| \U0001F4CF Statistics | 10+ | `t_linearreg`, `t_tsf`, `t_max`, `t_min`\
+    \ |\n| \u2797 Math Transform | 15 | `t_sin`, `t_cos`, `t_ln`, `t_sqrt` |\n\nEvery\
+    \ function is registered in two forms:\n- Scalar (`t_*`): pass pre-collected lists,\
+    \ returns a list\n- Aggregate/window (`ta_*`): use with `OVER()` for row-by-row\
+    \ results\n\n| | \U0001F3CE\uFE0F Scalar `t_*` | \U0001F9D1\u200D\U0001F4BB Aggregate\
+    \ `ta_*` |\n|---|---|---|\n| **Performance** | \u26A1 Fast \u2014 one pass over\
+    \ the full series, O(N) | \U0001F422 Slower \u2014 recomputes per window frame,\
+    \ ~O(N \xD7 window) |\n| **Ergonomics** | Requires `list(col ORDER BY date)` +\
+    \ `unnest` to rejoin rows | Natural SQL \u2014 plugs into `OVER (PARTITION BY\
+    \ \u2026 ORDER BY \u2026)` |\n| **Best for** | Backtests, full-history feature\
+    \ generation, large datasets | Dashboards, ad-hoc queries, mixing indicators with\
+    \ row-level columns |\n"

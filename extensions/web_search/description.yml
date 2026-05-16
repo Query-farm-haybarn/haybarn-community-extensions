@@ -1,0 +1,78 @@
+extension:
+  name: web_search
+  description: Query Google Custom Search API directly from SQL with filter pushdowns
+  version: '2026020501'
+  language: C++
+  build: cmake
+  license: MIT
+  maintainers:
+  - onnimonni
+repo:
+  github: midwork-finds-jobs/duckdb-web-search
+  ref: a4e07aa99050e8453b296f2572fc09e5c59f34ec
+docs:
+  hello_world: "-- Setup credentials (get from Google Cloud Console)\nCREATE SECRET\
+    \ google_search (\n    TYPE google_search,\n    key 'YOUR_API_KEY',\n    cx 'YOUR_SEARCH_ENGINE_ID'\n\
+    );\n\n-- Basic web search\nSELECT title, link, snippet\nFROM google_search('duckdb\
+    \ database')\nLIMIT 10;\n\n-- Filter by site\nSELECT title, link\nFROM google_search('rust\
+    \ tutorial')\nWHERE site = 'github.com'\nLIMIT 20;\n"
+  extended_description: 'DuckDB extension for querying Google Custom Search API with
+    SQL filter pushdowns.
+
+
+    ## Features
+
+
+    ### Table Functions
+
+    - `google_search(query)` - Web search
+
+    - `google_image_search(query)` - Image search
+
+
+    ### Filter Pushdowns (WHERE clause)
+
+    - `site = ''example.com''` / `site IN (...)` / `site != ''...''`
+
+    - `language = ''en''` / `country = ''US''` / `file_type = ''pdf''`
+
+    - `exact_match = ''phrase''` / `term IN (...)` / `term != ''...''`
+
+    - `ORDER BY date DESC/ASC`
+
+    - `LIMIT` optimization
+
+
+    ### Named Parameters
+
+    - `exact_terms`, `exclude_terms`, `or_terms`
+
+    - `safe` (boolean), `rights`, `sort`, `structured_data`
+
+    - Image: `img_size`, `img_type`, `img_color_type`, `img_dominant_color`
+
+
+    ### COPY TO
+
+    - `FORMAT google_pse_annotation` - Export URL patterns to PSE annotation XML
+
+
+    ### Other
+
+    - `pagemap` column as JSON type (arrow operator access)
+
+    - Graceful 429 rate limit handling
+
+    - JSON extension autoloaded
+
+
+    ## Setup
+
+
+    Get API credentials:
+
+    - API Key: https://developers.google.com/custom-search/v1/introduction
+
+    - Search Engine ID (cx): https://programmablesearchengine.google.com/controlpanel/all
+
+    '

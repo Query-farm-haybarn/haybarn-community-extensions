@@ -1,0 +1,127 @@
+extension:
+  name: dplyr
+  description: R dplyr pipeline syntax support for DuckDB - transpiles dplyr verbs
+    to SQL
+  version: 0.4.0
+  language: Rust & C++
+  build: cmake
+  license: MIT
+  excluded_platforms: windows_amd64_rtools
+  requires_toolchains: rust
+  maintainers:
+  - mrchypark
+repo:
+  github: mrchypark/libdplyr
+  ref: 405e38282970f5079f925549d2f574060c10313a
+docs:
+  hello_world: "-- Transform R dplyr pipeline syntax directly in DuckDB\n-- First,\
+    \ create a sample table\nCREATE TABLE iris AS SELECT * FROM (VALUES\n  (5.1, 3.5,\
+    \ 1.4, 0.2, 'setosa'),\n  (4.9, 3.0, 1.4, 0.2, 'setosa'),\n  (7.0, 3.2, 4.7, 1.4,\
+    \ 'versicolor'),\n  (6.4, 3.2, 4.5, 1.5, 'versicolor'),\n  (6.3, 3.3, 6.0, 2.5,\
+    \ 'virginica'),\n  (5.8, 2.7, 5.1, 1.9, 'virginica')\n) AS t(sepal_length, sepal_width,\
+    \ petal_length, petal_width, species);\n\n-- Run a pipeline directly as a statement\
+    \ (parser extension)\niris %>%\n  filter(sepal_length > 5) %>%\n  select(species,\
+    \ sepal_length, petal_length) %>%\n  arrange(desc(sepal_length));\n\u250C\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2510\n\u2502  species   \u2502 sepal_length \u2502 petal_length\
+    \ \u2502\n\u251C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 versicolor \u2502          7.0 \u2502\
+    \          4.7 \u2502\n\u2502 versicolor \u2502          6.4 \u2502          4.5\
+    \ \u2502\n\u2502 virginica  \u2502          6.3 \u2502          6.0 \u2502\n\u2502\
+    \ virginica  \u2502          5.8 \u2502          5.1 \u2502\n\u2502 setosa   \
+    \  \u2502          5.1 \u2502          1.4 \u2502\n\u2514\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\
+    \n\n-- Group and summarize with dplyr syntax\niris %>%\n  group_by(species) %>%\n\
+    \  summarise(avg_sepal = mean(sepal_length), count = n());\n  \u250C\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2510\n  \u2502 avg_sepal \u2502 count \u2502\n  \u2502\
+    \  double   \u2502 int64 \u2502\n  \u251C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\
+    \n  \u2502      6.05 \u2502     2 \u2502\n  \u2502       5.0 \u2502     2 \u2502\
+    \n  \u2502       6.7 \u2502     2 \u2502\n  \u2514\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2518\n\n-- Create derived columns with mutate\niris %>%\n  mutate(sepal_ratio\
+    \ = sepal_length / sepal_width) %>%\n  select(species, sepal_ratio) %>%\n  arrange(sepal_ratio);\n\
+    \n-- Embed a pipeline inside normal SQL using (| ... |)\nSELECT species, COUNT(*)\
+    \ AS n\nFROM (| iris %>% filter(sepal_length > 5) %>% select(species) |)\nGROUP\
+    \ BY species\nORDER BY n DESC;\n"
+  extended_description: '`dplyr` is a DuckDB extension that brings R''s popular dplyr
+    package syntax to DuckDB.
+
+    It transpiles dplyr pipeline syntax (using the `%>%` pipe operator) directly to
+    SQL,
+
+    allowing R users to write familiar data manipulation code in DuckDB.
+
+
+    **Supported dplyr Verbs:**
+
+    - `select()` - Choose columns by name
+
+    - `filter()` - Filter rows based on conditions
+
+    - `mutate()` - Create new columns or modify existing ones
+
+    - `arrange()` - Sort rows (supports `desc()` for descending order)
+
+    - `group_by()` - Group data by one or more columns
+
+    - `summarise()` / `summarize()` - Aggregate grouped data
+
+    - `rename()` - Rename columns
+
+
+    **Aggregation Functions:**
+
+    - `n()` - Count rows
+
+    - `mean()` / `avg()` - Average
+
+    - `sum()` - Sum
+
+    - `min()` / `max()` - Minimum / Maximum
+
+    - `median()` / `mode()` - DuckDB-specific aggregates
+
+    - Other aggregate function names are passed through to DuckDB (uppercased).
+
+
+    **Key Features:**
+
+    - Native R dplyr syntax support with `%>%` pipe operator
+
+    - Transpiles to optimized SQL at runtime
+
+    - Works with any DuckDB table (pipelines must start with a table name)
+
+    - Error messages include helpful diagnostics
+
+    - Embed pipelines in normal SQL using `(| ... |)` (e.g., `SELECT * FROM (| iris
+    %>% filter(x > 0) |);`)
+
+
+    **Usage:**
+
+    ```sql
+
+    -- Using the dplyr() table function
+
+    SELECT * FROM dplyr(''table_name %>% filter(x > 5) %>% select(a, b)'');
+
+
+    -- Or write a pipeline directly as a statement (parser extension)
+
+    table_name %>% filter(x > 5) %>% select(a, b);
+
+    ```
+
+
+    For more information, visit the [GitHub repository](https://github.com/mrchypark/libdplyr).
+
+    '

@@ -1,0 +1,65 @@
+extension:
+  name: warc
+  description: Parse WARC (Web ARChive) records for Common Crawl data processing
+  version: 0.1.0
+  language: Rust
+  build: cargo
+  license: MIT
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;linux_amd64_musl
+  requires_toolchains: rust
+  maintainers:
+  - onnimonni
+repo:
+  github: midwork-finds-jobs/duckdb_warc
+  ref: 7184683eec41abd8dbe34b8457c780cd80648cae
+docs:
+  hello_world: "-- Parse a WARC record from a gzip-compressed file\nSELECT parse_warc(content)\
+    \ FROM read_blob('record.warc.gz');\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502                           \
+    \   parse_warc(content)                            \u2502\n\u2502 struct(warc_version\
+    \ varchar, warc_headers varchar, http_version varchar,    \u2502\n\u2502     \
+    \   http_status integer, http_headers varchar, http_body blob)           \u2502\
+    \n\u251C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2524\n\u2502 {'warc_version': '1.0', 'warc_headers': '{\"WARC-Type\": \"response\"\
+    , ...}',   \u2502\n\u2502  'http_version': 'HTTP/1.1', 'http_status': 200,   \
+    \                         \u2502\n\u2502  'http_headers': '{\"content-type\":\
+    \ \"text/html\", ...}',                      \u2502\n\u2502  'http_body': <!doctype\
+    \ html>...}                                           \u2502\n\u2514\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n\n-- Extract\
+    \ specific fields\nSELECT\n    (parse_warc(content)).http_status,\n    (parse_warc(content)).http_body\n\
+    FROM read_blob('record.warc.gz');\n"
+  extended_description: "The WARC extension parses WARC (Web ARChive) records, the\
+    \ standard format used by Common Crawl\nand web archiving tools. It enables efficient\
+    \ processing of web archive data directly in DuckDB.\n\n## Function\n\n### `parse_warc(data)`\n\
+    \nParse a WARC record and return a struct with all components.\n\n**Parameters:**\n\
+    - `data` (BLOB or VARCHAR): WARC record data (auto-detects gzip compression)\n\
+    \n**Returns:** STRUCT with fields:\n- `warc_version` (VARCHAR): WARC format version\
+    \ (e.g., \"1.0\")\n- `warc_headers` (VARCHAR): JSON object of WARC headers\n-\
+    \ `http_version` (VARCHAR): HTTP version (e.g., \"HTTP/1.1\")\n- `http_status`\
+    \ (INTEGER): HTTP status code (e.g., 200)\n- `http_headers` (VARCHAR): JSON object\
+    \ of HTTP headers (lowercase keys)\n- `http_body` (BLOB): Response body content\n\
+    \n## Common Crawl Workflow\n\nThe recommended workflow for processing Common Crawl\
+    \ data:\n\n1. **Query the columnar index** (Parquet) to find records of interest\n\
+    2. **Fetch only the specific byte ranges** you need using HTTP Range requests\n\
+    3. **Parse with this extension**\n\n```sql\n-- Example: Parse a downloaded Common\
+    \ Crawl record\n-- First download: curl -r\"46376769-46377713\" \"https://data.commoncrawl.org/crawl-data/...\"\
+    \ > record.warc.gz\nSELECT\n    (parse_warc(content)).http_status,\n    decode((parse_warc(content)).http_body)\
+    \ as html\nFROM read_blob('record.warc.gz');\n```\n\n## Features\n\n- Auto-detects\
+    \ gzip compression\n- Handles binary content (skips body for non-text responses)\n\
+    - HTTP header keys are lowercased for consistent access\n- Works with both BLOB\
+    \ and VARCHAR input types\n"

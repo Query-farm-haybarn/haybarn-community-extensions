@@ -1,0 +1,99 @@
+extension:
+  name: pdal
+  description: Extension that adds support for manipulating point cloud data using
+    SQL.
+  version: 0.4.0
+  language: C++
+  build: cmake
+  excluded_platforms: windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
+  requires_toolchains: parser_tools
+  license: MIT / Overall PDAL license (BSD) - https://pdal.org/en/latest/copyright.html
+  maintainers:
+  - ahuarte47
+repo:
+  github: ahuarte47/duckdb-pdal
+  ref: 381e20d47f7b31febef0dc7fc487b5f892880c94
+docs:
+  hello_world: "SELECT * FROM PDAL_Read('path/to/your/pointcloud.las');\n---\n\u250C\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2510\n\u2502     X     \u2502     Y     \u2502   Z    \u2502       \u2502\
+    \n\u2502   double  \u2502   double  \u2502 double \u2502  ...  \u2502\n\u251C\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2524\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2524\n\u2502 637177.98 \u2502 849393.95 \u2502 411.19 \u2502  ...  \u2502\n\u2502\
+    \ 637177.30 \u2502 849396.95 \u2502 411.25 \u2502  ...  \u2502\n\u2502 637176.34\
+    \ \u2502 849400.84 \u2502 411.01 \u2502  ...  \u2502\n\u2502 637175.45 \u2502\
+    \ 849404.62 \u2502 410.99 \u2502  ...  \u2502\n\u2502 637174.33 \u2502 849407.37\
+    \ \u2502 411.38 \u2502  ...  \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n\nWITH __input AS (\n\
+    \    SELECT\n        X, Y, RasterValue\n    FROM\n        PDAL_Pipeline('./test/data/overlay-sample.tiff',\
+    \ './test/data/overlay-sample-pipeline.json')\n)\nSELECT\n    COUNT(*) AS c,\n\
+    \    SUM(RasterValue) AS s\nFROM\n    __input\n;\n---\n\u250C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2510\n\u2502   c   \u2502    s     \u2502\n\u2502 int64 \u2502 \
+    \ double  \u2502\n\u251C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 57600 \u2502\
+    \ 576000.0 \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n"
+  extended_description: "This is an extension for DuckDB for manipulating point cloud\
+    \ data using SQL.\n\nYou can use the extension to read point cloud data from various\
+    \ formats (e.g., LAS, LAZ) and perform transformations on them.\n\nThe extension\
+    \ is built on top of [PDAL (Point Data Abstraction Library)](https://pdal.io/),\
+    \ a C++ library that enables users to read, write, and process point cloud data\
+    \ and, with this extension, load the data directly into DuckDB using SQL queries.\n\
+    \n```sql\nSELECT * FROM PDAL_Read('path/to/your/pointcloud.las');\n\n\u250C\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2510\n\u2502     X     \u2502     Y     \u2502   Z    \u2502       \u2502\n\u2502\
+    \   double  \u2502   double  \u2502 double \u2502  ...  \u2502\n\u251C\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2524\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\
+    \n\u2502 637177.98 \u2502 849393.95 \u2502 411.19 \u2502  ...  \u2502\n\u2502\
+    \ 637177.30 \u2502 849396.95 \u2502 411.25 \u2502  ...  \u2502\n\u2502 637176.34\
+    \ \u2502 849400.84 \u2502 411.01 \u2502  ...  \u2502\n\u2502 637175.45 \u2502\
+    \ 849404.62 \u2502 410.99 \u2502  ...  \u2502\n\u2502 637174.33 \u2502 849407.37\
+    \ \u2502 411.38 \u2502  ...  \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n```\n\nPDAL supports data\
+    \ pipelines, you can perform complex transformations before loading data points\
+    \ into DuckDB.\n\nFor example, load a raster file, and using `filters.overlay`,\
+    \ extract attributes from a Geopackage:\n\n```sql\nWITH __input AS (\n    SELECT\n\
+    \        X, Y, RasterValue\n    FROM\n        PDAL_Pipeline('./test/data/overlay-sample.tiff',\
+    \ './test/data/overlay-sample-pipeline.json')\n)\nSELECT\n    COUNT(*) AS c,\n\
+    \    SUM(RasterValue) AS s\nFROM\n    __input\n;\n\n\u250C\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2510\n\u2502   c   \u2502    s     \u2502\n\u2502 int64 \u2502  double\
+    \  \u2502\n\u251C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 57600 \u2502 576000.0\
+    \ \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n```\n\nWhere the pipeline is:\n\
+    \n```json\n{\n    \"pipeline\": [\n        {\n            \"type\": \"filters.assign\"\
+    ,\n            \"value\" : [ \"RasterValue = 0.0\" ]\n        },\n        {\n\
+    \            \"type\": \"filters.overlay\",\n            \"datasource\": \"./test/data/overlay-sample.gpkg\"\
+    ,\n            \"layer\": \"area\",\n            \"column\": \"user_data\",\n\
+    \            \"dimension\": \"RasterValue\"\n        }\n    ]\n}\n```\n\nThe pipeline\
+    \ can be provided either as a JSON file or as an inline JSON string. If the second\
+    \ parameter value\nstarts with \"[\" and ends with \"]\", it represents an inline\
+    \ JSON, otherwise it is a file path:\n\n```sql\nSELECT\n    COUNT(*)\nFROM\n \
+    \   PDAL_pipeline('./test/data/autzen_trim.las',\n        '[\n            {\n\
+    \                \"type\": \"filters.tail\",\n                \"count\": 10\n\
+    \            }\n        ]'\n    )\n;\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502 count_star() \u2502\
+    \n\u2502    int64     \u2502\n\u251C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502     10       \u2502\n\
+    \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2518\n```\n\nThe `PDAL_PipelineTable` function runs a PDAL pipeline\
+    \ on an input table. It is supposed that the input table\ncontains columns compatible\
+    \ with PDAL point clouds.\n\nThe pipeline can be provided either as a JSON file\
+    \ or as an inline JSON string as well. If the second parameter value\nstarts with\
+    \ \"[\" and ends with \"]\", it represents an inline JSON, otherwise it is a file\
+    \ path:\n\n```sql\nSELECT\n\t*\nFROM\n    PDAL_PipelineTable((SELECT X,Y,Z FROM\
+    \ ...), '[ {\"type\": \"filters.tail\", \"count\": 10} ]')\n;\n```\n"

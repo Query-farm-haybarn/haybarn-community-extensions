@@ -1,0 +1,102 @@
+extension:
+  name: poached
+  description: SQL parsing and introspection for IDEs, editors, and developer tools
+  version: 0.2.3
+  language: C/C++
+  build: cmake
+  license: MIT
+  requires_toolchains: python3
+  excluded_platforms: windows_amd64;windows_arm64;windows_amd64_mingw
+  maintainers:
+  - sidequery
+repo:
+  github: sidequery/poached
+  ref: 3ea18b13eef73620a4707c70753331b235a87f37
+docs:
+  hello_world: "-- Tokenize SQL for syntax highlighting (with byte positions)\nSELECT\
+    \ * FROM tokenize_sql('SELECT * FROM users WHERE id = 1');\n\u250C\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502 byte_position \u2502     category\
+    \     \u2502\n\u251C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502\
+    \             0 \u2502 KEYWORD          \u2502\n\u2502             7 \u2502 OPERATOR\
+    \         \u2502\n\u2502             9 \u2502 KEYWORD          \u2502\n\u2502\
+    \            14 \u2502 IDENTIFIER       \u2502\n\u2502            20 \u2502 KEYWORD\
+    \          \u2502\n\u2502            26 \u2502 IDENTIFIER       \u2502\n\u2502\
+    \            29 \u2502 OPERATOR         \u2502\n\u2502            31 \u2502 NUMERIC_CONSTANT\
+    \ \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n\n-- Validate\
+    \ SQL and get error messages\nSELECT is_valid_sql('SELECT * FROM'), sql_error_message('SELECT\
+    \ * FROM');\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502 is_valid_sql\
+    \ \u2502            sql_error_message               \u2502\n\u251C\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 false        \u2502 Parser Error:\
+    \ syntax error at end of input \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2518\n\n-- Get result column types without executing\nSELECT * FROM parse_columns('SELECT\
+    \ 1 AS num, ''hello'' AS str', 0);\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2510\n\u2502 col_index \u2502 col_name \u2502 col_type \u2502\n\u251C\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502         0 \u2502 num      \u2502\
+    \ INTEGER  \u2502\n\u2502         1 \u2502 str      \u2502 VARCHAR  \u2502\n\u2514\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n\n-- Extract function calls\
+    \ with type info\nSELECT * FROM parse_functions('SELECT COUNT(*), UPPER(name)\
+    \ FROM t');\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502 function_name \u2502\
+    \ function_type \u2502\n\u251C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 count_star\
+    \    \u2502 aggregate     \u2502\n\u2502 upper         \u2502 scalar        \u2502\
+    \n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2518\n\n-- Get full query plan as JSON\n\
+    SELECT sql_parse_json('SELECT 1 + 2 AS result');\n"
+  extended_description: '`poached` is a DuckDB extension for SQL parsing and introspection,
+    designed for building IDEs, SQL editors, query analyzers, and developer tools.
+
+
+    **Tokenization**: `tokenize_sql()` returns tokens with byte positions and categories
+    (KEYWORD, IDENTIFIER, OPERATOR, NUMERIC_CONSTANT, STRING_CONSTANT, COMMENT, ERROR)
+    for accurate syntax highlighting.
+
+
+    **Validation**: `is_valid_sql()` and `sql_error_message()` for parse error detection
+    and reporting.
+
+
+    **Schema introspection**: `parse_columns()`, `parse_column_types()`, `parse_type_info()`
+    to get result column names and types without executing queries.
+
+
+    **Query analysis**: `parse_tables()`, `parse_functions()`, `parse_where()` to
+    extract structural information from queries.
+
+
+    **Parameters**: `parse_parameters()` to extract prepared statement parameters.
+
+
+    **JSON output**: `sql_parse_json()` for full query plan access as JSON.
+
+
+    For more details, visit the [extension repository](https://github.com/sidequery/poached).
+
+    '

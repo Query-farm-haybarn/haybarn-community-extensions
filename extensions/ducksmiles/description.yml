@@ -1,0 +1,83 @@
+extension:
+  name: ducksmiles
+  description: Cheminformatics toolkit for DuckDB - SMILES, InChI, MOL/SDF, PDB, SELFIES,
+    and Wildman-Crippen LogP from SQL
+  version: 0.2.0
+  language: C++
+  build: cmake
+  license: MIT
+  maintainers:
+  - nkwork9999
+repo:
+  github: nkwork9999/duckSMILES
+  ref: b34ffe7a20aeac2cc0c46debb3ab7179fdc726fc
+docs:
+  hello_world: '-- Validate SMILES
+
+    SELECT mol_is_valid(''CCO'');          -- true
+
+    SELECT mol_is_valid(''invalid_xyz'');  -- false
+
+
+    -- Molecular formula (Hill system)
+
+    SELECT mol_formula(''CCO'');           -- C2H6O  (ethanol)
+
+    SELECT mol_formula(''c1ccccc1'');      -- C6H6   (benzene)
+
+    SELECT mol_formula(''O'');             -- H2O    (water)
+
+
+    -- Molecular weight
+
+    SELECT round(mol_weight(''c1ccccc1''), 2);  -- 78.11
+
+
+    -- Wildman-Crippen LogP (matches RDKit Crippen.MolLogP)
+
+    SELECT round(logp_crippen(''c1ccccc1''), 4);            -- 1.6866 (benzene)
+
+    SELECT round(logp_crippen(''CC(=O)Oc1ccccc1C(=O)O''), 4); -- aspirin
+
+
+    -- Expand implicit hydrogens to explicit [H] atoms in SMILES
+
+    SELECT add_hydrogens(''CCO'');         -- [C]([C]([O][H])([H])[H])([H])([H])[H]
+
+
+    -- InChI layer extraction
+
+    SELECT inchi_formula(''InChI=1S/C2H4O2/c1-2(3)4/h1H3,(H,3,4)'');  -- C2H4O2
+
+
+    -- Convert SMILES to SELFIES (ML-friendly notation)
+
+    SELECT smiles_to_selfies(''CCO'');
+
+
+    -- Batch processing
+
+    SELECT smiles, mol_formula(smiles) AS formula, mol_num_atoms(smiles) AS atoms
+
+    FROM (VALUES (''CCO''), (''c1ccccc1''), (''CC(=O)Oc1ccccc1C(=O)O'')) AS t(smiles);
+
+    '
+  extended_description: "Cheminformatics toolkit for DuckDB \u2014 analyze molecular\
+    \ structures directly from SQL\nwithout leaving your database. Pure Rust implementation\
+    \ with no external chemistry\nlibrary dependencies (no RDKit required).\n\n**Supported\
+    \ Formats:**\n- SMILES: Molecular validation, formula, weight, atom/bond counts,\
+    \ LogP\n- InChI/InChIKey: Layer extraction, stereochemistry detection, skeleton\
+    \ matching\n- MOL/SDF: V2000/V3000 block parsing, molecule counting\n- PDB/CIF/XYZ:\
+    \ Protein structure analysis (atom, chain, residue, model counts)\n- SELFIES:\
+    \ Bidirectional SMILES-SELFIES conversion for ML pipelines\n\n**37 scalar SQL\
+    \ functions** for molecular property extraction, format conversion,\nstructural\
+    \ comparison, and physicochemical property prediction. Ideal for\ncheminformatics\
+    \ datasets, drug discovery pipelines, and molecular ML feature\nengineering.\n\
+    \n**LogP:** `logp_crippen()` implements the Wildman-Crippen atom-contribution\n\
+    method (110 SMARTS patterns, 68 atom types) and matches RDKit's\n`Crippen.MolLogP`\
+    \ exactly for small molecules.\n\n**Hydrogen expansion:** `add_hydrogens()` returns\
+    \ a SMILES with all implicit\nH atoms broken out as explicit `[H]` vertices (verbose\
+    \ bracket form, round-trips\nthrough the parser). Useful as a preprocessing primitive\
+    \ for any descriptor\nthat needs explicit hydrogens, and composes safely with\
+    \ `logp_crippen` (the\ninternal H expansion is idempotent).\n\n**Architecture:**\
+    \ Rust (core logic, 5 crates) + C++ (DuckDB integration via FFI)\n"

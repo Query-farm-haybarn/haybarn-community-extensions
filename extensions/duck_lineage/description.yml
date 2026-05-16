@@ -1,0 +1,60 @@
+extension:
+  name: duck_lineage
+  description: The Duck Lineage extension automatically captures query lineage events
+    and sends them to an Open Lineage backend.
+  version: 0.2.0
+  language: C++
+  build: cmake
+  license: MIT
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_mingw
+  vcpkg_commit: 84bab45d415d22042bd0b9081aea57f362da3f35
+  maintainers:
+  - thijs-s
+repo:
+  github: ilum-cloud/duck_lineage
+  ref: 9a4324ee86db62f8c31f784af62fcd265412e9d9
+docs:
+  hello_world: '-- Point to a running Open Lineage backend
+
+    SET duck_lineage_url = ''http://localhost:5000/api/v1/lineage'';
+
+
+    -- Run some queries
+
+    CREATE TABLE greetings (id INTEGER, message VARCHAR);
+
+    INSERT INTO greetings VALUES (1, ''Hello''), (2, ''World'');
+
+
+    SELECT * FROM greetings;
+
+
+    -- The lineage information for the above queries will be sent to the Open Lineage
+    backend automatically!
+
+    '
+  extended_description: "The duck_lineage extension automatically captures data lineage\
+    \ from every DuckDB query and emits OpenLineage events to any compatible backend\
+    \ (e.g., Marquez, Atlan, DataHub).\n\nFeatures:\n- Automatic lineage capture \u2014\
+    \ no query modification required\n- OpenLineage START/COMPLETE/FAIL event lifecycle\
+    \ for every query\n- Input and output dataset extraction from logical query plans\n\
+    - Schema facets with column names and types for all tracked datasets\n- SQL query\
+    \ facet attached to every event\n- Output statistics facet (row count) on COMPLETE\
+    \ events\n- Lifecycle state change tracking (CREATE, DROP, ALTER, OVERWRITE, RENAME,\
+    \ TRUNCATE)\n- Symlinks facet for dataset identity resolution\n- File-based source\
+    \ tracking (read_csv, read_parquet, COPY TO)\n- DuckLake catalog support with\
+    \ automatic namespace resolution from DATA_PATH\n- Asynchronous event delivery\
+    \ via background worker thread\n- Exponential backoff retry with configurable\
+    \ max retries\n- Configurable event queue with overflow protection\n- API key\
+    \ authentication for OpenLineage backends\n- Parent run facet via OPENLINEAGE_PARENT_*\
+    \ environment variables\n- Debug logging mode\n\nTracked operations:\n- INSERT,\
+    \ UPDATE, DELETE, MERGE\n- CREATE TABLE, CREATE TABLE AS, CREATE VIEW, CREATE\
+    \ INDEX\n- DROP, ALTER\n- COPY TO\n- SELECT (read-only lineage)\n\nConfiguration\
+    \ (via SET statements):\n- duck_lineage_url \u2014 OpenLineage backend endpoint\n\
+    - duck_lineage_namespace \u2014 default dataset namespace\n- duck_lineage_api_key\
+    \ \u2014 authentication key\n- duck_lineage_debug \u2014 enable debug logging\n\
+    - duck_lineage_max_retries \u2014 retry attempts for failed HTTP requests (default:\
+    \ 3)\n- duck_lineage_max_queue_size \u2014 max queued events before dropping (default:\
+    \ 10000)\n- duck_lineage_timeout \u2014 HTTP request timeout in seconds (default:\
+    \ 10)\n\nLimitations:\n- Lineage captured from Prepared Statements is less detailed\n\
+    - Requires an external OpenLineage-compatible backend for event storage\n"

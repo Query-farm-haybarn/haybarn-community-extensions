@@ -1,0 +1,44 @@
+extension:
+  name: fsquery
+  description: Query filesystem metadata using SQL with recursive directory traversal
+  version: 0.1.0
+  language: C++
+  build: cmake
+  license: MIT
+  maintainers:
+  - halgari
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads
+repo:
+  github: halgari/fsquery
+  ref: d7a8acb6f3d5f73d1c7738da57ee3da1ce782f18
+docs:
+  hello_world: '-- Scan a directory and find large files
+
+    SELECT path, size, mtime
+
+    FROM fsquery_scan(''/home'')
+
+    WHERE is_regular_file AND size > 1000000
+
+    ORDER BY size DESC
+
+    LIMIT 10;
+
+    '
+  extended_description: "The **fsquery** extension adds a `fsquery_scan(path)` table\
+    \ function that recursively\ntraverses directories and returns file metadata including\
+    \ path, size, timestamps,\npermissions, and file type flags.\n\n### Features\n\
+    - **14 metadata columns**: path, mode, size, uid, gid, atime, mtime, ctime, nlink,\
+    \ ino, dev, is_regular_file, is_directory, is_symlink\n- **Filter pushdown**:\
+    \ Path prefix filters are pushed down to avoid scanning irrelevant directories.\
+    \ When using `fsquery_scan()` (no explicit path), filters like `path >= '/home/user/docs'`\
+    \ or `path IN (...)` cause only those subtrees to be traversed.\n- **Projection\
+    \ pushdown**: Only requested columns are computed, skipping unnecessary `stat`\
+    \ field extraction.\n- Cross-platform support (Linux, macOS, Windows)\n\n### Examples\n\
+    \nScan a specific directory:\n```sql\nSELECT path, size, mtime FROM fsquery_scan('/var/log')\
+    \ WHERE is_regular_file;\n```\n\nFilter pushdown \u2014 only `/etc` and `/var/log`\
+    \ are traversed, not the entire filesystem:\n```sql\nSELECT path, size FROM fsquery_scan()\n\
+    WHERE path >= '/etc' OR path >= '/var/log';\n```\n\nFind recently modified files:\n\
+    ```sql\nSELECT path, mtime FROM fsquery_scan('/home')\nWHERE is_regular_file AND\
+    \ mtime > TIMESTAMP '2025-01-01'\nORDER BY mtime DESC;\n```\n\nFind all symlinks:\n\
+    ```sql\nSELECT path FROM fsquery_scan('/usr') WHERE is_symlink;\n```\n"

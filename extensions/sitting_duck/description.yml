@@ -1,0 +1,102 @@
+extension:
+  name: sitting_duck
+  description: Parse and analyze source code ASTs from 27 programming languages with
+    tree-sitter grammars, pattern matching, and structural search
+  version: 1.7.4
+  language: C++
+  build: cmake
+  license: MIT
+  maintainers:
+  - teaguesterling
+repo:
+  github: teaguesterling/sitting_duck
+  ref: f7b9c600116b3ee869d8b5a9dca9f1357d31569c
+docs:
+  hello_world: "-- Parse Python code and find function definitions\nSELECT name, start_line,\
+    \ peek\nFROM parse_ast('\ndef hello():\n    return \"hello world\"\ndef greet(name):\n\
+    \    print(f\"Hello, {name}!\")\n    return name\n', 'python')\nWHERE is_function_definition(semantic_type);\n\
+    \n-- Pattern matching: find eval() calls and capture arguments\nSELECT captures['X'].peek\
+    \ as dangerous_input, file_path, start_line\nFROM ast_match('code', 'eval(__X__)',\
+    \ 'python');\n\n-- Pattern matching with variadic wildcards\nSELECT captures['F'].name\
+    \ as func_name, captures['Y'].peek as return_value\nFROM ast_match('code',\n \
+    \   'def __F__(__):\n    %__<BODY*>__%\n    return __Y__', 'python');\n\n-- Security\
+    \ audit: find dangerous function calls\nSELECT * FROM ast_security_audit('code')\n\
+    WHERE risk_level = 'high';\n\n-- Function complexity metrics\nSELECT name, cyclomatic,\
+    \ max_depth, lines\nFROM ast_function_metrics('code')\nWHERE cyclomatic > 10;\n\
+    \n-- Cross-language analysis with semantic types\nSELECT language, COUNT(*) as\
+    \ functions\nFROM read_ast(['src/**/*.py', 'src/**/*.js', 'src/**/*.go'])\nWHERE\
+    \ is_function_definition(semantic_type)\nGROUP BY language;\n"
+  extended_description: "Sitting Duck is a DuckDB extension for parsing source code\
+    \ into Abstract Syntax Trees (ASTs)\nusing tree-sitter grammars. It provides a\
+    \ powerful SQL interface to analyze, search, and\nunderstand code structure across\
+    \ 25+ programming languages.\n\n**Documentation:** https://sitting-duck.readthedocs.io/\n\
+    \n## Core Features\n\n**Pattern Matching:**\nFind code structures using pattern-by-example\
+    \ matching with wildcards:\n```sql\n-- Recursive wildcards for deep matching\n\
+    SELECT * FROM ast_match('code', 'class __C__: %__<**>__% def __M__(self): %__<BODY*>__%',\
+    \ 'python');\n\n-- Optional and negation wildcards\nSELECT * FROM ast_match('code',\
+    \ 'def __F__(__<?ARGS>__): %__<BODY*>__%', 'python');\n```\nSee: https://sitting-duck.readthedocs.io/en/latest/guide/pattern-matching/\n\
+    \n**CSS Selector Queries (v1.6.0, enhanced in v1.7.0+):**\nQuery AST nodes using\
+    \ CSS selector syntax \u2014 bootstrapped with sitting duck's own CSS grammar:\n\
+    ```sql\nSELECT name FROM ast_select('src/*.py', '.func:has(.call#execute):not(:has(try_statement))');\n\
+    \n-- v1.7.0: :match (current-node) vs :contains (subtree) structural patterns\n\
+    SELECT name FROM ast_select('src/*.py', '.func:contains(\"db.execute()\")');\n\
+    SELECT name FROM ast_select('src/*.py', 'call:match(\"db.execute()\")');\n\n--\
+    \ v1.7.2: parse once, query many \u2014 orders of magnitude faster for interactive\
+    \ use\nCREATE TABLE my_ast AS SELECT * FROM read_ast('src/**/*.py');\nSELECT *\
+    \ FROM ast_select_from('my_ast', '.class:named');\nSELECT * FROM ast_select_from('my_ast',\
+    \ '.func:has(return_statement)');\n```\nSupports type selectors, `#name`, `.semantic`\
+    \ (~80 aliases), combinators, `:has()`, `:not()`,\n`:match()` / `:contains()`\
+    \ structural patterns, scope/call-graph pseudo-classes, and pseudo-element navigation.\n\
+    Bare type matching: `if` matches `if` + `if_statement` + `if_clause`.\n\n**Table\
+    \ Functions:**\n- `read_ast(file_pattern, language := NULL)` - Parse source files\
+    \ into AST rows (parallel)\n- `parse_ast(content, language)` - Parse source code\
+    \ strings (table function)\n- `parse_ast_list(content, language)` - Parse source\
+    \ code strings (scalar, returns LIST<STRUCT>; v1.7.0)\n- `ast_match(source, pattern,\
+    \ lang)` - Pattern matching for code search\n- `ast_select(source, css_selector)`\
+    \ - CSS selector queries\n- `ast_select_from(table_name, selector)` - CSS selectors\
+    \ on pre-parsed tables (v1.7.2)\n- `ast_type_map(language)` - Node type discovery\
+    \ across languages\n\n**v1.7.0 extraction suffix:**\nAny extraction parameter\
+    \ (`context`, `source`, `structure`, `peek`) can take a `+schema`\nsuffix that\
+    \ keeps the full column set in the output schema as NULLs without computing them:\n\
+    ```sql\n-- Keep peek column in schema but skip its computation\nSELECT name, peek\
+    \ FROM read_ast('file.py', peek := 'none+schema');\n```\nEnables SQL macros to\
+    \ declare stable schemas regardless of which columns they populate.\n\n**Relational\
+    \ Predicates (v1.5.0):**\n- `ast_has(source, parent_type, child_type)` - Check\
+    \ containment relationships\n- `ast_inside(source, child_type, parent_type, parent_name)`\
+    \ - Find nodes inside specific parents\n- `ast_precedes(source, before_type, after_type)`\
+    \ - Ordering predicates\n- `ast_follows(source, after_type, before_type)` - Ordering\
+    \ predicates\n- `ast_not_has(source, parent_type, child_type)` - Negated containment\n\
+    \n**Analysis Macros (file-path based):**\n- `ast_definitions(source)` - All named\
+    \ definitions with categories\n- `ast_function_metrics(source)` - Cyclomatic complexity,\
+    \ nesting depth, line counts\n- `ast_security_audit(source)` - Detect dangerous\
+    \ function call patterns\n- `ast_dead_code(source)` - Find potentially unused\
+    \ functions/classes\n- `ast_nesting_analysis(source)` - Identify deeply nested\
+    \ code\n- `ast_definition_parent(table)` - Resolve nearest definition ancestor\
+    \ per node\n\n**Tree Navigation:**\n- `ast_descendants(table, node_id)` - Get\
+    \ subtree (O(1) using descendant_count)\n- `ast_ancestors(table, node_id)` - Path\
+    \ from node to root\n- `ast_children(table, node_id)` - Immediate children\n-\
+    \ `ast_function_scope(table, node_id)` - Function body excluding nested functions\n\
+    \n**Semantic Predicates:**\nCross-language filtering with normalized types:\n\
+    - `is_function_definition(st)`, `is_class_definition(st)`, `is_variable_definition(st)`\n\
+    - `is_function_call(st)`, `is_literal(st)`, `is_conditional(st)`, `is_loop(st)`\n\
+    \n## Supported Languages (27)\n\n| Category | Languages |\n|----------|-----------|\n\
+    | **Web** | JavaScript, TypeScript, HTML, CSS |\n| **Systems** | C, C++, Go, Rust,\
+    \ Zig |\n| **Scripting** | Python, Ruby, PHP, Lua, R, Bash |\n| **Enterprise**\
+    \ | Java, C#, Kotlin, Swift |\n| **Mobile** | Dart |\n| **Data** | SQL, JSON,\
+    \ TOML, GraphQL, HCL |\n| **Documentation** | Markdown |\n\n## AST Schema\n\n\
+    Each parsed node includes:\n- `type`, `name` - Node type and extracted identifier\n\
+    - `semantic_type` - Normalized type for cross-language queries\n- `file_path`,\
+    \ `language` - Source location\n- `start_line`, `end_line`, `depth` - Position\
+    \ and nesting\n- `descendant_count` - For O(1) subtree queries\n- `peek` - Configurable\
+    \ source preview\n- `qualified_name` - Scope-based path unique within a file (`C[User]\
+    \ F[__init__]` format; v1.7.0)\n- `signature_type`, `parameters`, `modifiers`,\
+    \ `annotations` - Native extraction\n- `scope` - STRUCT<current, function, class,\
+    \ module, stack> (v1.7.4); replaces\n  the v1.7.2 `scope_id` / `scope_stack` columns.\
+    \ `scope.function` lets you\n  answer \"what function is this in?\" as a single\
+    \ column read.\n\nFull schema: https://sitting-duck.readthedocs.io/en/latest/api/output-schema/\n\
+    \n## Use Cases\n\n- **Security auditing** - Find dangerous patterns (eval, exec,\
+    \ SQL injection)\n- **Code quality** - Complexity metrics, dead code detection,\
+    \ nesting analysis\n- **Refactoring** - Pattern-based code search across large\
+    \ codebases\n- **Documentation** - Extract function signatures and structure\n\
+    - **AI workflows** - Structured code understanding for LLM tools\n\n**GitHub:**\
+    \ https://github.com/teaguesterling/sitting_duck\n"
