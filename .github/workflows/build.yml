@@ -247,13 +247,22 @@ jobs:
     uses: ./.github/workflows/_extension_deploy.yml
     if: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_DEPLOY != '' && inputs.deploy != 'false' }}
     # Reusable-workflow permissions must be granted by the caller — the
-    # called workflow can only USE what we grant here.
+    # called workflow can only USE what we grant here, AND any further
+    # reusable workflow it chains into can only request permissions that
+    # are a subset of what this block grants (otherwise GHA refuses to
+    # start the run with "Error calling workflow ... is requesting 'X',
+    # but is only allowed 'X: none'"). _extension_deploy.yml's nested
+    # call_publish_registries job requests actions:read for cross-run
+    # actions/download-artifact, so we grant it here too.
     #   contents: read   → checkout the extension source repo
+    #   actions: read    → cross-run artifact download in the chained
+    #                      _extension_registry_publish.yml
     #   id-token: write  → PEP 740 attestations on PyPI publish, and
     #                      --provenance on npm publish (only used when
     #                      publish_registries is true; harmless otherwise).
     permissions:
       contents: read
+      actions: read
       id-token: write
     secrets: inherit
     with:
