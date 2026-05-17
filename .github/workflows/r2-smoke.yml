@@ -1,13 +1,9 @@
-# Tiny standalone smoke test for R2 PutObject + GetObject + Delete using the
-# same secrets _extension_deploy.yml uses. Lets us validate credentials +
-# region without paying for a 30+ min extension build.
+# R2 PutObject diagnostic. Single run, no fail-fast — reports what the
+# token can actually do across the buckets we know about, so we can
+# tell whether the issue is (a) wrong R2_BUCKET value, (b) token scope
+# missing the bucket, or (c) bucket policy denying writes.
 #
-# Trigger via:
-#   gh workflow run r2-smoke.yml --ref <branch>
-#
-# Writes / reads / deletes a single tiny object under the `community/_smoke/`
-# prefix on the configured bucket. Self-cleans on success; leaves the probe
-# object if delete fails, so the run output still tells you what happened.
+# Trigger:  gh workflow run r2-smoke.yml --ref main
 
 name: R2 smoke test
 on:
@@ -20,52 +16,57 @@ jobs:
   probe:
     runs-on: ubuntu-24.04
     env:
-      AWS_ACCESS_KEY_ID:     ${{ secrets.R2_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_KEY_ID }}
-      AWS_ENDPOINT_URL:      ${{ secrets.R2_ENDPOINT }}
-      # Cloudflare R2 expects region=auto; without it the SDK signs sigv4
-      # with the default us-east-1 scope and R2 rejects the signature
-      # (surfaces as AccessDenied on PUT).
-      AWS_DEFAULT_REGION:    auto
-      # Cloudflare R2 doesn't accept the new "always" default for sigv4
-      # checksum headers that awscli ≥ 1.36 / v2 ≥ 2.23 introduced.
-      # Setting both to when_required restores pre-2024 behavior. Without
-      # this, PutObject fails with AccessDenied (the actual cause behind
-      # the r2-smoke failure on run 25998369052 and the deploy/linux_arm64
-      # leg of run 25998018403). Same pattern haybarn-extension-ci-tools'
-      # `Downgrade AWS cli` step works around at the package level.
+      AWS_ACCESS_KEY_ID:                 ${{ secrets.R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY:             ${{ secrets.R2_SECRET_KEY_ID }}
+      AWS_ENDPOINT_URL:                  ${{ secrets.R2_ENDPOINT }}
+      AWS_DEFAULT_REGION:                auto
       AWS_REQUEST_CHECKSUM_CALCULATION:  when_required
       AWS_RESPONSE_CHECKSUM_VALIDATION:  when_required
-      BUCKET:                ${{ secrets.R2_BUCKET }}
+      R2_BUCKET_VALUE:                   ${{ secrets.R2_BUCKET }}
     steps:
       - name: Install awscli
         run: |
           python3 -m pip install --user --break-system-packages awscli >/dev/null
           aws --version
 
-      - name: PutObject
+      - name: What can this token see?
         run: |
-          set -euo pipefail
-          KEY="community/_smoke/${{ github.run_id }}-${{ github.run_attempt }}.txt"
-          BODY="r2 smoke probe @ $(date -u +%Y-%m-%dT%H:%M:%SZ) | run=${{ github.run_id }} branch=${{ github.ref_name }} actor=${{ github.actor }}"
-          echo "$BODY" > probe.txt
-          aws s3 cp probe.txt "s3://${BUCKET}/${KEY}"
-          echo "KEY=$KEY" >> "$GITHUB_ENV"
+          set +e
+          echo "::group::list-buckets (what the token has any visibility on)"
+          aws s3api list-buckets 2>&1
+          echo "::endgroup::"
+          echo
+          echo "::group::is R2_BUCKET value pointing at a real, accessible bucket?"
+          aws s3 ls "s3://${R2_BUCKET_VALUE}/" --summarize 2>&1 | head -10
+          echo "exit: $?"
+          echo "::endgroup::"
+          echo
+          echo "::group::known-good control: haybarn-community-extensions (archive workflow's bucket)"
+          aws s3 ls s3://haybarn-community-extensions/ --summarize 2>&1 | head -10
+          echo "exit: $?"
+          echo "::endgroup::"
 
-      - name: GetObject (round-trip)
+      - name: PUT probes (continue on error)
         run: |
-          set -euo pipefail
-          aws s3 cp "s3://${BUCKET}/${KEY}" probe.got
-          echo "--- contents ---"
-          cat probe.got
-          echo "--- diff vs original ---"
-          diff probe.txt probe.got && echo OK
-
-      - name: ListObjects on the prefix
-        run: aws s3 ls "s3://${BUCKET}/community/_smoke/"
-
-      - name: Delete (cleanup)
-        if: always()
-        run: |
-          set -euo pipefail
-          aws s3 rm "s3://${BUCKET}/${KEY}" || echo "::warning::failed to delete ${KEY} — leftover object will linger"
+          set +e
+          echo "smoke probe $(date -u +%Y-%m-%dT%H:%M:%SZ)" > probe.txt
+          TAG="${{ github.run_id }}-${{ github.run_attempt }}"
+          for spec in \
+              "R2_BUCKET-root|${R2_BUCKET_VALUE}|_smoke/${TAG}.txt" \
+              "R2_BUCKET-core|${R2_BUCKET_VALUE}|core/_smoke/${TAG}.txt" \
+              "R2_BUCKET-community|${R2_BUCKET_VALUE}|community/_smoke/${TAG}.txt" \
+              "community-bucket-root|haybarn-community-extensions|_smoke/${TAG}.txt" \
+              "community-bucket-archive|haybarn-community-extensions|archived_sources/_smoke/${TAG}.txt"
+          do
+            IFS='|' read -r LABEL BUCKET KEY <<< "$spec"
+            echo "::group::${LABEL} → s3://<bucket>/${KEY}"
+            aws s3 cp probe.txt "s3://${BUCKET}/${KEY}" 2>&1
+            rc=$?
+            if [[ $rc -eq 0 ]]; then
+              echo ">>> PUT OK"
+              aws s3 rm "s3://${BUCKET}/${KEY}" >/dev/null 2>&1
+            else
+              echo ">>> PUT FAILED (exit ${rc})"
+            fi
+            echo "::endgroup::"
+          done
