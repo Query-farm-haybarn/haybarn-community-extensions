@@ -637,12 +637,7 @@ jobs:
     # a PR, and avoids accidental publishes on PR-driven CI runs.
     # workflow_dispatch is permitted so maintainers can republish a
     # failed run; it requires repo write access to trigger.
-    if: >-
-      inputs.publish_registries
-      && (
-        (github.event_name == 'push' && github.ref == 'refs/heads/main')
-        || github.event_name == 'workflow_dispatch'
-      )
+    if: ${{ inputs.publish_registries && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -690,12 +685,7 @@ jobs:
       - deploy
     # Same gating as publish_pypi — push-to-main + workflow_dispatch only.
     # See publish_pypi above for the rationale.
-    if: >-
-      inputs.publish_registries
-      && (
-        (github.event_name == 'push' && github.ref == 'refs/heads/main')
-        || github.event_name == 'workflow_dispatch'
-      )
+    if: ${{ inputs.publish_registries && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
