@@ -142,6 +142,9 @@ jobs:
     if: ${{ needs.generate_matrix.outputs.deploy_matrix != '{}' && needs.generate_matrix.outputs.deploy_matrix != '' }}
     strategy:
       matrix: ${{ fromJson(needs.generate_matrix.outputs.deploy_matrix) }}
+      # Don't cascade-cancel other legs when one fails — for waddle we
+      # want every successful platform's wheel/leaf to still publish.
+      fail-fast: false
     # NOTE: a job-level `concurrency:` group referencing ${{ matrix.X }} is
     # not currently supported by GitHub Actions (causes startup_failure on
     # workflow validation). The per-(ext, version, arch) current.json
@@ -547,8 +550,10 @@ jobs:
             osx_arm64)         PY=macosx_11_0_arm64;      NOS=darwin; NCPU=arm64; NLIBC=-     ;;
             windows_amd64)     PY=win_amd64;              NOS=win32;  NCPU=x64;   NLIBC=-     ;;
             windows_arm64)     PY=win_arm64;              NOS=win32;  NCPU=arm64; NLIBC=-     ;;
-            wasm_*)
-              # wasm is not a PyPI / npm publish target — skip silently.
+            wasm_*|windows_amd64_mingw)
+              # No PyPI / npm publish for wasm or the MinGW Windows variant
+              # (npm os/cpu can't distinguish MinGW from MSVC; we'd be
+              # publishing a duplicate-platform leaf). Skip silently.
               echo "skip=true" >> "$GITHUB_OUTPUT"
               exit 0
               ;;
@@ -669,7 +674,11 @@ jobs:
     # a PR, and avoids accidental publishes on PR-driven CI runs.
     # workflow_dispatch is permitted so maintainers can republish a
     # failed run; it requires repo write access to trigger.
-    if: ${{ inputs.extension_name == 'waddle' && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') }}
+    #
+    # always() so partial deploy-matrix failures don't skip publish —
+    # if one platform fails to build, we still publish the wheels for
+    # the platforms that succeeded.
+    if: ${{ always() && needs.deploy.result != 'cancelled' && inputs.extension_name == 'waddle' && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -715,9 +724,8 @@ jobs:
     needs:
       - generate_matrix
       - deploy
-    # Same gating as publish_pypi — push-to-main + workflow_dispatch only.
-    # See publish_pypi above for the rationale.
-    if: ${{ inputs.extension_name == 'waddle' && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') }}
+    # Same gating + always() as publish_pypi — see that job for the rationale.
+    if: ${{ always() && needs.deploy.result != 'cancelled' && inputs.extension_name == 'waddle' && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
