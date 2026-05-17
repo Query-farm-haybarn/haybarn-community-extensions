@@ -142,14 +142,14 @@ jobs:
     if: ${{ needs.generate_matrix.outputs.deploy_matrix != '{}' && needs.generate_matrix.outputs.deploy_matrix != '' }}
     strategy:
       matrix: ${{ fromJson(needs.generate_matrix.outputs.deploy_matrix) }}
-    # Serialize current.json updates per (extension, arch). The pointer
-    # is the only mutable surface in the new R2 layout — if two pushes
-    # land at once for the same extension+arch they'd both try to write
-    # current.json. The per-build binary + manifest paths are immutable,
-    # so they don't need this; the cost of serializing here is small.
-    concurrency:
-      group: deploy-${{ inputs.extension_name }}-${{ inputs.duckdb_version }}-${{ matrix.duckdb_arch }}
-      cancel-in-progress: false
+    # NOTE: a job-level `concurrency:` group referencing ${{ matrix.X }} is
+    # not currently supported by GitHub Actions (causes startup_failure on
+    # workflow validation). The per-(ext, version, arch) current.json
+    # writes don't race within a single run anyway — each matrix leg
+    # targets a different per-arch path. Cross-run races (two pushes for
+    # the same extension landing simultaneously) remain possible but
+    # uncommon for our smoke-test workflow; can be addressed later with
+    # If-Match retry or a non-matrix follow-up job if needed.
     outputs:
       version: ${{ steps.calver.outputs.version }}
       ext_commit: ${{ steps.extsrc.outputs.ext_commit }}
