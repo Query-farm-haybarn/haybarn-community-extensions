@@ -114,9 +114,13 @@ def build_wheel(
         f"Haybarn extension {extension!r} built against haybarn {haybarn_version}."
     )
 
-    # install_requires is encoded into METADATA as Requires-Dist. The exact
-    # pin matches the haybarn version encoded in the package name suffix —
-    # see ideas/extension-version-pinning.md "Peer dependency on haybarn".
+    # No Requires-Dist on the haybarn engine for now. The PyPI package
+    # name is `haybarn-cli` (not `haybarn`), and the currently-published
+    # versions are pre-release (1.5.2rcN) which pip won't resolve without
+    # --pre. Declaring a hard dep would block `pip install` of the
+    # extension. The package-name suffix `-h<M>-<m>-<p>` still pins the
+    # haybarn ABI for users who care; the engine itself verifies the RSA
+    # signature on load anyway.
     metadata_lines = [
         "Metadata-Version: 2.1",
         f"Name: {display}",
@@ -127,7 +131,6 @@ def build_wheel(
         "License-File: LICENSE",
         "Requires-Python: >=3.8",
         "Description-Content-Type: text/markdown",
-        f"Requires-Dist: haybarn == {haybarn_version}",
         "Classifier: License :: OSI Approved :: MIT License",
         "Classifier: Operating System :: POSIX :: Linux",
         "Classifier: Operating System :: MacOS :: MacOS X",

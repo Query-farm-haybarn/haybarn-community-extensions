@@ -73,10 +73,12 @@ def main() -> int:
         },
         "license": "MIT",
         "keywords": ["haybarn", "duckdb", "extension", extension],
-        # The package name already pins the haybarn patch; the peerDep is
-        # an exact pin used purely for resolver enforcement to prevent
-        # accidental loads against the wrong haybarn engine.
-        "peerDependencies": {"haybarn": haybarn_version},
+        # peerDependencies intentionally omitted for now. The `haybarn`
+        # package on npm only has pre-release versions (1.5.2-rcN); a
+        # strict pin to "1.5.2" would warn against an unsatisfiable
+        # version on every install. The package-name suffix
+        # `-h<M>-<m>-<p>` still encodes the haybarn ABI; the engine
+        # verifies the RSA signature on load.
         "optionalDependencies": optional,
         "haybarn": metadata_blob,
         "publishConfig": {"access": "public"},
