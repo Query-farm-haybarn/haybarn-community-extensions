@@ -222,6 +222,12 @@ jobs:
           path: /tmp/extension
 
       - name: Deploy
+        # The pip wheel + npm leaf builds downstream don't depend on the
+        # R2 upload succeeding — they consume the locally-staged binary
+        # from "Re-sign and compress" above. Letting R2 publish soft-fail
+        # so the registry publish path still runs while the community
+        # bucket's token scope is sorted out.
+        continue-on-error: true
         shell: bash
         # Reuse the same R2_* org-secret credentials used by haybarn-extensions.yml
         # Community extensions now share the core bucket
@@ -478,6 +484,7 @@ jobs:
           ls -la stage/
 
       - name: Upload binary + manifest to per-commit immutable R2 path
+        continue-on-error: true   # see Deploy step's note on R2 soft-failing
         shell: bash
         env:
           AWS_ACCESS_KEY_ID:     ${{ secrets.R2_ACCESS_KEY_ID }}
@@ -497,6 +504,7 @@ jobs:
           aws s3 cp stage/manifest.json.asc "${PREFIX}/manifest.json.asc"
 
       - name: Update current.json pointer
+        continue-on-error: true   # see Deploy step's note on R2 soft-failing
         shell: bash
         env:
           AWS_ACCESS_KEY_ID:     ${{ secrets.R2_ACCESS_KEY_ID }}
