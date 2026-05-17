@@ -407,7 +407,7 @@ jobs:
         run: |
           set -euo pipefail
           # Channels list reflects what this build will actually be published to.
-          if [[ '${{ inputs.extension_name == 'waddle' }}' == 'true' ]]; then
+          if [[ '${{ contains(fromJSON('["waddle","h3","crypto","prql","lindel","arrow","chsql","airport","cache_httpfs","hnsw_acorn","http_client"]'), inputs.extension_name) }}' == 'true' ]]; then
             CHANNELS='r2-community,pypi,npm'
           else
             CHANNELS='r2-community'
@@ -525,7 +525,7 @@ jobs:
       # ------------------------------------------------------------------
 
       - name: Map duckdb_arch → PyPI platform tag + npm os/cpu/libc
-        if: ${{ inputs.extension_name == 'waddle' }}
+        if: ${{ contains(fromJSON('["waddle","h3","crypto","prql","lindel","arrow","chsql","airport","cache_httpfs","hnsw_acorn","http_client"]'), inputs.extension_name) }}
         id: platmap
         shell: bash
         run: |
@@ -570,7 +570,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Build pip wheel
-        if: ${{ inputs.extension_name == 'waddle' && steps.platmap.outputs.skip == 'false' }}
+        if: ${{ contains(fromJSON('["waddle","h3","crypto","prql","lindel","arrow","chsql","airport","cache_httpfs","hnsw_acorn","http_client"]'), inputs.extension_name) && steps.platmap.outputs.skip == 'false' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -588,7 +588,7 @@ jobs:
           DV: ${{ inputs.duckdb_version }}
 
       - name: Upload pip wheel artifact (for publish_pypi job)
-        if: ${{ inputs.extension_name == 'waddle' && steps.platmap.outputs.skip == 'false' }}
+        if: ${{ contains(fromJSON('["waddle","h3","crypto","prql","lindel","arrow","chsql","airport","cache_httpfs","hnsw_acorn","http_client"]'), inputs.extension_name) && steps.platmap.outputs.skip == 'false' }}
         uses: actions/upload-artifact@v4
         with:
           name: pypi-wheel-${{ inputs.extension_name }}-${{ matrix.duckdb_arch }}
@@ -596,7 +596,7 @@ jobs:
           if-no-files-found: error
 
       - name: Build npm leaf package
-        if: ${{ inputs.extension_name == 'waddle' && steps.platmap.outputs.skip == 'false' }}
+        if: ${{ contains(fromJSON('["waddle","h3","crypto","prql","lindel","arrow","chsql","airport","cache_httpfs","hnsw_acorn","http_client"]'), inputs.extension_name) && steps.platmap.outputs.skip == 'false' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -632,7 +632,7 @@ jobs:
           DV: ${{ inputs.duckdb_version }}
 
       - name: Upload npm leaf artifact (for publish_npm job)
-        if: ${{ inputs.extension_name == 'waddle' && steps.platmap.outputs.skip == 'false' }}
+        if: ${{ contains(fromJSON('["waddle","h3","crypto","prql","lindel","arrow","chsql","airport","cache_httpfs","hnsw_acorn","http_client"]'), inputs.extension_name) && steps.platmap.outputs.skip == 'false' }}
         uses: actions/upload-artifact@v4
         with:
           name: npm-leaf-${{ inputs.extension_name }}-${{ inputs.duckdb_version }}-${{ matrix.duckdb_arch }}
@@ -670,7 +670,7 @@ jobs:
     # always() so partial deploy-matrix failures don't skip publish —
     # if one platform fails to build, we still publish the wheels for
     # the platforms that succeeded.
-    if: ${{ always() && needs.deploy.result != 'cancelled' && inputs.extension_name == 'waddle' && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') }}
+    if: ${{ always() && needs.deploy.result != 'cancelled' && contains(fromJSON('["waddle","h3","crypto","prql","lindel","arrow","chsql","airport","cache_httpfs","hnsw_acorn","http_client"]'), inputs.extension_name) && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -717,7 +717,7 @@ jobs:
       - generate_matrix
       - deploy
     # Same gating + always() as publish_pypi — see that job for the rationale.
-    if: ${{ always() && needs.deploy.result != 'cancelled' && inputs.extension_name == 'waddle' && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') }}
+    if: ${{ always() && needs.deploy.result != 'cancelled' && contains(fromJSON('["waddle","h3","crypto","prql","lindel","arrow","chsql","airport","cache_httpfs","hnsw_acorn","http_client"]'), inputs.extension_name) && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
