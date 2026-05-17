@@ -1,7 +1,7 @@
-# R2 PutObject diagnostic. Single run, no fail-fast — reports what the
-# token can actually do across the buckets we know about, so we can
-# tell whether the issue is (a) wrong R2_BUCKET value, (b) token scope
-# missing the bucket, or (c) bucket policy denying writes.
+# R2 PutObject diagnostic. Probes the unified haybarn-extensions bucket
+# (the only one we use now) across the prefixes _extension_deploy.yml
+# would write to. No fail-fast, so we get a (prefix → result) matrix
+# in one run.
 #
 # Trigger:  gh workflow run r2-smoke.yml --ref main
 
@@ -22,44 +22,25 @@ jobs:
       AWS_DEFAULT_REGION:                auto
       AWS_REQUEST_CHECKSUM_CALCULATION:  when_required
       AWS_RESPONSE_CHECKSUM_VALIDATION:  when_required
-      R2_BUCKET_VALUE:                   ${{ secrets.R2_BUCKET }}
+      BUCKET:                            ${{ secrets.R2_BUCKET }}
     steps:
       - name: Install awscli
         run: |
           python3 -m pip install --user --break-system-packages awscli >/dev/null
           aws --version
 
-      - name: What can this token see?
-        run: |
-          set +e
-          echo "::group::list-buckets (what the token has any visibility on)"
-          aws s3api list-buckets 2>&1
-          echo "::endgroup::"
-          echo
-          echo "::group::is R2_BUCKET value pointing at a real, accessible bucket?"
-          aws s3 ls "s3://${R2_BUCKET_VALUE}/" --summarize 2>&1 | head -10
-          echo "exit: $?"
-          echo "::endgroup::"
-          echo
-          echo "::group::known-good control: haybarn-community-extensions (archive workflow's bucket)"
-          aws s3 ls s3://haybarn-community-extensions/ --summarize 2>&1 | head -10
-          echo "exit: $?"
-          echo "::endgroup::"
-
-      - name: PUT probes (continue on error)
+      - name: Probe write across the prefixes deploy/archive use
         run: |
           set +e
           echo "smoke probe $(date -u +%Y-%m-%dT%H:%M:%SZ)" > probe.txt
           TAG="${{ github.run_id }}-${{ github.run_attempt }}"
-          for spec in \
-              "R2_BUCKET-root|${R2_BUCKET_VALUE}|_smoke/${TAG}.txt" \
-              "R2_BUCKET-core|${R2_BUCKET_VALUE}|core/_smoke/${TAG}.txt" \
-              "R2_BUCKET-community|${R2_BUCKET_VALUE}|community/_smoke/${TAG}.txt" \
-              "community-bucket-root|haybarn-community-extensions|_smoke/${TAG}.txt" \
-              "community-bucket-archive|haybarn-community-extensions|archived_sources/_smoke/${TAG}.txt"
+          for KEY in \
+              "_smoke/${TAG}.txt" \
+              "core/_smoke/${TAG}.txt" \
+              "community/_smoke/${TAG}.txt" \
+              "archived_sources/_smoke/${TAG}.txt"
           do
-            IFS='|' read -r LABEL BUCKET KEY <<< "$spec"
-            echo "::group::${LABEL} → s3://<bucket>/${KEY}"
+            echo "::group::PUT s3://<bucket>/${KEY}"
             aws s3 cp probe.txt "s3://${BUCKET}/${KEY}" 2>&1
             rc=$?
             if [[ $rc -eq 0 ]]; then
