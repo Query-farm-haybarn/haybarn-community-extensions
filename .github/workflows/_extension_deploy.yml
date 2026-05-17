@@ -640,245 +640,35 @@ jobs:
           if-no-files-found: error
 
   # ------------------------------------------------------------------
-  # Aggregate PyPI publish — collects per-platform wheels from the
-  # deploy matrix and publishes all of them in one upload.
+  # Registry publish (PyPI + npm) is now a separate reusable workflow
+  # so it can be re-dispatched independently when PyPI's
+  # project-creation rate limit ("429 Too many new projects") bounces
+  # an earlier attempt — no need to rebuild.
   #
-  # Auth: account-scoped API token (HAYBARN_PYPI_TOKEN). We deliberately
-  # don't use Trusted Publishers OIDC here — TPs require per-project
-  # registration on pypi.org, which doesn't scale to ~250 community
-  # extension package names (each `haybarn-ext-<name>-h<M>-<m>-<p>` is
-  # a distinct project). One account-scoped token publishes any of them
-  # without per-package setup.
-  #
-  # Attestations (PEP 740) still use OIDC — they're independent of the
-  # publish auth — so id-token: write stays and `attestations: true`
-  # continues to attach build provenance.
+  # Retry recipe:
+  #   gh workflow run "_extension_registry_publish.yml" --ref main \\
+  #     -f extension_name=<name> -f source_run_id=<this-run-id>
   # ------------------------------------------------------------------
-  publish_pypi:
-    name: Publish PyPI
+  call_publish_registries:
+    name: Publish PyPI + npm
     needs:
       - generate_matrix
       - deploy
-    # Gate publish to push-to-main and manual reruns only. PRs (including
-    # internal-branch PRs that have access to repo secrets) build wheels
-    # for validation but DO NOT publish — prevents a compromised
-    # collaborator from triggering a publish by modifying a descriptor in
-    # a PR, and avoids accidental publishes on PR-driven CI runs.
-    # workflow_dispatch is permitted so maintainers can republish a
-    # failed run; it requires repo write access to trigger.
-    #
-    # always() so partial deploy-matrix failures don't skip publish —
-    # if one platform fails to build, we still publish the wheels for
-    # the platforms that succeeded.
     if: ${{ always() && needs.deploy.result != 'cancelled' && contains(fromJSON('["waddle","h3","crypto","prql","lindel","arrow","rapidfuzz","airport","cache_httpfs","hnsw_acorn","http_client"]'), inputs.extension_name) && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') }}
-    runs-on: ubuntu-24.04
+    uses: ./.github/workflows/_extension_registry_publish.yml
     permissions:
       contents: read
-      id-token: write    # PEP 740 attestations (NOT publish auth)
-    concurrency:
-      group: publish-pypi-${{ inputs.extension_name }}-${{ inputs.duckdb_version }}
-      cancel-in-progress: false
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: pypi-wheel-${{ inputs.extension_name }}-*
-          path: dist/
-          merge-multiple: true
-
-      - name: List collected wheels
-        run: ls -la dist/
-
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: dist/
-          # Token-based publish auth. Attestations still use OIDC.
-          password: ${{ secrets.HAYBARN_PYPI_TOKEN }}
-          attestations: true
-          skip-existing: true
-          verbose: true
-
-  # ------------------------------------------------------------------
-  # Aggregate npm publish — collects per-platform leaf packages, publishes
-  # each leaf, then assembles + publishes the meta-package with
-  # optionalDependencies pointing at the leaves that actually shipped.
-  #
-  # Auth: scope-granted granular access token (HAYBARN_NPM_TOKEN).
-  # Deliberately NOT Trusted Publishers OIDC — that requires per-package
-  # configuration on npmjs.com, and we have N leaves × ~250 extensions
-  # worth of names. One @haybarn/*-scoped token publishes them all.
-  #
-  # Provenance attestations still use OIDC (--provenance is independent
-  # of publish auth), so id-token: write stays.
-  # ------------------------------------------------------------------
-  publish_npm:
-    name: Publish npm
-    needs:
-      - generate_matrix
-      - deploy
-    # Same gating + always() as publish_pypi — see that job for the rationale.
-    if: ${{ always() && needs.deploy.result != 'cancelled' && contains(fromJSON('["waddle","h3","crypto","prql","lindel","arrow","rapidfuzz","airport","cache_httpfs","hnsw_acorn","http_client"]'), inputs.extension_name) && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') }}
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: read
-      id-token: write    # --provenance attestations (NOT publish auth)
-    concurrency:
-      group: publish-npm-${{ inputs.extension_name }}-${{ inputs.duckdb_version }}
-      cancel-in-progress: false
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          path: ce
-
-      # Node 24 ships with npm 11.x. npm 9.5+ is required for
-      # `--provenance` to attach Sigstore-signed build attestations
-      # using the workflow's OIDC token.
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          registry-url: 'https://registry.npmjs.org'
-
-      - name: Sanity-check npm version
-        run: npm --version
-
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: npm-leaf-${{ inputs.extension_name }}-${{ inputs.duckdb_version }}-*
-          path: leaves/
-
-      - name: Publish each leaf
-        id: leaves
-        env:
-          NPM_CONFIG_PROVENANCE: 'true'
-          # actions/setup-node@v6 with registry-url writes an .npmrc
-          # containing `//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}`
-          # — npm reads NODE_AUTH_TOKEN from env at publish time.
-          NODE_AUTH_TOKEN: ${{ secrets.HAYBARN_NPM_TOKEN }}
-          VERSION: ${{ needs.deploy.outputs.version }}
-          EXTENSION: ${{ inputs.extension_name }}
-          DV: ${{ inputs.duckdb_version }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          HV="${DV#v}"
-          HSUFFIX="h${HV//./-}"
-          META_PKG="@haybarn/ext-${EXTENSION}-${HSUFFIX}"
-
-          # Derive each leaf's suffix from the artifact directory name
-          # (npm-leaf-<ext>-<duckdb_version>-<arch>), publish it, and
-          # accumulate the suffix for the meta package's optionalDeps.
-          PRESENT_LEAVES=""
-          ART_PREFIX="leaves/npm-leaf-${EXTENSION}-${DV}-"
-          META_PREFIX="${META_PKG}-"
-          for art in "${ART_PREFIX}"*; do
-            [[ -d "$art" ]] || continue
-            ARCH="${art#"$ART_PREFIX"}"
-            echo "::group::leaf for $ARCH"
-            STAGE=$(mktemp -d)
-            tar -xzf "$art/npm-leaf.tar.gz" -C "$STAGE"
-            LEAF_NAME=$(python3 -c "import json; print(json.load(open('$STAGE/package.json'))['name'])")
-            echo "publishing $LEAF_NAME @ $VERSION"
-            # Tolerate "already published this exact version" — npm
-            # rejects re-publishing the same (name, version) with EEXIST.
-            # Treat as success if a publish previously succeeded for
-            # this tuple. Other failures still error out.
-            if ! (cd "$STAGE" && npm publish --provenance --access public --tag latest 2>/tmp/npm.err); then
-              if grep -qiE 'previously published|EPUBLISHCONFLICT|cannot publish over' /tmp/npm.err; then
-                echo "::notice::$LEAF_NAME@$VERSION already published — skipping"
-              else
-                cat /tmp/npm.err
-                echo "::error::npm publish failed for $LEAF_NAME@$VERSION"
-                exit 1
-              fi
-            fi
-            # Derive the suffix part by stripping the meta prefix.
-            SLUG="${LEAF_NAME#"$META_PREFIX"}"
-            if [[ -n "$PRESENT_LEAVES" ]]; then
-              PRESENT_LEAVES="${PRESENT_LEAVES},${SLUG}"
-            else
-              PRESENT_LEAVES="$SLUG"
-            fi
-            echo "::endgroup::"
-          done
-
-          if [[ -z "$PRESENT_LEAVES" ]]; then
-            echo "::error::no npm leaves found — nothing to publish"
-            exit 1
-          fi
-          echo "present_leaves=$PRESENT_LEAVES" >> "$GITHUB_OUTPUT"
-          echo "meta_pkg=$META_PKG"             >> "$GITHUB_OUTPUT"
-
-      - name: Build + publish meta package
-        env:
-          NPM_CONFIG_PROVENANCE: 'true'
-          NODE_AUTH_TOKEN: ${{ secrets.HAYBARN_NPM_TOKEN }}
-          VERSION: ${{ needs.deploy.outputs.version }}
-          EXTENSION: ${{ inputs.extension_name }}
-          DV: ${{ inputs.duckdb_version }}
-          EXT_COMMIT: ${{ needs.deploy.outputs.ext_commit }}
-          EXT_VERSION_LABEL: ${{ inputs.extension_version_label }}
-          PRESENT_LEAVES: ${{ steps.leaves.outputs.present_leaves }}
-          META_PKG:       ${{ steps.leaves.outputs.meta_pkg }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          HV="${DV#v}"
-
-          # The meta needs its own haybarn-metadata.json (same shape as
-          # the leaves'). Regenerate locally — the per-platform sha256
-          # in a leaf's metadata is platform-specific and doesn't make
-          # sense in the meta, so we use a placeholder ("see leaves").
-          # Actually: the meta carries an aggregate metadata blob with
-          # ext_commit + haybarn_version + ext_version_label only —
-          # consumers fetch the actual binary's sha256 from whichever
-          # leaf ends up installed for their platform.
-          # Export everything the npm_build_meta.py script needs, then
-          # invoke. Using `export` (rather than inline KEY=VAL python3 ...)
-          # avoids shellcheck SC2097/SC2098 confusion about which assignment
-          # is visible where.
-          export STAGE="stage/npm-meta"
-          export PKG="$META_PKG"
-          export HAYBARN_VERSION="$HV"
-          export HAYBARN_METADATA="$STAGE/haybarn-metadata.json"
-          # VERSION, EXTENSION, PRESENT_LEAVES already in env from `env:`
-          # block; npm_build_meta.py also needs them so re-export to be
-          # explicit.
-          export VERSION EXTENSION PRESENT_LEAVES
-
-          mkdir -p "$STAGE"
-          python3 ce/scripts/generate_haybarn_metadata.py \
-            --extension "$EXTENSION" \
-            --ext-commit "$EXT_COMMIT" \
-            --haybarn-version "$HV" \
-            --ext-version-label "$EXT_VERSION_LABEL" \
-            --sha256 "see-leaf-packages-for-per-platform-sha256" \
-            --built-at "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
-            --out "$HAYBARN_METADATA"
-
-          python3 ce/scripts/npm_build_meta.py
-
-          cat "$STAGE/package.json"
-
-          echo "::notice::publishing $META_PKG @ $VERSION"
-          # Same EEXIST tolerance as the leaf publish.
-          if ! (cd "$STAGE" && npm publish --provenance --access public --tag latest 2>/tmp/npm-meta.err); then
-            if grep -qiE 'previously published|EPUBLISHCONFLICT|cannot publish over' /tmp/npm-meta.err; then
-              echo "::notice::$META_PKG@$VERSION already published — skipping"
-            else
-              cat /tmp/npm-meta.err
-              echo "::error::npm publish failed for $META_PKG@$VERSION"
-              exit 1
-            fi
-          fi
-
-      - name: Verify
-        env:
-          VERSION: ${{ needs.deploy.outputs.version }}
-          META_PKG: ${{ steps.leaves.outputs.meta_pkg }}
-        run: |
-          echo "Published $META_PKG @ $VERSION + all per-platform leaves."
-          echo "Users can run:"
-          echo "  npm install $META_PKG"
+      actions:  read
+      id-token: write
+    secrets: inherit
+    with:
+      extension_name:          ${{ inputs.extension_name }}
+      duckdb_version:          ${{ inputs.duckdb_version }}
+      version:                 ${{ needs.deploy.outputs.version }}
+      ext_commit:              ${{ needs.deploy.outputs.ext_commit }}
+      extension_version_label: ${{ inputs.extension_version_label }}
+      # Empty source_run_id → publish from the current run's artifacts.
+      source_run_id: ''
 
 # NOTE: upstream has a `clean_cache` job here that purges the Cloudflare CDN
 # for the just-replaced extension's path. We don't need it: every deployed
