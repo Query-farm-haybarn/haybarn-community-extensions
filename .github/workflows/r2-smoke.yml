@@ -27,6 +27,15 @@ jobs:
       # with the default us-east-1 scope and R2 rejects the signature
       # (surfaces as AccessDenied on PUT).
       AWS_DEFAULT_REGION:    auto
+      # Cloudflare R2 doesn't accept the new "always" default for sigv4
+      # checksum headers that awscli ≥ 1.36 / v2 ≥ 2.23 introduced.
+      # Setting both to when_required restores pre-2024 behavior. Without
+      # this, PutObject fails with AccessDenied (the actual cause behind
+      # the r2-smoke failure on run 25998369052 and the deploy/linux_arm64
+      # leg of run 25998018403). Same pattern haybarn-extension-ci-tools'
+      # `Downgrade AWS cli` step works around at the package level.
+      AWS_REQUEST_CHECKSUM_CALCULATION:  when_required
+      AWS_RESPONSE_CHECKSUM_VALIDATION:  when_required
       BUCKET:                ${{ secrets.R2_BUCKET }}
     steps:
       - name: Install awscli

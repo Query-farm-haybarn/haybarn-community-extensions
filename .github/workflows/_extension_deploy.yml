@@ -240,6 +240,11 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_KEY_ID }}
           AWS_ENDPOINT_URL:      ${{ secrets.R2_ENDPOINT }}
           AWS_DEFAULT_REGION:    auto
+          # Cloudflare R2 rejects new sigv4 checksum headers added
+          # in awscli ≥ 1.36 / v2 ≥ 2.23 (surfaces as AccessDenied on
+          # PutObject). Pin to pre-2024 checksum behavior.
+          AWS_REQUEST_CHECKSUM_CALCULATION:  when_required
+          AWS_RESPONSE_CHECKSUM_VALIDATION:  when_required
           BUCKET_NAME:           ${{ secrets.R2_BUCKET }}/community
           # SAME private key Haybarn uses to sign core extensions. The
           # engine's `community_public_keys[]` and `public_keys[]` both
@@ -374,6 +379,11 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_KEY_ID }}
           AWS_ENDPOINT_URL:      ${{ secrets.R2_ENDPOINT }}
           AWS_DEFAULT_REGION:    auto
+          # Cloudflare R2 rejects new sigv4 checksum headers added
+          # in awscli ≥ 1.36 / v2 ≥ 2.23 (surfaces as AccessDenied on
+          # PutObject). Pin to pre-2024 checksum behavior.
+          AWS_REQUEST_CHECKSUM_CALCULATION:  when_required
+          AWS_RESPONSE_CHECKSUM_VALIDATION:  when_required
         run: |
           set -euo pipefail
           PTR="s3://${{ secrets.R2_BUCKET }}/community/${{ inputs.duckdb_version }}/${{ matrix.duckdb_arch }}/${{ inputs.extension_name }}/current.json"
@@ -394,7 +404,7 @@ jobs:
         run: |
           set -euo pipefail
           # Channels list reflects what this build will actually be published to.
-          if [[ '${{ inputs.publish_registries }}' == 'true' ]]; then
+          if [[ '${{ inputs.extension_name == 'waddle' }}' == 'true' ]]; then
             CHANNELS='r2-community,pypi,npm'
           else
             CHANNELS='r2-community'
@@ -474,6 +484,11 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_KEY_ID }}
           AWS_ENDPOINT_URL:      ${{ secrets.R2_ENDPOINT }}
           AWS_DEFAULT_REGION:    auto
+          # Cloudflare R2 rejects new sigv4 checksum headers added
+          # in awscli ≥ 1.36 / v2 ≥ 2.23 (surfaces as AccessDenied on
+          # PutObject). Pin to pre-2024 checksum behavior.
+          AWS_REQUEST_CHECKSUM_CALCULATION:  when_required
+          AWS_RESPONSE_CHECKSUM_VALIDATION:  when_required
         run: |
           set -euo pipefail
           PREFIX="s3://${{ secrets.R2_BUCKET }}/community/${{ inputs.duckdb_version }}/${{ matrix.duckdb_arch }}/${{ inputs.extension_name }}/${{ steps.extsrc.outputs.ext_commit_short }}"
@@ -488,6 +503,11 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_KEY_ID }}
           AWS_ENDPOINT_URL:      ${{ secrets.R2_ENDPOINT }}
           AWS_DEFAULT_REGION:    auto
+          # Cloudflare R2 rejects new sigv4 checksum headers added
+          # in awscli ≥ 1.36 / v2 ≥ 2.23 (surfaces as AccessDenied on
+          # PutObject). Pin to pre-2024 checksum behavior.
+          AWS_REQUEST_CHECKSUM_CALCULATION:  when_required
+          AWS_RESPONSE_CHECKSUM_VALIDATION:  when_required
         run: |
           set -euo pipefail
           # Concurrency group above serializes runs for the same
@@ -502,7 +522,7 @@ jobs:
       # ------------------------------------------------------------------
 
       - name: Map duckdb_arch → PyPI platform tag + npm os/cpu/libc
-        if: ${{ inputs.publish_registries }}
+        if: ${{ inputs.extension_name == 'waddle' }}
         id: platmap
         shell: bash
         run: |
@@ -545,7 +565,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Build pip wheel
-        if: ${{ inputs.publish_registries && steps.platmap.outputs.skip == 'false' }}
+        if: ${{ inputs.extension_name == 'waddle' && steps.platmap.outputs.skip == 'false' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -563,7 +583,7 @@ jobs:
           DV: ${{ inputs.duckdb_version }}
 
       - name: Upload pip wheel artifact (for publish_pypi job)
-        if: ${{ inputs.publish_registries && steps.platmap.outputs.skip == 'false' }}
+        if: ${{ inputs.extension_name == 'waddle' && steps.platmap.outputs.skip == 'false' }}
         uses: actions/upload-artifact@v4
         with:
           name: pypi-wheel-${{ inputs.extension_name }}-${{ matrix.duckdb_arch }}
@@ -571,7 +591,7 @@ jobs:
           if-no-files-found: error
 
       - name: Build npm leaf package
-        if: ${{ inputs.publish_registries && steps.platmap.outputs.skip == 'false' }}
+        if: ${{ inputs.extension_name == 'waddle' && steps.platmap.outputs.skip == 'false' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -607,7 +627,7 @@ jobs:
           DV: ${{ inputs.duckdb_version }}
 
       - name: Upload npm leaf artifact (for publish_npm job)
-        if: ${{ inputs.publish_registries && steps.platmap.outputs.skip == 'false' }}
+        if: ${{ inputs.extension_name == 'waddle' && steps.platmap.outputs.skip == 'false' }}
         uses: actions/upload-artifact@v4
         with:
           name: npm-leaf-${{ inputs.extension_name }}-${{ inputs.duckdb_version }}-${{ matrix.duckdb_arch }}
@@ -641,7 +661,7 @@ jobs:
     # a PR, and avoids accidental publishes on PR-driven CI runs.
     # workflow_dispatch is permitted so maintainers can republish a
     # failed run; it requires repo write access to trigger.
-    if: ${{ inputs.publish_registries && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') }}
+    if: ${{ inputs.extension_name == 'waddle' && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -689,7 +709,7 @@ jobs:
       - deploy
     # Same gating as publish_pypi — push-to-main + workflow_dispatch only.
     # See publish_pypi above for the rationale.
-    if: ${{ inputs.publish_registries && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') }}
+    if: ${{ inputs.extension_name == 'waddle' && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
