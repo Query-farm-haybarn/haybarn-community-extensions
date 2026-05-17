@@ -173,12 +173,16 @@ jobs:
           path: duckdb
           fetch-depth: 0
 
-      # Second checkout of this community-extensions repo (under ce/) so
-      # the new scripts (compute_calver, generate_haybarn_metadata, etc.)
-      # are available alongside the extension source checkout above.
+      # ci-tools checkout (under ci-tools/) supplies the shared publish
+      # helpers (compute_calver, generate_haybarn_metadata, r2_build_manifest,
+      # pypi_build_wheel, npm_build_leaf) from scripts/publish/. Pinned to
+      # the consolidation SHA — single source of truth shared with the
+      # engine repo's haybarn-extensions.yml.
       - uses: actions/checkout@v4
         with:
-          path: ce
+          repository: 'Query-farm-haybarn/haybarn-extension-ci-tools'
+          ref: a2b04e6a2fdf0fe2feabc406a801c670fa5ca2e0
+          path: ci-tools
 
       - name: Capture extension source commit + timestamp
         id: extsrc
@@ -212,9 +216,9 @@ jobs:
         run: |
           set -euo pipefail
           if [[ -n "${{ inputs.extension_version_label }}" ]]; then
-            VERSION=$(python3 ce/scripts/compute_calver.py --semver "${{ inputs.extension_version_label }}")
+            VERSION=$(python3 ci-tools/scripts/publish/compute_calver.py --semver "${{ inputs.extension_version_label }}")
           else
-            VERSION=$(python3 ce/scripts/compute_calver.py --commit-ts "${{ steps.extsrc.outputs.ext_commit_ts }}")
+            VERSION=$(python3 ci-tools/scripts/publish/compute_calver.py --commit-ts "${{ steps.extsrc.outputs.ext_commit_ts }}")
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "::notice::pip/npm version: $VERSION"
@@ -362,7 +366,7 @@ jobs:
           # blob ("1.5.2", not "v1.5.2") — matches the package-name suffix
           # convention from extension-version-pinning.md.
           HAYBARN_VERSION="${DV#v}"
-          python3 ce/scripts/generate_haybarn_metadata.py \
+          python3 ci-tools/scripts/publish/generate_haybarn_metadata.py \
             --extension '${{ inputs.extension_name }}' \
             --ext-commit '${{ steps.extsrc.outputs.ext_commit }}' \
             --haybarn-version "$HAYBARN_VERSION" \
@@ -412,7 +416,7 @@ jobs:
           else
             CHANNELS='r2-community'
           fi
-          python3 ce/scripts/r2_build_manifest.py \
+          python3 ci-tools/scripts/publish/r2_build_manifest.py \
             --extension '${{ inputs.extension_name }}' \
             --duckdb-version '${{ inputs.duckdb_version }}' \
             --platform '${{ matrix.duckdb_arch }}' \
@@ -575,7 +579,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist/pypi
-          python3 ce/scripts/pypi_build_wheel.py \
+          python3 ci-tools/scripts/publish/pypi_build_wheel.py \
             --extension '${{ inputs.extension_name }}' \
             --haybarn-version "${DV#v}" \
             --version '${{ steps.calver.outputs.version }}' \
@@ -623,7 +627,7 @@ jobs:
           CPU='${{ steps.platmap.outputs.npm_cpu }}' \
           LIBC='${{ steps.platmap.outputs.npm_libc }}' \
           HAYBARN_METADATA="$STAGE_DIR/haybarn-metadata.json" \
-            python3 ce/scripts/npm_build_leaf.py
+            python3 ci-tools/scripts/publish/npm_build_leaf.py
 
           # Tar the staged dir for the publish_npm job
           (cd "$STAGE_DIR" && tar -czf "$GITHUB_WORKSPACE/dist/npm-leaf.tar.gz" .)
@@ -640,14 +644,20 @@ jobs:
           if-no-files-found: error
 
   # ------------------------------------------------------------------
-  # Registry publish (PyPI + npm) is now a separate reusable workflow
-  # so it can be re-dispatched independently when PyPI's
-  # project-creation rate limit ("429 Too many new projects") bounces
-  # an earlier attempt — no need to rebuild.
+  # Registry publish (PyPI + npm) is the consolidated reusable workflow
+  # in ci-tools — same workflow the engine repo's haybarn-extensions.yml
+  # calls for core extensions. We pass artifact_shape=per-extension so
+  # it downloads pypi-wheel-<ext>-* / npm-leaf-<ext>-<dv>-* (matrix
+  # artifacts), as opposed to the bundled core-{pypi,npm}-* shape.
   #
-  # Retry recipe:
-  #   gh workflow run "_extension_registry_publish.yml" --ref main \\
-  #     -f extension_name=<name> -f source_run_id=<this-run-id>
+  # Independent dispatch (e.g. for retry after a PyPI "429 Too many new
+  # projects" rate-limit bounce) is supported by calling the upstream
+  # workflow directly:
+  #   gh workflow run "_extension_registry_publish.yml" \
+  #     -R Query-farm-haybarn/haybarn-extension-ci-tools --ref haybarn \
+  #     -f artifact_shape=per-extension -f extension_name=<name> \
+  #     -f source_run_id=<this-run-id> -f duckdb_version=v1.5.2 \
+  #     -f version=<calver> -f ext_commit=<sha> -f extension_version_label=
   # ------------------------------------------------------------------
   call_publish_registries:
     name: Publish PyPI + npm
@@ -655,13 +665,14 @@ jobs:
       - generate_matrix
       - deploy
     if: ${{ always() && needs.deploy.result != 'cancelled' && contains(fromJSON('["waddle","h3","crypto","prql","lindel","arrow","rapidfuzz","airport","cache_httpfs","hnsw_acorn","http_client"]'), inputs.extension_name) && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') }}
-    uses: ./.github/workflows/_extension_registry_publish.yml
+    uses: Query-farm-haybarn/haybarn-extension-ci-tools/.github/workflows/_extension_registry_publish.yml@a2b04e6a2fdf0fe2feabc406a801c670fa5ca2e0
     permissions:
       contents: read
       actions:  read
       id-token: write
     secrets: inherit
     with:
+      artifact_shape:          per-extension
       extension_name:          ${{ inputs.extension_name }}
       duckdb_version:          ${{ inputs.duckdb_version }}
       version:                 ${{ needs.deploy.outputs.version }}
