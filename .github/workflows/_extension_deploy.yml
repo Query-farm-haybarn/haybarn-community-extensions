@@ -778,7 +778,19 @@ jobs:
             tar -xzf "$art/npm-leaf.tar.gz" -C "$STAGE"
             LEAF_NAME=$(python3 -c "import json; print(json.load(open('$STAGE/package.json'))['name'])")
             echo "publishing $LEAF_NAME @ $VERSION"
-            (cd "$STAGE" && npm publish --provenance --access public --tag latest)
+            # Tolerate "already published this exact version" — npm
+            # rejects re-publishing the same (name, version) with EEXIST.
+            # Treat as success if a publish previously succeeded for
+            # this tuple. Other failures still error out.
+            if ! (cd "$STAGE" && npm publish --provenance --access public --tag latest 2>/tmp/npm.err); then
+              if grep -qiE 'previously published|EPUBLISHCONFLICT|cannot publish over' /tmp/npm.err; then
+                echo "::notice::$LEAF_NAME@$VERSION already published — skipping"
+              else
+                cat /tmp/npm.err
+                echo "::error::npm publish failed for $LEAF_NAME@$VERSION"
+                exit 1
+              fi
+            fi
             # Derive the suffix part by stripping the meta prefix.
             SLUG="${LEAF_NAME#"$META_PREFIX"}"
             if [[ -n "$PRESENT_LEAVES" ]]; then
@@ -848,7 +860,16 @@ jobs:
           cat "$STAGE/package.json"
 
           echo "::notice::publishing $META_PKG @ $VERSION"
-          (cd "$STAGE" && npm publish --provenance --access public --tag latest)
+          # Same EEXIST tolerance as the leaf publish.
+          if ! (cd "$STAGE" && npm publish --provenance --access public --tag latest 2>/tmp/npm-meta.err); then
+            if grep -qiE 'previously published|EPUBLISHCONFLICT|cannot publish over' /tmp/npm-meta.err; then
+              echo "::notice::$META_PKG@$VERSION already published — skipping"
+            else
+              cat /tmp/npm-meta.err
+              echo "::error::npm publish failed for $META_PKG@$VERSION"
+              exit 1
+            fi
+          fi
 
       - name: Verify
         env:
