@@ -246,6 +246,15 @@ jobs:
       - build
     uses: ./.github/workflows/_extension_deploy.yml
     if: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_DEPLOY != '' && inputs.deploy != 'false' }}
+    # Reusable-workflow permissions must be granted by the caller — the
+    # called workflow can only USE what we grant here.
+    #   contents: read   → checkout the extension source repo
+    #   id-token: write  → PEP 740 attestations on PyPI publish, and
+    #                      --provenance on npm publish (only used when
+    #                      publish_registries is true; harmless otherwise).
+    permissions:
+      contents: read
+      id-token: write
     secrets: inherit
     with:
       deploy_latest: true
