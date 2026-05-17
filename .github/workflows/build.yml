@@ -109,6 +109,14 @@ jobs:
       # Mapped from `requires_toolchains` by scripts/build.py — one of
       # base / rust / full, selecting which pre-built GHCR image to pull.
       COMMUNITY_EXTENSION_IMAGE_VARIANT: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_IMAGE_VARIANT }}
+      # Haybarn: per-extension opt-in to publishing pip wheel + npm package
+      # alongside the R2 binary. Default off; waddle's descriptor sets it
+      # true. See ideas/extension-version-pinning.md Phase 5.
+      COMMUNITY_EXTENSION_PUBLISH_REGISTRIES: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_PUBLISH_REGISTRIES }}
+      # Extension's own semver from descriptor (extension.version). Used as
+      # the pip/npm version field when present; otherwise the deploy
+      # workflow falls back to CalVer derived from the commit timestamp.
+      COMMUNITY_EXTENSION_VERSION_LABEL: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_VERSION_LABEL }}
       COMMUNITY_EXTENSION_VCPKG_URL: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_VCPKG_URL == '' && 'https://github.com/microsoft/vcpkg.git' || steps.parse.outputs.COMMUNITY_EXTENSION_VCPKG_URL }}
       # Haybarn: the upstream-versioned `case()` selecting different vcpkg pins
       # per DuckDB version is collapsed: we only target v1.5.2 today. When/if
@@ -257,3 +265,8 @@ jobs:
       extension_name: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_NAME }}
       repository: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_GITHUB }}
       ref: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_REF }}
+      # Per-extension opt-in (descriptor field publish_registries: true).
+      # When true, the deploy workflow also builds + publishes a pip wheel
+      # and npm leaf+meta in addition to the R2 upload.
+      publish_registries: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_PUBLISH_REGISTRIES == '1' }}
+      extension_version_label: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_VERSION_LABEL }}

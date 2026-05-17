@@ -11,6 +11,13 @@ extension:
   vcpkg_commit: ce613c41372b23b1f51333815feb3edd87ef8a8b
   custom_toolchain_script: true
   opt_in_platforms: windows_arm64;
+  # Haybarn: opt this extension into the per-commit immutable R2 layout's
+  # registry mirrors (PyPI + npm). Default off — waddle is the smoke-test
+  # artifact that proves the full round-trip before we flip this for the
+  # rest of the community catalog. See:
+  #   ideas/extension-version-pinning.md (Phase 5)
+  #   ideas/extensions-from-npm-pypi.md  (packaging shape)
+  publish_registries: true
 repo:
   github: duckdb/extension-template
   ref: 5df4b9401665d23ec5f9dd08f248df08c9075232

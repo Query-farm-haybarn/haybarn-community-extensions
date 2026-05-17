@@ -84,6 +84,11 @@ with open('env.sh', 'w+') as hdl:
     vcpkg_url              = desc['extension'].get('vcpkg_url')
     vcpkg_commit           = desc['extension'].get('vcpkg_commit')
     test_config            = desc['extension'].get('test_config')
+    # Haybarn: per-extension opt-in to PyPI + npm publishing. Off by default;
+    # only waddle (smoke test) flips this until the full round-trip is proven.
+    # See ideas/extension-version-pinning.md Phase 5.
+    publish_registries     = desc['extension'].get('publish_registries', False)
+    extension_version_label = desc['extension'].get('version', '')
 
     # Haybarn: derive which pre-built Linux build image to pull from GHCR
     # based on this extension's toolchain needs. Three variants are published:
@@ -119,3 +124,7 @@ with open('env.sh', 'w+') as hdl:
         escaped_config = test_config.replace("\n", "")
         hdl.write(f"COMMUNITY_EXTENSION_TEST_CONFIG={escaped_config}\n")
     hdl.write(f"COMMUNITY_EXTENSION_IMAGE_VARIANT={image_variant}\n")
+    if publish_registries:
+        hdl.write("COMMUNITY_EXTENSION_PUBLISH_REGISTRIES=1\n")
+    if extension_version_label:
+        hdl.write(f"COMMUNITY_EXTENSION_VERSION_LABEL={extension_version_label}\n")
