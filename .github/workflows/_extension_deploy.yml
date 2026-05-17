@@ -137,11 +137,14 @@ jobs:
       - name: Deploy
         shell: bash
         # Reuse the same R2_* org-secret credentials used by haybarn-extensions.yml
-        # for the core bucket. The user granted this token access to the
-        # haybarn-community-extensions bucket too. (Previously I used the wrong
-        # HAYBARN_S3_* names — they don't exist; the upload script silently
-        # bailed with "No AWS key found, skipping..", which is why deploy
-        # jobs showed green but no binaries actually landed on R2.)
+        # Community extensions now share the core bucket
+        # (haybarn-extensions.query.farm), distinguished by a top-level
+        # `community/` key prefix instead of a separate bucket+subdomain.
+        # The upload script's $5 (bucket name) accepts "<bucket>/<prefix>"
+        # — aws s3 cp treats anything after the bucket as the object key,
+        # so `s3://<core>/community/<name>/<extver>/<duckdbver>/<arch>/...`
+        # works without script changes. URL the engine fetches becomes
+        # `https://haybarn-extensions.query.farm/community/<duckdbver>/<arch>/<name>.duckdb_extension.gz`.
         env:
           AWS_ACCESS_KEY_ID:     ${{ secrets.R2_ACCESS_KEY_ID }}
           # The org secret is named R2_SECRET_KEY_ID (not the more
@@ -149,7 +152,7 @@ jobs:
           # haybarn/.github/workflows/haybarn-extensions.yml.
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_KEY_ID }}
           AWS_ENDPOINT_URL:      ${{ secrets.R2_ENDPOINT }}
-          BUCKET_NAME:           haybarn-community-extensions
+          BUCKET_NAME:           ${{ secrets.R2_BUCKET }}/community
           # SAME private key Haybarn uses to sign core extensions. The
           # engine's `community_public_keys[]` and `public_keys[]` both
           # reference the matching HAYBARN_TRUST_ROOT constant.

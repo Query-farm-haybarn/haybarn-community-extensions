@@ -5,7 +5,7 @@ The community-extensions catalog for **[Haybarn](https://github.com/Query-farm-h
 This repo mirrors [`duckdb/community-extensions`](https://github.com/duckdb/community-extensions) — every extension upstream lists gets rebuilt against the Haybarn engine, signed with the Haybarn trust root, and published to:
 
 ```
-https://haybarn-community-extensions.query.farm/<duckdb_version>/<platform>/<name>.duckdb_extension.gz
+https://haybarn-extensions.query.farm/community/<duckdb_version>/<platform>/<name>.duckdb_extension.gz
 ```
 
 A `haybarn` CLI on a supported platform can `INSTALL <name> FROM community; LOAD <name>;` and the engine fetches from that URL automatically.
@@ -64,7 +64,7 @@ On PR merge, `.github/workflows/build.yml` parses the descriptor, kicks off the 
 
 ## Signing and trust
 
-Both `core` (`haybarn-extensions.query.farm`) and `community` (`haybarn-community-extensions.query.farm`) are signed with the **same Haybarn RSA key**. One cryptographic identity, two distribution channels. The corresponding public key is baked into the Haybarn engine at `src/main/extension/extension_helper.cpp` as `HAYBARN_TRUST_ROOT` and verified for every `INSTALL`.
+Both `core` (`haybarn-extensions.query.farm/core`) and `community` (`haybarn-extensions.query.farm/community`) are signed with the **same Haybarn RSA key** and served from the same R2 bucket under distinct top-level path prefixes. One cryptographic identity, one origin, two distribution channels. The corresponding public key is baked into the Haybarn engine at `src/main/extension/extension_helper.cpp` as `HAYBARN_TRUST_ROOT` and verified for every `INSTALL`.
 
 Anything signed with a DuckDB key — core OR community — will be rejected by Haybarn. This is intentional. Haybarn ABI-compatible doesn't mean security-state-compatible.
 

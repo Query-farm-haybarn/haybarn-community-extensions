@@ -85,7 +85,7 @@ jobs:
             - [ ] No descriptor with `repo.haybarn_fork` had its fork field stomped
 
             On merge, `build.yml` will fire per changed descriptor and deploy
-            to `haybarn-community-extensions.query.farm`.
+            to `haybarn-extensions.query.farm/community`.
           branch: sync/upstream
           delete-branch: true
           labels: |
