@@ -117,6 +117,11 @@ jobs:
       # extension description + a link back to the upstream source).
       COMMUNITY_EXTENSION_DESCRIPTION: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_DESCRIPTION }}
       COMMUNITY_EXTENSION_SOURCE_REPO: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_SOURCE_REPO }}
+      # Per-descriptor opt-out for the build's test step. Used for
+      # extensions that build cleanly but whose tests are environment-
+      # sensitive (e.g. h5db cert chain, magic remote URL fetch). Falls
+      # through to the workflow_dispatch input if not set in the descriptor.
+      COMMUNITY_EXTENSION_SKIP_TESTS: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_SKIP_TESTS }}
       # Mapped from `requires_toolchains` by scripts/build.py — one of
       # base / rust / full, selecting which pre-built GHCR image to pull.
       COMMUNITY_EXTENSION_IMAGE_VARIANT: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_IMAGE_VARIANT }}
@@ -228,7 +233,11 @@ jobs:
       # readwrite cache at haybarn-vcpkg-cache.rusty-bb6.workers.dev with the
       # bearer token substituted from HAYBARN_VCPKG_TOKEN. Same Worker fronts
       # vcpkg and ccache; secrets: inherit above pipes the token through.
-      skip_tests: ${{ inputs.skip_tests || false }}
+      # Skip tests when EITHER (a) the descriptor opts out via
+      # haybarn_skip_tests (Cluster-A extensions whose binaries build
+      # fine but whose tests are env-sensitive), or (b) the dispatcher
+      # asked us to via the workflow_dispatch skip_tests input.
+      skip_tests: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_SKIP_TESTS == 'true' || inputs.skip_tests || false }}
       # Only the quack template's cache is persisted (upstream convention) —
       # it's the canonical "warm me up" extension for vcpkg dependency cache.
       save_cache: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_NAME == 'quack' && github.event_name != 'pull_request' }}

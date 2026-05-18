@@ -99,6 +99,16 @@ with open('env.sh', 'w+') as hdl:
     ext_repo_github = (desc.get('repo', {}).get('github') or '').strip()
     if ext_repo_github:
         hdl.write(f"COMMUNITY_EXTENSION_SOURCE_REPO=https://github.com/{ext_repo_github}\n")
+
+    # Haybarn-specific: `haybarn_skip_tests: true` in the descriptor skips
+    # the per-extension test suite during the build. We use this for
+    # extensions whose binaries build cleanly but whose test data is
+    # environment-sensitive in ways that don't survive the Haybarn CI
+    # context (e.g. h5db's cert-chain test, magic's remote-URL fetch).
+    # The build leg still runs end-to-end and produces a valid signed
+    # binary; only the test step is bypassed.
+    if desc['extension'].get('haybarn_skip_tests') is True:
+        hdl.write("COMMUNITY_EXTENSION_SKIP_TESTS=true\n")
     excluded_platforms     = desc['extension'].get('excluded_platforms')
     opt_in_platforms       = desc['extension'].get('opt_in_platforms')
     requires_toolchains    = desc['extension'].get('requires_toolchains')

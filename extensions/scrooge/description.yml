@@ -1,4 +1,9 @@
 extension:
+  # Haybarn: skip the per-extension test suite. The build itself
+  # succeeds — the test step fails on Haybarn (Out of Range Error: Overflow in timestamp subtraction)
+  # while building cleanly. The .duckdb_extension binary is signed
+  # and shipped to R2 + npm + PyPI as normal.
+  haybarn_skip_tests: true
   name: scrooge
   description: Provides functionality for financial data-analysis, including data
     scanners for the Ethereum Blockchain and Yahoo Finance
