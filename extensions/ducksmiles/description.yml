@@ -1,8 +1,8 @@
 extension:
   name: ducksmiles
   description: Cheminformatics toolkit for DuckDB - SMILES, InChI, MOL/SDF, PDB, SELFIES,
-    and Wildman-Crippen LogP from SQL
-  version: 0.2.0
+    Wildman-Crippen LogP, and Morgan/ECFP fingerprints from SQL
+  version: 0.3.0
   language: C++
   build: cmake
   license: MIT
@@ -10,58 +10,27 @@ extension:
   - nkwork9999
 repo:
   github: nkwork9999/duckSMILES
-  ref: b34ffe7a20aeac2cc0c46debb3ab7179fdc726fc
+  ref: 85dfe3cae4ba15e9e59887a0c8d0ba16201d919e
 docs:
-  hello_world: '-- Validate SMILES
-
-    SELECT mol_is_valid(''CCO'');          -- true
-
-    SELECT mol_is_valid(''invalid_xyz'');  -- false
-
-
-    -- Molecular formula (Hill system)
-
-    SELECT mol_formula(''CCO'');           -- C2H6O  (ethanol)
-
-    SELECT mol_formula(''c1ccccc1'');      -- C6H6   (benzene)
-
-    SELECT mol_formula(''O'');             -- H2O    (water)
-
-
-    -- Molecular weight
-
-    SELECT round(mol_weight(''c1ccccc1''), 2);  -- 78.11
-
-
-    -- Wildman-Crippen LogP (matches RDKit Crippen.MolLogP)
-
-    SELECT round(logp_crippen(''c1ccccc1''), 4);            -- 1.6866 (benzene)
-
-    SELECT round(logp_crippen(''CC(=O)Oc1ccccc1C(=O)O''), 4); -- aspirin
-
-
-    -- Expand implicit hydrogens to explicit [H] atoms in SMILES
-
-    SELECT add_hydrogens(''CCO'');         -- [C]([C]([O][H])([H])[H])([H])([H])[H]
-
-
-    -- InChI layer extraction
-
-    SELECT inchi_formula(''InChI=1S/C2H4O2/c1-2(3)4/h1H3,(H,3,4)'');  -- C2H4O2
-
-
-    -- Convert SMILES to SELFIES (ML-friendly notation)
-
-    SELECT smiles_to_selfies(''CCO'');
-
-
-    -- Batch processing
-
-    SELECT smiles, mol_formula(smiles) AS formula, mol_num_atoms(smiles) AS atoms
-
-    FROM (VALUES (''CCO''), (''c1ccccc1''), (''CC(=O)Oc1ccccc1C(=O)O'')) AS t(smiles);
-
-    '
+  hello_world: "-- Validate SMILES\nSELECT mol_is_valid('CCO');          -- true\n\
+    SELECT mol_is_valid('invalid_xyz');  -- false\n\n-- Molecular formula (Hill system)\n\
+    SELECT mol_formula('CCO');           -- C2H6O  (ethanol)\nSELECT mol_formula('c1ccccc1');\
+    \      -- C6H6   (benzene)\nSELECT mol_formula('O');             -- H2O    (water)\n\
+    \n-- Molecular weight\nSELECT round(mol_weight('c1ccccc1'), 2);  -- 78.11\n\n\
+    -- Wildman-Crippen LogP (matches RDKit Crippen.MolLogP)\nSELECT round(logp_crippen('c1ccccc1'),\
+    \ 4);            -- 1.6866 (benzene)\nSELECT round(logp_crippen('CC(=O)Oc1ccccc1C(=O)O'),\
+    \ 4); -- aspirin\n\n-- Expand implicit hydrogens to explicit [H] atoms in SMILES\n\
+    SELECT add_hydrogens('CCO');         -- [C]([C]([O][H])([H])[H])([H])([H])[H]\n\
+    \n-- Morgan/ECFP fingerprint as a 2048-bit BLOB (ECFP4 default)\nSELECT bit_count(CAST(morgan_fp_bits('CC(=O)Oc1ccccc1C(=O)O')\
+    \ AS BIT));  -- 26 (aspirin)\n\n-- Tanimoto similarity between two SMILES (CAST\
+    \ BLOB to BIT to use bitwise ops)\nWITH x AS (\n  SELECT CAST(morgan_fp_bits('CCO')\
+    \ AS BIT) AS a,\n         CAST(morgan_fp_bits('CCN') AS BIT) AS b\n)\nSELECT bit_count(a\
+    \ & b)::DOUBLE / bit_count(a | b) AS tanimoto FROM x;  -- 0.3333\n\n-- InChI layer\
+    \ extraction\nSELECT inchi_formula('InChI=1S/C2H4O2/c1-2(3)4/h1H3,(H,3,4)'); \
+    \ -- C2H4O2\n\n-- Convert SMILES to SELFIES (ML-friendly notation)\nSELECT smiles_to_selfies('CCO');\n\
+    \n-- Batch processing\nSELECT smiles, mol_formula(smiles) AS formula, mol_num_atoms(smiles)\
+    \ AS atoms\nFROM (VALUES ('CCO'), ('c1ccccc1'), ('CC(=O)Oc1ccccc1C(=O)O')) AS\
+    \ t(smiles);\n"
   extended_description: "Cheminformatics toolkit for DuckDB \u2014 analyze molecular\
     \ structures directly from SQL\nwithout leaving your database. Pure Rust implementation\
     \ with no external chemistry\nlibrary dependencies (no RDKit required).\n\n**Supported\
@@ -69,7 +38,7 @@ docs:
     \ LogP\n- InChI/InChIKey: Layer extraction, stereochemistry detection, skeleton\
     \ matching\n- MOL/SDF: V2000/V3000 block parsing, molecule counting\n- PDB/CIF/XYZ:\
     \ Protein structure analysis (atom, chain, residue, model counts)\n- SELFIES:\
-    \ Bidirectional SMILES-SELFIES conversion for ML pipelines\n\n**37 scalar SQL\
+    \ Bidirectional SMILES-SELFIES conversion for ML pipelines\n\n**38 scalar SQL\
     \ functions** for molecular property extraction, format conversion,\nstructural\
     \ comparison, and physicochemical property prediction. Ideal for\ncheminformatics\
     \ datasets, drug discovery pipelines, and molecular ML feature\nengineering.\n\
@@ -79,5 +48,11 @@ docs:
     \ a SMILES with all implicit\nH atoms broken out as explicit `[H]` vertices (verbose\
     \ bracket form, round-trips\nthrough the parser). Useful as a preprocessing primitive\
     \ for any descriptor\nthat needs explicit hydrogens, and composes safely with\
-    \ `logp_crippen` (the\ninternal H expansion is idempotent).\n\n**Architecture:**\
-    \ Rust (core logic, 5 crates) + C++ (DuckDB integration via FFI)\n"
+    \ `logp_crippen` (the\ninternal H expansion is idempotent).\n\n**Morgan / ECFP\
+    \ fingerprint:** `morgan_fp_bits()` ports RDKit's MorganGenerator\n(layered BFS\
+    \ + hash_combine + dead-atom dedup) to Rust and returns a fixed-width\nbit vector\
+    \ as `BLOB`. Defaults to ECFP4 (radius=2, 2048 bit); 3-arg overload\n`morgan_fp_bits(smi,\
+    \ radius, n_bits)` exposes full control. Combine with\n`CAST(... AS BIT)` for\
+    \ SQL-level Tanimoto similarity:\n`bit_count(a & b)::DOUBLE / bit_count(a | b)`.\n\
+    \n**Architecture:** Rust (core logic, 5 crates) + C++ (DuckDB integration via\
+    \ FFI)\n"

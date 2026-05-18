@@ -1,8 +1,9 @@
 extension:
   name: duckorch
-  description: DAG orchestration with side-product lineage for DuckDB - SQL-file tasks,
-    parallel execution, Mermaid graphs, OpenLineage emission
-  version: 0.1.0
+  description: "Asset-centric data orchestration with partitions, declarative automation\
+    \ sensor, Snowflake-compatible CREATE DYNAMIC ASSET, MCP server, lineage and OpenLineage\
+    \ emission \u2014 all on DuckDB"
+  version: 0.2.0
   language: C++
   build: cmake
   license: MIT
@@ -10,40 +11,60 @@ extension:
   - nkwork9999
 repo:
   github: nkwork9999/duck-orch
-  ref: 00b8fc4ab5d8cbbd9c683359102907fff92af325
+  ref: 89645807397b8f33c10ab0d0c347cb989c1598bd
 docs:
-  hello_world: "LOAD duckorch;\n\n-- Set up state schema\nPRAGMA orch_init;\n\n--\
-    \ Register a task directly (in real use, prefer .sql files via PRAGMA orch_register('./tasks/'))\n\
-    INSERT INTO __orch__.tasks (name, sql, inputs, outputs, retries) VALUES\n  ('clean_users',\n\
-    \   'CREATE OR REPLACE TABLE clean_users AS SELECT id FROM raw_users WHERE deleted_at\
-    \ IS NULL',\n   ['raw_users']::VARCHAR[],\n   ['clean_users']::VARCHAR[],\n  \
-    \ 0);\n\n-- Run the DAG (topological order, parallel within each layer)\nSET orch_max_parallel\
-    \ = 4;\nPRAGMA orch_run;\n\n-- Inspect run history\nSELECT task_name, status,\
-    \ retry_count FROM __orch__.runs ORDER BY started_at;\n\n-- Get a Mermaid lineage\
-    \ graph\nPRAGMA orch_visualize('lineage');\n\n-- Pure helpers (auto-extract I/O\
-    \ from a SQL string)\nSELECT orch_extract_io('INSERT INTO out SELECT * FROM a\
-    \ JOIN b ON a.id = b.id');\n-- {\"inputs\":[\"a\",\"b\"],\"outputs\":[\"out\"\
-    ]}\n"
-  extended_description: "duckorch is a DuckDB extension for **DAG-based task orchestration**,\
-    \ with\ntable-level lineage emerging as a side product of each task's declared\n\
-    inputs and outputs.\n\n**Task definition (SQLMesh-style headers in plain .sql\
-    \ files):**\n\n    -- @task name=user_stats\n    -- @outputs analytics.user_stats\n\
-    \    -- @retries 2\n    -- @incremental_by updated_at\n    -- @test \"SELECT COUNT(*)\
-    \ FROM analytics.user_stats WHERE users < 0\" expect 0\n\n    CREATE OR REPLACE\
-    \ TABLE analytics.user_stats AS\n    SELECT country, COUNT(*) AS users\n    FROM\
-    \ analytics.clean_users\n    GROUP BY country;\n\nInputs are auto-extracted from\
-    \ the SQL via `sqlparser-rs`, so writing\n`@inputs` is optional in most cases.\n\
-    \n**Capabilities:**\n- Directory-loaded task files (`PRAGMA orch_register('./tasks/')`)\n\
-    - Topological execution with per-layer parallelism (`SET orch_max_parallel`)\n\
-    - Exponential backoff retry, downstream skip on failure\n- Incremental processing\
-    \ with `{{ last_processed_at }}` / `{{ now }}` / `{{ run_id }}` placeholders\n\
-    - Per-task assertions via `@test \"<sql>\" expect|expect_gt|expect_lt|expect_empty|expect_non_empty\
-    \ <n>`\n- Mermaid output (lineage / dag / combined modes) \u2014 `PRAGMA orch_visualize`\n\
-    - OpenLineage event emission to Marquez / DataHub / etc.\n  (`SET orch_openlineage_url`)\n\
-    - State tables: `__orch__.tasks` / `runs` / `lineage_edges` / `task_edges`\n \
-    \ `tests` / `schedules`\n\n**Companion CLI:** `duck-orch` provides `register /\
-    \ run / status / graph /\ntest / validate / impact / lineage / schedule` subcommands,\
-    \ all with\n`--json` for agent integration.\n\n**Architecture:** thin C++ shim\
-    \ plus a Rust workspace\n(orch_common / orch_dag / orch_lineage / orch_runtime\
-    \ / orch_ol /\norch_core), keeping all logic in Rust while the C++ layer handles\n\
-    DuckDB-internal calls (PRAGMAs, scalar functions, parallel dispatch).\n"
+  hello_world: "LOAD duckorch;\n\n-- 1. Set up state schema and register a directory\
+    \ of *.sql task files.\nPRAGMA orch_init;\nPRAGMA orch_register('./tasks/');\n\
+    \n-- 2. Run the DAG (topological order, per-layer parallelism).\nSET orch_max_parallel\
+    \ = 4;\nPRAGMA orch_run;\n\n-- 3. Asset-aware features (Phase 13+):\nPRAGMA orch_asset_list;\
+    \                            -- all registered Assets\nPRAGMA orch_asset_partitions('analytics.daily');\
+    \   -- per-partition status\nPRAGMA orch_backfill('analytics.daily', '2026-01-01',\
+    \ '2026-12-31');\n\n-- 4. Snowflake-compatible declaration (Phase 17):\nPRAGMA\
+    \ orch_create_dynamic_asset(\n  'analytics.region_total',\n  '5 minutes',\n  'SELECT\
+    \ region, SUM(total) AS rt FROM analytics.daily GROUP BY region');\n\n-- 5. Sensor\
+    \ \u2014 auto-materializes when upstream updates (Phase 15):\nPRAGMA orch_sensor_set_interval(30);\n\
+    PRAGMA orch_sensor_start;\n\n-- 6. Mermaid lineage:\nPRAGMA orch_visualize('lineage');\n"
+  extended_description: "duckorch is a **DuckDB-native, single-file Asset orchestrator**\
+    \ that\nbrings Dagster's declarative automation and Snowflake's\n`CREATE DYNAMIC\
+    \ TABLE` semantics into a `LOAD duckorch;`. Designed to\nrun on a laptop or in\
+    \ a plane without a cloud control plane.\n\n**Task definition (SQLMesh-style headers\
+    \ in plain .sql files):**\n\n    -- @asset name=analytics.user_stats\n    -- @asset_group\
+    \ sales\n    -- @partitions_by daily(start=2026-01-01)\n    -- @param partition_key:DATE\n\
+    \    -- @automation eager AND NOT in_progress()\n    -- @freshness max_lag=60min\n\
+    \    -- @check name=positive \"SELECT MIN(rev) FROM ${asset}\" expect gt 0\n\n\
+    \    CREATE OR REPLACE TABLE analytics.user_stats AS\n    SELECT country, SUM(rev)\
+    \ AS rev\n    FROM analytics.clean_users\n    WHERE event_date = $partition_key\n\
+    \    GROUP BY country;\n\nInputs auto-extracted via `sqlparser-rs`. `$partition_key`\
+    \ bound via\nDuckDB `PREPARE` (multi-statement aware).\n\n**Capabilities:**\n\
+    - **Tasks + DAG** (Phase 0-9): directory-loaded SQL files, topological\n  execution,\
+    \ per-layer parallelism, exponential backoff retry, downstream\n  skip, `@test`,\
+    \ Mermaid (`lineage` / `dag` / `combined`), OpenLineage\n  events, table- and\
+    \ column-level lineage with subtype taxonomy, opt-in\n  ad-hoc query capture,\
+    \ DuckLake-aware OL namespace.\n- **MCP server** (Phase 11): `duck-orch-mcp` stdio\
+    \ server (rmcp 0.3)\n  with 9 tools for Claude Code integration (`list_assets`,\
+    \ `run_pipeline`\n  with `dry_run` default, etc.).\n- **Asset** (Phase 13): `@asset`\
+    \ headers promote outputs to first-class\n  Assets in `__orch__.assets` with materialization\
+    \ history, code_version\n  hash, declared edges. Backward compatible with `@outputs`.\n\
+    - **Partition** (Phase 14): `@partitions_by daily/static/multi`,\n  `$partition_key`\
+    \ bind, `orch_backfill`, calendar-style \u2705\u26AA ASCII view.\n- **AutomationCondition\
+    \ + Sensor** (Phase 15): DSL\n  (`eager / on_cron / on_missing / freshness_violated\
+    \ / in_progress`\n  + `&` / `|` / `!`), `@target_lag` throttle, background `std::thread`\n\
+    \  sensor that polls and auto-fires `RunSingleTask` when conditions met.\n- **Freshness\
+    \ + Asset Check** (Phase 16): `@freshness max_lag=...`,\n  `@check name=N \"<SQL>\"\
+    \ expect <op> <value>` with auto-run on success\n  and `severity=error` blocking\
+    \ downstream.\n- **Snowflake `CREATE DYNAMIC ASSET`** (Phase 17): `PRAGMA\n  orch_create_dynamic_asset(name,\
+    \ target_lag, sql)` synthesizes Asset +\n  `automation_condition='eager()'` so\
+    \ the sensor picks it up. The\n  `duck-orch dynamic migrate-from-snowflake <dump>`\
+    \ CLI parses Snowflake\n  dumps and registers each block (skipping `WAREHOUSE`/`REFRESH_MODE`).\n\
+    \n**3-route surface**: every feature reachable from CLI (`duck-orch ...`),\nSQL\
+    \ (`PRAGMA orch_*`), and MCP (Claude Code).\n\n**Companion CLI:** `duck-orch`\
+    \ with `register / run / status / graph /\ntest / validate / impact / lineage\
+    \ / schedule / asset / backfill /\nautomation / sensor / check / dynamic` subcommands,\
+    \ all `--json`-capable.\n\n**State tables:** `__orch__.{tasks, runs, lineage_edges,\
+    \ column_lineage,\ntask_edges, tests, schedules, assets, asset_materializations,\n\
+    asset_edges, asset_partitions, automation_evaluations, asset_checks,\nasset_check_results}`.\n\
+    \n**Architecture:** thin C++ shim (~3000 lines, registers PRAGMAs, runs\nSQL via\
+    \ per-thread Connection, hosts the sensor thread, exposes\nOptimizerExtension\
+    \ for ad-hoc capture) plus a Rust workspace\n(orch_common / orch_dag / orch_lineage\
+    \ / orch_runtime / orch_ol /\norch_core / orch_cli / orch_mcp), keeping all logic\
+    \ in Rust while the\nC++ layer handles DuckDB-internal calls.\n"

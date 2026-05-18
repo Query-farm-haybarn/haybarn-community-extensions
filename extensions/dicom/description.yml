@@ -6,7 +6,7 @@ extension:
     Medicine).
 
     '
-  version: 0.1.0
+  version: 0.2.0
   language: C++
   build: cmake
   excluded_platforms: wasm_mvp;wasm_eh;wasm_threads
@@ -15,7 +15,7 @@ extension:
   - nmontesg
 repo:
   github: nmontesg/duck-dicom
-  ref: 91524cf0a885e7f5f236490b0eea02e5d46fa978
+  ref: v0.2.0
 docs:
   hello_world: 'INSTALL dicom FROM community;
 
@@ -36,4 +36,8 @@ docs:
     GROUP BY 1;\n\n-- extract study description per study instance\nSELECT\n    dicom_content->'0020000D'->'Value'\
     \ AS study_instance_uid,\n    any_value(dicom_content->'00081030'->'Value') AS\
     \ study_description\nFROM read_dicom('/Users/nmontes/Downloads/slicer_export/**/*.dcm')\n\
-    GROUP BY 1;\n"
+    GROUP BY 1;\n\nThis extension also supports reading from remote object storage\
+    \ using the httpfs extension:\n\nLOAD httpfs;\n\nCREATE OR REPLACE SECRET my_secret\
+    \ (\n    TYPE s3,\n    PROVIDER config,\n    KEY_ID 'my_key',\n    SECRET 'my_secret_key',\n\
+    \    URL_STYLE 'path'\n);\n\n-- read one file from an AWS S3 bucket\nFROM read_dicom('s3://my-bucket/path/to/dicom_file.dcm');\n\
+    \n-- use glob pattern\nFROM read_dicom('s3://my-bucket/path/to/dicoms/**/*.dcm');\n"

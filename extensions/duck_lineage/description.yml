@@ -1,60 +1,80 @@
 extension:
   name: duck_lineage
-  description: The Duck Lineage extension automatically captures query lineage events
-    and sends them to an Open Lineage backend.
-  version: 0.2.0
+  description: 'DuckLineage automatically captures data lineage from every DuckDB
+    query and emits OpenLineage
+
+    events to any OpenLineage-compatible backend such as Marquez, DataHub,or Atlan.
+
+    Includes column-level lineage, schema facets, DuckLake catalog support, asynchronous
+
+    HTTP delivery, and parent-run linking for orchestrators like Airflow and Dagster.
+
+    Built and maintained by Ilum Labs.
+
+    '
+  version: 0.2.1
   language: C++
   build: cmake
   license: MIT
   excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_mingw
   vcpkg_commit: 84bab45d415d22042bd0b9081aea57f362da3f35
   maintainers:
+  - ilum-cloud
   - thijs-s
 repo:
   github: ilum-cloud/duck_lineage
-  ref: 9a4324ee86db62f8c31f784af62fcd265412e9d9
+  ref: 7b3a7d31067f5f264272fd7f1e1b785bc0124e46
+  ref_next: 7f9f423d8626134f425312018598085fb2846d4d
 docs:
-  hello_world: '-- Point to a running Open Lineage backend
-
-    SET duck_lineage_url = ''http://localhost:5000/api/v1/lineage'';
-
-
-    -- Run some queries
-
-    CREATE TABLE greetings (id INTEGER, message VARCHAR);
-
-    INSERT INTO greetings VALUES (1, ''Hello''), (2, ''World'');
-
-
-    SELECT * FROM greetings;
-
-
-    -- The lineage information for the above queries will be sent to the Open Lineage
-    backend automatically!
-
-    '
-  extended_description: "The duck_lineage extension automatically captures data lineage\
-    \ from every DuckDB query and emits OpenLineage events to any compatible backend\
-    \ (e.g., Marquez, Atlan, DataHub).\n\nFeatures:\n- Automatic lineage capture \u2014\
-    \ no query modification required\n- OpenLineage START/COMPLETE/FAIL event lifecycle\
-    \ for every query\n- Input and output dataset extraction from logical query plans\n\
-    - Schema facets with column names and types for all tracked datasets\n- SQL query\
-    \ facet attached to every event\n- Output statistics facet (row count) on COMPLETE\
-    \ events\n- Lifecycle state change tracking (CREATE, DROP, ALTER, OVERWRITE, RENAME,\
-    \ TRUNCATE)\n- Symlinks facet for dataset identity resolution\n- File-based source\
-    \ tracking (read_csv, read_parquet, COPY TO)\n- DuckLake catalog support with\
-    \ automatic namespace resolution from DATA_PATH\n- Asynchronous event delivery\
-    \ via background worker thread\n- Exponential backoff retry with configurable\
-    \ max retries\n- Configurable event queue with overflow protection\n- API key\
-    \ authentication for OpenLineage backends\n- Parent run facet via OPENLINEAGE_PARENT_*\
-    \ environment variables\n- Debug logging mode\n\nTracked operations:\n- INSERT,\
-    \ UPDATE, DELETE, MERGE\n- CREATE TABLE, CREATE TABLE AS, CREATE VIEW, CREATE\
-    \ INDEX\n- DROP, ALTER\n- COPY TO\n- SELECT (read-only lineage)\n\nConfiguration\
-    \ (via SET statements):\n- duck_lineage_url \u2014 OpenLineage backend endpoint\n\
-    - duck_lineage_namespace \u2014 default dataset namespace\n- duck_lineage_api_key\
-    \ \u2014 authentication key\n- duck_lineage_debug \u2014 enable debug logging\n\
-    - duck_lineage_max_retries \u2014 retry attempts for failed HTTP requests (default:\
-    \ 3)\n- duck_lineage_max_queue_size \u2014 max queued events before dropping (default:\
-    \ 10000)\n- duck_lineage_timeout \u2014 HTTP request timeout in seconds (default:\
-    \ 10)\n\nLimitations:\n- Lineage captured from Prepared Statements is less detailed\n\
-    - Requires an external OpenLineage-compatible backend for event storage\n"
+  hello_world: "-- Point DuckLineage at a running OpenLineage backend (e.g. Marquez\
+    \ at localhost:5000)\nSET duck_lineage_url          = 'http://localhost:5000/api/v1/lineage';\n\
+    -- SET duck_lineage_namespace = 'my-data-warehouse';\n-- SET duck_lineage_api_key\
+    \   = 'your-api-key';\n-- SET duck_lineage_debug     = true;\n\n-- Run any query\
+    \ \u2014 lineage is captured automatically, no query changes required.\nCREATE\
+    \ TABLE greetings (id INTEGER, message VARCHAR);\nINSERT INTO greetings VALUES\
+    \ (1, 'Hello'), (2, 'World');\n\n-- Derived table \u2014 column-level lineage\
+    \ links shouted.message -> greetings.message.\nCREATE TABLE shouted AS\n    SELECT\
+    \ id, upper(message) AS message FROM greetings;\n\nSELECT * FROM shouted;\n\n\
+    -- START/COMPLETE events with input/output datasets, schemas, column-level lineage,\n\
+    -- SQL facet, and row-count statistics are streamed to the OpenLineage backend.\n"
+  extended_description: "DuckLineage is an open-source DuckDB extension by Ilum Labs\
+    \ that captures\ndata lineage from every query without requiring SQL changes and\
+    \ emits OpenLineage events to any\nOpenLineage-compatible backend (Marquez, DataHub,\
+    \ Atlan, OpenMetadata, and similar). It is\ndesigned to make data lineage, governance,\
+    \ and observability work out-of-the-box for embedded\nanalytics, local ELT pipelines,\
+    \ and DuckLake catalog workloads.\n\nThe extension hooks into the DuckDB optimizer\
+    \ pipeline, analyzes each logical query plan,\nextracts input and output datasets\
+    \ together with their schemas, and asynchronously delivers\nstructured OpenLineage\
+    \ events over HTTP \u2014 so query performance is not impacted by the\nlineage\
+    \ backend's latency.\n\nFeatures:\n- Automatic lineage capture \u2014 runs as\
+    \ a DuckDB optimizer extension, no query rewriting needed\n- Full OpenLineage\
+    \ START / COMPLETE / FAIL event lifecycle for every executed query\n- Input and\
+    \ output dataset extraction from logical query plans\n- Schema facets (column\
+    \ names and types) for all tracked datasets\n- Column-level lineage facet on output\
+    \ datasets, with direct/indirect transformation tagging\n  across CAST, aliases,\
+    \ joins, aggregation, UNION/INTERSECT/EXCEPT, window functions, CTAS,\n  INSERT\
+    \ INTO SELECT, file scans (CSV/Parquet), PIVOT, and UNNEST\n- SQL job facet attached\
+    \ to every event (when the raw SQL string is available)\n- Output statistics facet\
+    \ (row count) on COMPLETE events\n- Lifecycle state-change facet (CREATE, DROP,\
+    \ ALTER, OVERWRITE, RENAME, TRUNCATE)\n- Symlinks facet for dataset identity resolution\
+    \ across catalog/storage names\n- File-based source tracking for read_csv, read_parquet,\
+    \ and COPY TO\n- DuckLake catalog support with namespace automatically resolved\
+    \ from the catalog DATA_PATH\n- processing_engine, dataSource and catalog facets\
+    \ for richer backend visualization\n- Asynchronous event delivery via a background\
+    \ worker thread\n- Exponential-backoff retry with configurable max retries\n-\
+    \ Bounded in-memory event queue with overflow protection\n- API-key (bearer) authentication\
+    \ for OpenLineage backends\n- Parent-run facet derived from OPENLINEAGE_PARENT_*\
+    \ environment variables, so DuckDB queries\n  link cleanly as child runs of Airflow,\
+    \ Dagster, Prefect, or any OpenLineage-aware orchestrator\n- Configurable dataset-prefix\
+    \ filtering to suppress lineage for internal/system datasets\n- Debug logging\
+    \ mode that prints emitted JSON events to the console\n\nTracked operations:\n\
+    - INSERT, UPDATE, DELETE, MERGE\n- CREATE TABLE, CREATE TABLE AS, CREATE VIEW,\
+    \ CREATE INDEX\n- DROP, ALTER\n- COPY TO\n- SELECT (read-only lineage)\n\nConfiguration\
+    \ (via DuckDB SET statements):\n- duck_lineage_url: OpenLineage backend endpoint\
+    \ (required)\n- duck_lineage_namespace: default dataset namespace (default: duckdb)\n\
+    - duck_lineage_api_key: bearer token for the backend (optional)\n- duck_lineage_debug:\
+    \ enable debug logging (default: false)\n- duck_lineage_max_retries: retry attempts\
+    \ for failed HTTP requests (default: 3)\n- duck_lineage_max_queue_size: max queued\
+    \ events before dropping (default: 10000)\n- duck_lineage_timeout: HTTP request\
+    \ timeout in seconds (default: 10)\n- duck_lineage_exclude_dataset_prefixes: comma-separated\
+    \ dataset prefixes to exclude from lineage\n"
