@@ -287,5 +287,11 @@ jobs:
       extension_license: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_LICENSE }}
       extension_description: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_DESCRIPTION }}
       extension_source_repo: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_SOURCE_REPO }}
+      # Every community extension gets npm + PyPI publish by default —
+      # the hardcoded 11-name allowlist that used to gate this was a
+      # holdover from the bring-up phase. Per-extension opt-OUT can be
+      # added later via a descriptor field if a maintainer needs to
+      # keep an extension R2-only.
+      publish_registries: true
       repository: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_GITHUB }}
       ref: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_REF }}

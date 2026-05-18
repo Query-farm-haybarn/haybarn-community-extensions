@@ -435,7 +435,7 @@ jobs:
         run: |
           set -euo pipefail
           # Channels list reflects what this build will actually be published to.
-          if [[ '${{ contains(fromJSON('["waddle","h3","crypto","prql","lindel","arrow","rapidfuzz","airport","cache_httpfs","hnsw_acorn","http_client"]'), inputs.extension_name) }}' == 'true' ]]; then
+          if [[ '${{ inputs.publish_registries }}' == 'true' ]]; then
             CHANNELS='r2-community,pypi,npm'
           else
             CHANNELS='r2-community'
@@ -553,7 +553,12 @@ jobs:
       # ------------------------------------------------------------------
 
       - name: Map duckdb_arch → PyPI platform tag + npm os/cpu/libc
-        if: ${{ contains(fromJSON('["waddle","h3","crypto","prql","lindel","arrow","rapidfuzz","airport","cache_httpfs","hnsw_acorn","http_client"]'), inputs.extension_name) }}
+        # Was previously gated by a hardcoded allowlist of 11 names. Now
+        # driven by the caller's `publish_registries` input — community
+        # build.yml defaults that to true so every merged descriptor
+        # auto-publishes; other callers (engine, build-forks) keep the
+        # input default of false and stay R2-only unless they opt in.
+        if: ${{ inputs.publish_registries }}
         id: platmap
         shell: bash
         run: |
@@ -598,7 +603,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Build pip wheel
-        if: ${{ contains(fromJSON('["waddle","h3","crypto","prql","lindel","arrow","rapidfuzz","airport","cache_httpfs","hnsw_acorn","http_client"]'), inputs.extension_name) && steps.platmap.outputs.skip == 'false' }}
+        if: ${{ inputs.publish_registries && steps.platmap.outputs.skip == 'false' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -616,7 +621,7 @@ jobs:
           DV: ${{ inputs.duckdb_version }}
 
       - name: Upload pip wheel artifact (for publish_pypi job)
-        if: ${{ contains(fromJSON('["waddle","h3","crypto","prql","lindel","arrow","rapidfuzz","airport","cache_httpfs","hnsw_acorn","http_client"]'), inputs.extension_name) && steps.platmap.outputs.skip == 'false' }}
+        if: ${{ inputs.publish_registries && steps.platmap.outputs.skip == 'false' }}
         uses: actions/upload-artifact@v4
         with:
           name: pypi-wheel-${{ inputs.extension_name }}-${{ matrix.duckdb_arch }}
@@ -624,7 +629,7 @@ jobs:
           if-no-files-found: error
 
       - name: Build npm leaf package
-        if: ${{ contains(fromJSON('["waddle","h3","crypto","prql","lindel","arrow","rapidfuzz","airport","cache_httpfs","hnsw_acorn","http_client"]'), inputs.extension_name) && steps.platmap.outputs.skip == 'false' }}
+        if: ${{ inputs.publish_registries && steps.platmap.outputs.skip == 'false' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -663,7 +668,7 @@ jobs:
           DV: ${{ inputs.duckdb_version }}
 
       - name: Upload npm leaf artifact (for publish_npm job)
-        if: ${{ contains(fromJSON('["waddle","h3","crypto","prql","lindel","arrow","rapidfuzz","airport","cache_httpfs","hnsw_acorn","http_client"]'), inputs.extension_name) && steps.platmap.outputs.skip == 'false' }}
+        if: ${{ inputs.publish_registries && steps.platmap.outputs.skip == 'false' }}
         uses: actions/upload-artifact@v4
         with:
           name: npm-leaf-${{ inputs.extension_name }}-${{ inputs.duckdb_version }}-${{ matrix.duckdb_arch }}
@@ -691,7 +696,7 @@ jobs:
     needs:
       - generate_matrix
       - deploy
-    if: ${{ always() && needs.deploy.result != 'cancelled' && contains(fromJSON('["waddle","h3","crypto","prql","lindel","arrow","rapidfuzz","airport","cache_httpfs","hnsw_acorn","http_client"]'), inputs.extension_name) && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') }}
+    if: ${{ always() && needs.deploy.result != 'cancelled' && inputs.publish_registries && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') }}
     uses: Query-farm-haybarn/haybarn-extension-ci-tools/.github/workflows/_extension_registry_publish.yml@4b493022ae210e11c5c4b91db066c3acc84e1e56
     permissions:
       contents: read
