@@ -85,6 +85,20 @@ with open('env.sh', 'w+') as hdl:
     license_value = desc['extension'].get('license')
     if license_value:
         hdl.write(f"COMMUNITY_EXTENSION_LICENSE={license_value}\n")
+
+    # Description + upstream source repo URL — used by npm_build_meta.py /
+    # npm_build_leaf.py to render the generated README.md with a real
+    # extension description and a link back to the upstream source repo.
+    # GITHUB_OUTPUT uses `name=value` lines, so squash any newlines in the
+    # description to a single space (the existing test_config block does
+    # the same for the same reason).
+    description_text = (desc['extension'].get('description') or '').strip()
+    if description_text:
+        single_line = ' '.join(description_text.split())
+        hdl.write(f"COMMUNITY_EXTENSION_DESCRIPTION={single_line}\n")
+    ext_repo_github = (desc.get('repo', {}).get('github') or '').strip()
+    if ext_repo_github:
+        hdl.write(f"COMMUNITY_EXTENSION_SOURCE_REPO=https://github.com/{ext_repo_github}\n")
     excluded_platforms     = desc['extension'].get('excluded_platforms')
     opt_in_platforms       = desc['extension'].get('opt_in_platforms')
     requires_toolchains    = desc['extension'].get('requires_toolchains')

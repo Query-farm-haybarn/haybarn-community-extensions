@@ -111,6 +111,12 @@ jobs:
       # registry artifact reflects the upstream extension's license rather
       # than the engine's MIT (the previous hardcoded fallback).
       COMMUNITY_EXTENSION_LICENSE: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_LICENSE }}
+      # Description + upstream source repo URL — used by npm_build_meta /
+      # npm_build_leaf to render the generated README.md ahead of npm
+      # publish (so npmjs.com renders the package page with the real
+      # extension description + a link back to the upstream source).
+      COMMUNITY_EXTENSION_DESCRIPTION: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_DESCRIPTION }}
+      COMMUNITY_EXTENSION_SOURCE_REPO: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_SOURCE_REPO }}
       # Mapped from `requires_toolchains` by scripts/build.py — one of
       # base / rust / full, selecting which pre-built GHCR image to pull.
       COMMUNITY_EXTENSION_IMAGE_VARIANT: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_IMAGE_VARIANT }}
@@ -279,5 +285,7 @@ jobs:
       opt_in_archs: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_OPT_IN_PLATFORMS }}
       extension_name: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_NAME }}
       extension_license: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_LICENSE }}
+      extension_description: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_DESCRIPTION }}
+      extension_source_repo: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_SOURCE_REPO }}
       repository: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_GITHUB }}
       ref: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_REF }}

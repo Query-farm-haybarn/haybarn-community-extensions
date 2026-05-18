@@ -105,6 +105,20 @@ on:
         required: false
         type: string
         default: ""
+      # One-line description from descriptor's `extension.description`
+      # — used by npm_build_meta.py / npm_build_leaf.py to render the
+      # generated README.md and package.json `description` field.
+      extension_description:
+        required: false
+        type: string
+        default: ""
+      # Upstream extension source repo URL (https://github.com/<o>/<r>),
+      # derived from descriptor's `repo.github`. Shown as a link in the
+      # generated README.md.
+      extension_source_repo:
+        required: false
+        type: string
+        default: ""
 
 jobs:
   generate_matrix:
@@ -191,7 +205,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: 'Query-farm-haybarn/haybarn-extension-ci-tools'
-          ref: 30b66fb88ab3d9b891ed93f3fa70f479da6535b3
+          ref: 5ebc16f394622cc6e0a8e028240bbafcee4cbbcc
           path: ci-tools
 
       - name: Capture extension source commit + timestamp
@@ -637,6 +651,8 @@ jobs:
           CPU='${{ steps.platmap.outputs.npm_cpu }}' \
           LIBC='${{ steps.platmap.outputs.npm_libc }}' \
           LICENSE='${{ inputs.extension_license }}' \
+          EXTENSION_DESCRIPTION='${{ inputs.extension_description }}' \
+          EXTENSION_SOURCE_REPO='${{ inputs.extension_source_repo }}' \
           HAYBARN_METADATA="$STAGE_DIR/haybarn-metadata.json" \
             python3 ci-tools/scripts/publish/npm_build_leaf.py
 
@@ -676,7 +692,7 @@ jobs:
       - generate_matrix
       - deploy
     if: ${{ always() && needs.deploy.result != 'cancelled' && contains(fromJSON('["waddle","h3","crypto","prql","lindel","arrow","rapidfuzz","airport","cache_httpfs","hnsw_acorn","http_client"]'), inputs.extension_name) && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') }}
-    uses: Query-farm-haybarn/haybarn-extension-ci-tools/.github/workflows/_extension_registry_publish.yml@30b66fb88ab3d9b891ed93f3fa70f479da6535b3
+    uses: Query-farm-haybarn/haybarn-extension-ci-tools/.github/workflows/_extension_registry_publish.yml@5ebc16f394622cc6e0a8e028240bbafcee4cbbcc
     permissions:
       contents: read
       actions:  read
@@ -686,13 +702,15 @@ jobs:
       artifact_shape:          per-extension
       # MUST match the `@<SHA>` pinned in the `uses:` line above — the
       # called workflow uses this to checkout its own scripts/publish/.
-      ci_tools_ref:            30b66fb88ab3d9b891ed93f3fa70f479da6535b3
+      ci_tools_ref:            5ebc16f394622cc6e0a8e028240bbafcee4cbbcc
       extension_name:          ${{ inputs.extension_name }}
       duckdb_version:          ${{ inputs.duckdb_version }}
       version:                 ${{ needs.deploy.outputs.version }}
       ext_commit:              ${{ needs.deploy.outputs.ext_commit }}
       extension_version_label: ${{ inputs.extension_version_label }}
       extension_license:       ${{ inputs.extension_license }}
+      extension_description:   ${{ inputs.extension_description }}
+      extension_source_repo:   ${{ inputs.extension_source_repo }}
       # Empty source_run_id → publish from the current run's artifacts.
       source_run_id: ''
 
