@@ -82,18 +82,51 @@ def strip_andium(desc: dict) -> dict:
 def merge_for_haybarn(upstream: dict, current: dict | None) -> tuple[dict, bool]:
     """Produce the descriptor to write, plus whether it differs from `current`.
 
-    If `current` carries Haybarn-specific patch pins (`repo.haybarn_fork` /
-    `repo.haybarn_ref`), those are preserved on top of upstream's values.
+    Haybarn-specific fields preserved from `current`:
+
+      repo.haybarn_fork / haybarn_ref
+          Patch-pinning override — points the build at our fork instead
+          of upstream's repo+ref.
+
+      extension.excluded_platforms / opt_in_platforms
+          When we've decided an upstream extension just doesn't build
+          on Haybarn (e.g. duckdb-rs pinned pre-1.5, missing source,
+          archived repo), we set `excluded_platforms: <all>` plus a
+          Haybarn-comment block above it. The sync MUST preserve that
+          decision — otherwise every weekly sync re-enables the broken
+          extension and we re-discover the same failure.
+          Same for `opt_in_platforms`: upstream defaults to a small
+          opt-in set, but we may have widened or narrowed it locally.
+
+      extension.haybarn_skip_tests
+          Haybarn-only descriptor field (not in upstream's schema) that
+          tells our build to skip the per-extension test suite. Set on
+          extensions whose binaries build cleanly but whose tests fail
+          in our environment for non-extension-author reasons.
+
+    NOTE on the comment block: yaml.dump (used downstream by the
+    caller) doesn't preserve comments — that's a separate concern. The
+    `excluded_platforms` field carries the actual semantic; the comment
+    is purely human-facing. If the comment is critical to preserve,
+    use ruamel.yaml or the round-trip dumper.
     """
     new = json.loads(json.dumps(upstream))   # deep copy via json round-trip
     new = strip_andium(new)
 
-    if current and 'repo' in current:
-        for key in ('haybarn_fork', 'haybarn_ref'):
-            if key in current.get('repo', {}):
-                new.setdefault('repo', {})[key] = current['repo'][key]
+    if not current:
+        return new, True
 
-    changed = current is None or current != new
+    current_repo = current.get('repo') or {}
+    for key in ('haybarn_fork', 'haybarn_ref'):
+        if key in current_repo:
+            new.setdefault('repo', {})[key] = current_repo[key]
+
+    current_ext = current.get('extension') or {}
+    for key in ('excluded_platforms', 'opt_in_platforms', 'haybarn_skip_tests'):
+        if key in current_ext:
+            new.setdefault('extension', {})[key] = current_ext[key]
+
+    changed = current != new
     return new, changed
 
 
