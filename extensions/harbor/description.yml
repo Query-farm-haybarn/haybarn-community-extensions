@@ -1,0 +1,67 @@
+extension:
+  name: harbor
+  description: Multi-protocol HTTP service (Quack RPC, JSON SQL, DuckDB UI, admin)
+    for DuckDB on a single port
+  version: 0.1.0
+  language: C++
+  build: cmake
+  license: MIT
+  maintainers:
+  - shreeve
+repo:
+  github: shreeve/duckdb-harbor
+  ref: 181ad520b37cdb9ccd8a8ed855beaa5624a83df4
+docs:
+  hello_world: "-- Load the extension and start the server in the background.\n--\
+    \ harbor_serve returns immediately; harbor_wait keeps the process\n-- alive in\
+    \ daemon mode (containers, systemd).\nLOAD harbor;\nCALL harbor_serve('harbor:127.0.0.1:9494');\n\
+    --                                                  \u250C\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2510\n--                                                 \
+    \ \u2502             token               \u2502\n--                          \
+    \                        \u251C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\
+    \n--                                                  \u2502 a1b2c3d4e5f6... \
+    \                \u2502\n--                                                  \u2514\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n\n-- Hit it from another shell:\n\
+    --   curl http://127.0.0.1:9494/health\n--   curl -H \"Authorization: Bearer <token>\"\
+    \ \\\n--        -X POST http://127.0.0.1:9494/sql \\\n--        -H 'Content-Type:\
+    \ application/json' \\\n--        -d '{\"sql\":\"SELECT 42 AS the_answer\"}'\n\
+    --\n--   {\"ok\":true,\"kind\":\"select\",\"columns\":[{\"name\":\"the_answer\"\
+    ,\"duckdbType\":\"INTEGER\",\"lossless\":true}],\n--    \"data\":[[42]],\"rowCount\"\
+    :1,\"timeMs\":0}\n\n-- Browser users open http://127.0.0.1:9494/ \u2014 the harbor\
+    \ login\n-- page asks for the token once, sets a HttpOnly SameSite=Strict\n--\
+    \ cookie, then proxies the official DuckDB UI through.\n\n-- A second DuckDB process\
+    \ can attach via the Quack RPC protocol:\n--   ATTACH 'quack:127.0.0.1:9494' AS\
+    \ h (SECRET <bearer-secret>);\n--   SELECT * FROM h.main.t;\n\n-- Stop the server:\n\
+    CALL harbor_stop();\n"
+  extended_description: "`harbor` is a single DuckDB extension. When loaded, your\
+    \ DuckDB\ninstance turns into a multi-protocol HTTP service on one port:\n\n|\
+    \ Surface     | Endpoints                              | What it gives you   \
+    \                                                      |\n|-------------|----------------------------------------|---------------------------------------------------------------------------|\n\
+    | Quack RPC   | `POST /quack`                          | Wire-compat with stock\
+    \ `duckdb-quack` clients (`ATTACH 'quack:host'`)     |\n| JSON SQL    | `POST\
+    \ /sql`, `/sql/sessions/*`         | NDJSON streaming + one-shot JSON, prepared\
+    \ params (incl. `LIST`/`STRUCT`/`MAP`), principal-owned sessions, `harbor_query_timeout_s`\
+    \ enforcement |\n| DuckDB UI   | `GET /`, `/ddb/*`, `/localEvents`      | Cookie-gated\
+    \ proxy to the official DuckDB UI; CSP+nonce on the login page |\n| Admin    \
+    \   | `/health`, `/whoami`, `/tables`, `/schema/:db/:t`, `/checkpoint`, `/sessions`,\
+    \ `/interrupt` | Centralized `__HARBOR_ADMIN__:resource:action` default-deny +\
+    \ `harbor_allow_admin_without_authz` operator opt-in |\n| Auth        | `/auth/login`,\
+    \ `/auth/logout`          | Bearer / X-Harbor-Token / HMAC-signed `harbor_session`\
+    \ cookie             |\n\nAll on the same port, against the same in-process DuckDB,\
+    \ with the\nsame session pool and auth model.\n\n**Use cases:**\n- Operate one\
+    \ DuckDB process and let users hit it via whatever interface\n  fits their tool:\
+    \ notebook (UI), REPL (Quack), backend code (`/sql`).\n- Bridge between SQL clients\
+    \ and apps without standing up a separate\n  database server.\n- Container-native\
+    \ deployments \u2014 `harbor_wait()` blocks until SIGTERM\n  so harbor runs cleanly\
+    \ under systemd / Docker / Kubernetes.\n\n**Status:** v0.1 release, tested across\
+    \ all 9 DuckDB CI platforms\n(linux_amd64/arm64, osx_amd64/arm64, windows_amd64/_mingw,\n\
+    wasm_mvp/eh/threads). 198 test assertions across 6 suites.\n\nSource, design spec,\
+    \ contributor guide, full release notes:\n[github.com/shreeve/duckdb-harbor](https://github.com/shreeve/duckdb-harbor).\n\
+    \nTracks upstream `duckdb-quack` `v1.5-variegata` and `duckdb-ui`;\ntargets DuckDB\
+    \ v1.5.2.\n"
