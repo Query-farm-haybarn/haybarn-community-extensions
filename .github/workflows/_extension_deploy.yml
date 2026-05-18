@@ -522,10 +522,16 @@ jobs:
           AWS_RESPONSE_CHECKSUM_VALIDATION:  when_required
         run: |
           set -euo pipefail
+          # Per-commit immutable path: same content for the life of the URL,
+          # so cache forever. Without explicit Cache-Control, R2 stores
+          # objects with no metadata and Cloudflare's zone default (~4h)
+          # applies — fine for staleness here but wastes cache space for
+          # immutable assets that could be held indefinitely.
+          IMMUTABLE_CC="public, max-age=31536000, immutable"
           PREFIX="s3://${{ secrets.R2_BUCKET }}/community/${{ inputs.duckdb_version }}/${{ matrix.duckdb_arch }}/${{ inputs.extension_name }}/${{ steps.extsrc.outputs.ext_commit_short }}"
-          aws s3 cp '${{ steps.signpack.outputs.binary_path }}' "${PREFIX}/${{ steps.signpack.outputs.binary_basename }}"
-          aws s3 cp stage/manifest.json     "${PREFIX}/manifest.json"
-          aws s3 cp stage/manifest.json.asc "${PREFIX}/manifest.json.asc"
+          aws s3 cp '${{ steps.signpack.outputs.binary_path }}' "${PREFIX}/${{ steps.signpack.outputs.binary_basename }}" --cache-control "$IMMUTABLE_CC"
+          aws s3 cp stage/manifest.json     "${PREFIX}/manifest.json"     --cache-control "$IMMUTABLE_CC" --content-type application/json
+          aws s3 cp stage/manifest.json.asc "${PREFIX}/manifest.json.asc" --cache-control "$IMMUTABLE_CC" --content-type application/pgp-signature
 
       - name: Update current.json pointer
         shell: bash
@@ -544,9 +550,14 @@ jobs:
           # Concurrency group above serializes runs for the same
           # (extension, version, arch). The pointer is the only mutable
           # surface; per-build binary + manifest live at immutable paths.
+          # Short Cache-Control so the Cloudflare edge serves the just-
+          # updated pointer within seconds — without it the zone default
+          # (~4h) holds the prior pointer and `INSTALL <ext>` keeps
+          # resolving the previous commit.
+          MUTABLE_CC="public, max-age=10, must-revalidate"
           PTR="s3://${{ secrets.R2_BUCKET }}/community/${{ inputs.duckdb_version }}/${{ matrix.duckdb_arch }}/${{ inputs.extension_name }}/current.json"
-          aws s3 cp stage/current.json     "$PTR"
-          aws s3 cp stage/current.json.asc "${PTR}.asc"
+          aws s3 cp stage/current.json     "$PTR"        --cache-control "$MUTABLE_CC" --content-type application/json
+          aws s3 cp stage/current.json.asc "${PTR}.asc"  --cache-control "$MUTABLE_CC" --content-type application/pgp-signature
 
       # ------------------------------------------------------------------
       # PyPI + npm registry publishing (opt-in via descriptor).
