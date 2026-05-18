@@ -77,6 +77,14 @@ with open('env.sh', 'w+') as hdl:
 
     hdl.write(f"COMMUNITY_EXTENSION_REF={extension_ref}\n")
     hdl.write(f"COMMUNITY_EXTENSION_NAME={desc['extension']['name']}\n")
+    # Haybarn: pass the upstream extension's license through to the deploy
+    # workflow so the published npm package.json / PyPI metadata reflects
+    # the extension's actual license rather than misattributing it as MIT
+    # (which is what the engine + core extensions are, and was the previous
+    # hardcoded fallback in npm_build_leaf.py / npm_build_meta.py).
+    license_value = desc['extension'].get('license')
+    if license_value:
+        hdl.write(f"COMMUNITY_EXTENSION_LICENSE={license_value}\n")
     excluded_platforms     = desc['extension'].get('excluded_platforms')
     opt_in_platforms       = desc['extension'].get('opt_in_platforms')
     requires_toolchains    = desc['extension'].get('requires_toolchains')

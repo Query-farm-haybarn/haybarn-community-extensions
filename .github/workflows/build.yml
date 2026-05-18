@@ -106,6 +106,11 @@ jobs:
       COMMUNITY_EXTENSION_OPT_IN_PLATFORMS: ${{ inputs.more_opt_in }}${{ steps.parse.outputs.COMMUNITY_EXTENSION_OPT_IN_PLATFORMS }}
       COMMUNITY_EXTENSION_REQUIRES_TOOLCHAINS: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_REQUIRES_TOOLCHAINS }}
       COMMUNITY_EXTENSION_TEST_CONFIG: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_TEST_CONFIG }}
+      # SPDX license string from descriptor's `extension.license`. Passed
+      # through to npm package.json / PyPI metadata so the published
+      # registry artifact reflects the upstream extension's license rather
+      # than the engine's MIT (the previous hardcoded fallback).
+      COMMUNITY_EXTENSION_LICENSE: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_LICENSE }}
       # Mapped from `requires_toolchains` by scripts/build.py — one of
       # base / rust / full, selecting which pre-built GHCR image to pull.
       COMMUNITY_EXTENSION_IMAGE_VARIANT: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_IMAGE_VARIANT }}
@@ -273,5 +278,6 @@ jobs:
       exclude_archs: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_EXCLUDE_PLATFORMS }}
       opt_in_archs: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_OPT_IN_PLATFORMS }}
       extension_name: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_NAME }}
+      extension_license: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_LICENSE }}
       repository: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_GITHUB }}
       ref: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_REF }}
