@@ -1,4 +1,10 @@
 extension:
+  # Haybarn: disabled because the extension does not yet build
+  # against DuckDB 1.5.2 — upstream community-extensions also has
+  # no v1.5.2 binary. Re-enable when upstream lands a v1.5.2-
+  # compatible release (sync_from_upstream will pick up the bump).
+  # Tracker: https://github.com/hyehudai/QuackFIX/issues/3
+  excluded_platforms: linux_amd64;linux_arm64;linux_amd64_musl;linux_arm64_musl;osx_amd64;osx_arm64;windows_amd64;windows_arm64;windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
   name: quackfix
   description: Allows the consumption FIX protocol format logs, from all supported
     duckdb filesystems.

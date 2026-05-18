@@ -1,11 +1,16 @@
 extension:
+  # Haybarn: disabled because the extension does not yet build
+  # against DuckDB 1.5.2 — upstream community-extensions also has
+  # no v1.5.2 binary. Re-enable when upstream lands a v1.5.2-
+  # compatible release (sync_from_upstream will pick up the bump).
+  # Tracker: https://github.com/Hugoberry/duckdb-nanodbc-extension/issues/41
+  excluded_platforms: linux_amd64;linux_arm64;linux_amd64_musl;linux_arm64_musl;osx_amd64;osx_arm64;windows_amd64;windows_arm64;windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
   name: nanodbc
   description: Connect to any ODBC-compatible database and query data directly from
     DuckDB
   version: 0.4.0
   language: C++
   build: cmake
-  excluded_platforms: linux_amd64_musl;osx_amd64;wasm_mvp;wasm_eh;wasm_threads
   license: MIT
   maintainers:
   - Hugoberry

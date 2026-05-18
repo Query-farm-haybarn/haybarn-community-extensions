@@ -1,4 +1,10 @@
 extension:
+  # Haybarn: disabled because the extension does not yet build
+  # against DuckDB 1.5.2 — upstream community-extensions also has
+  # no v1.5.2 binary. Re-enable when upstream lands a v1.5.2-
+  # compatible release (sync_from_upstream will pick up the bump).
+  # Query Farm-owned repo (Query-farm/clickhouse-sql) — fix internally
+  excluded_platforms: linux_amd64;linux_arm64;linux_amd64_musl;linux_arm64_musl;osx_amd64;osx_arm64;windows_amd64;windows_arm64;windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
   name: chsql
   description: ClickHouse SQL Macros for DuckDB
   version: 1.4.0
@@ -8,7 +14,6 @@ extension:
   maintainers:
   - lmangani
   - akvlad
-  excluded_platforms: windows_amd64_rtools;windows_amd64_mingw;windows_amd64;
 repo:
   github: Query-farm/clickhouse-sql
   ref: 7c871adf7990631ecdca77fb2cd0fc7e5c5b5665
