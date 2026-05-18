@@ -4,8 +4,10 @@ extension:
   # community-extensions has the same broken descriptor; their last
   # binary at v1.5.2 predates the repo going dark.
   # Companion issue filed at duckdb/community-extensions to fix the
-  # descriptor upstream — once the URL is corrected (or removed),
-  # sync_from_upstream will pull the fix and we re-enable.
+  # descriptor upstream:
+  # https://github.com/duckdb/community-extensions/issues/1924
+  # Once the URL is corrected (or descriptor removed), sync_from_upstream
+  # will pull the fix and we re-enable.
   excluded_platforms: linux_amd64;linux_arm64;linux_amd64_musl;linux_arm64_musl;osx_amd64;osx_arm64;windows_amd64;windows_arm64;windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
   name: splink_udfs
   description: Phonetic, text normalization and address matching functions for record
