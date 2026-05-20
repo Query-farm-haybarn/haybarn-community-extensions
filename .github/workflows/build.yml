@@ -99,9 +99,10 @@ env:
   # Haybarn binary). Drives the URL segment under which we deploy.
   HAYBARN_DUCKDB_VERSION_DEFAULT: 'v1.5.2'
   # Branch/SHA of Query-farm-haybarn/haybarn-extension-ci-tools to use.
-  # Bump this and the `uses:`/`ci_tools_version:` literals below in lockstep
-  # whenever rolling forward. (GHA doesn't allow ${{ }} inside `uses:`.)
-  HAYBARN_CI_TOOLS_REF_DEFAULT: '3e39de2d77149b60f7d0d9aee697897d35af1109'
+  # We track the `haybarn` branch tip so builds always pick up the latest
+  # CI-tools fixes. Keep the `uses:` literals below in lockstep. (GHA doesn't
+  # allow ${{ }} inside `uses:`, so the branch name is duplicated there.)
+  HAYBARN_CI_TOOLS_REF_DEFAULT: 'haybarn'
   # Branch/SHA of Query-farm-haybarn/haybarn (the engine) to build against.
   HAYBARN_ENGINE_REPO: 'Query-farm-haybarn/haybarn'
   HAYBARN_ENGINE_REF_DEFAULT: 'haybarn'
@@ -175,17 +176,10 @@ jobs:
 
   build:
     needs: prepare
-    # Pinned by SHA; bumped deliberately alongside engine-release rolls.
-    # See HAYBARN_CI_TOOLS_REF_DEFAULT above for the canonical value (this
-    # `uses:` line MUST stay in lockstep with that env var by convention —
-    # `uses` doesn't accept ${{ }} interpolation so we duplicate it).
-    #
-    # 7e4a36f includes:
-    #   - Phase A: GHCR image publish workflow (haybarn-<arch>-<variant>:v1.5.2)
-    #   - Phase B: use_prebuilt_images / image_variant inputs
-    #   - vcpkg cache default switched to the readwrite haybarn cache
-    #   - retry on transient GHCR "unknown blob" during image push
-    uses: Query-farm-haybarn/haybarn-extension-ci-tools/.github/workflows/_extension_distribution.yml@3e39de2d77149b60f7d0d9aee697897d35af1109
+    # Tracks the `haybarn` branch tip (see HAYBARN_CI_TOOLS_REF_DEFAULT above);
+    # this `uses:` line MUST stay in lockstep with that env var by convention —
+    # `uses` doesn't accept ${{ }} interpolation so we duplicate the ref here.
+    uses: Query-farm-haybarn/haybarn-extension-ci-tools/.github/workflows/_extension_distribution.yml@haybarn
     # Cannot use `secrets: inherit` here: the callee expects a secret named
     # `vcpkg_token` (lowercase), but our org-level secret is HAYBARN_VCPKG_TOKEN.
     # `inherit` forwards by name only — no renaming — so the callee would see
@@ -199,7 +193,7 @@ jobs:
     with:
       duckdb_version: ${{ inputs.duckdb_version || 'v1.5.2' }}
       duckdb_tag: ${{ inputs.duckdb_tag || '' }}
-      ci_tools_version: ${{ inputs.ci_tools_version || '3e39de2d77149b60f7d0d9aee697897d35af1109' }}
+      ci_tools_version: ${{ inputs.ci_tools_version || 'haybarn' }}
       # Phase C: pull the pre-built Linux build image from GHCR instead of
       # running `docker build` inline on every extension. The variant
       # (base/rust/full) is chosen by scripts/build.py from the descriptor's
@@ -301,7 +295,7 @@ jobs:
       deploy_latest: true
       duckdb_version: ${{ inputs.duckdb_version || 'v1.5.2' }}
       duckdb_tag: ${{ inputs.duckdb_tag || '' }}
-      ci_tools_version: ${{ inputs.ci_tools_version || '3e39de2d77149b60f7d0d9aee697897d35af1109' }}
+      ci_tools_version: ${{ inputs.ci_tools_version || 'haybarn' }}
       exclude_archs: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_EXCLUDE_PLATFORMS }}
       opt_in_archs: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_OPT_IN_PLATFORMS }}
       extension_name: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_NAME }}

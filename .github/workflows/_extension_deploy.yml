@@ -199,13 +199,13 @@ jobs:
 
       # ci-tools checkout (under ci-tools/) supplies the shared publish
       # helpers (compute_calver, generate_haybarn_metadata, r2_build_manifest,
-      # pypi_build_wheel, npm_build_leaf) from scripts/publish/. Pinned to
-      # the consolidation SHA — single source of truth shared with the
-      # engine repo's haybarn-extensions.yml.
+      # pypi_build_wheel, npm_build_leaf) from scripts/publish/. Tracks the
+      # `haybarn` branch tip — single source of truth shared with the engine
+      # repo's haybarn-extensions.yml.
       - uses: actions/checkout@v4
         with:
           repository: 'Query-farm-haybarn/haybarn-extension-ci-tools'
-          ref: 7bd64f842f3b752f142ddc422b8cdd457ef24347
+          ref: haybarn
           path: ci-tools
 
       - name: Capture extension source commit + timestamp
@@ -709,7 +709,7 @@ jobs:
       - generate_matrix
       - deploy
     if: ${{ always() && needs.deploy.result != 'cancelled' && inputs.publish_registries && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') }}
-    uses: Query-farm-haybarn/haybarn-extension-ci-tools/.github/workflows/_extension_registry_publish.yml@7bd64f842f3b752f142ddc422b8cdd457ef24347
+    uses: Query-farm-haybarn/haybarn-extension-ci-tools/.github/workflows/_extension_registry_publish.yml@haybarn
     permissions:
       contents: read
       actions:  read
@@ -717,9 +717,9 @@ jobs:
     secrets: inherit
     with:
       artifact_shape:          per-extension
-      # MUST match the `@<SHA>` pinned in the `uses:` line above — the
-      # called workflow uses this to checkout its own scripts/publish/.
-      ci_tools_ref:            7bd64f842f3b752f142ddc422b8cdd457ef24347
+      # MUST match the ref in the `uses:` line above — the called workflow
+      # uses this to checkout its own scripts/publish/.
+      ci_tools_ref:            haybarn
       extension_name:          ${{ inputs.extension_name }}
       duckdb_version:          ${{ inputs.duckdb_version }}
       version:                 ${{ needs.deploy.outputs.version }}
