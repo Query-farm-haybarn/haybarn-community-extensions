@@ -33,6 +33,16 @@ on:
         required: false
         default: ''
 
+# A called reusable workflow's jobs are capped by the *caller's* granted
+# token permissions. build.yml's `deploy` job requests
+# `contents/actions: read` + `id-token: write`; without granting them here
+# the org-default restrictive token (`actions: none, id-token: none`) caps
+# the nested call and the run fails validation with a startup_failure.
+permissions:
+  contents: read
+  actions: read
+  id-token: write
+
 jobs:
   collect_extensions:
     outputs:
