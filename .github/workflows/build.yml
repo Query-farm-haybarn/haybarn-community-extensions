@@ -59,6 +59,14 @@ on:
         required: false
         type: boolean
         default: false
+      # Publish PyPI/npm leaf packages alongside the R2 deploy. R2 is the
+      # source of truth; registry publish is a decoupled second step, so
+      # bulk rebuilds (build_all) pass false and we publish to registries
+      # separately afterward. Defaults true to preserve PR-merge behavior.
+      publish_registries:
+        required: false
+        type: boolean
+        default: true
   workflow_call:
     inputs:
       extension_name:
@@ -79,6 +87,10 @@ on:
         required: false
         type: boolean
         default: false
+      publish_registries:
+        required: false
+        type: boolean
+        default: true
 
 # Default Haybarn pins. These are the single source of truth — every other
 # workflow in this repo reads its defaults from here.
@@ -296,11 +308,12 @@ jobs:
       extension_license: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_LICENSE }}
       extension_description: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_DESCRIPTION }}
       extension_source_repo: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_SOURCE_REPO }}
-      # Every community extension gets npm + PyPI publish by default —
-      # the hardcoded 11-name allowlist that used to gate this was a
-      # holdover from the bring-up phase. Per-extension opt-OUT can be
-      # added later via a descriptor field if a maintainer needs to
-      # keep an extension R2-only.
-      publish_registries: true
+      # PR-merge builds publish npm + PyPI by default (input defaults true).
+      # Bulk rebuilds (build_all) pass publish_registries=false so R2 is the
+      # only publish target; the registry publish is run as a separate step
+      # afterward.
+      # On `push` (PR merge) there are no inputs, so inputs.publish_registries
+      # is empty/falsy — force true there to keep the merge path publishing.
+      publish_registries: ${{ github.event_name == 'push' || inputs.publish_registries }}
       repository: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_GITHUB }}
       ref: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_REF }}

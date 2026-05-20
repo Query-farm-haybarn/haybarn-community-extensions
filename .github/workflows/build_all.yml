@@ -32,6 +32,13 @@ on:
         type: string
         required: false
         default: ''
+      # R2 is the source of truth for a bulk rebuild; npm/PyPI publish is a
+      # decoupled second step. Default false so a sweep is R2-only.
+      publish_registries:
+        description: "Also publish npm/PyPI leaf packages (R2 is published regardless)."
+        type: boolean
+        required: false
+        default: false
 
 # A called reusable workflow's jobs are capped by the *caller's* granted
 # token permissions. build.yml's `deploy` job requests
@@ -75,3 +82,4 @@ jobs:
       duckdb_version: ${{ inputs.duckdb_version }}
       duckdb_tag: ${{ inputs.duckdb_tag }}
       deploy: ${{ inputs.deploy }}
+      publish_registries: ${{ inputs.publish_registries }}
