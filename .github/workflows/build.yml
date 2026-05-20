@@ -6,8 +6,10 @@
 #
 # Two upstream-shaped differences from duckdb/community-extensions:
 #   1. The reusable distribution workflow is the haybarn fork
-#      (`Query-farm-haybarn/haybarn-extension-ci-tools`) pinned by SHA, and
-#      it's pointed at the Haybarn engine via `override_duckdb_repository`.
+#      (`Query-farm-haybarn/haybarn-extension-ci-tools`), tracked at its
+#      `haybarn` branch tip (the `uses: …@haybarn` line + `ci_tools_version:
+#      haybarn` default), and it's pointed at the Haybarn engine via
+#      `override_duckdb_repository`.
 #      That's how the extension gets built against Haybarn (with the Haybarn
 #      curated patch stack) rather than upstream DuckDB.
 #   2. `duckdb_version` stays `v1.5.3` because the Haybarn engine reports
