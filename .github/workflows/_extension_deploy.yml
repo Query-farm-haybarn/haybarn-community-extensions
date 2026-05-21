@@ -648,6 +648,10 @@ jobs:
           name: pypi-wheel-${{ inputs.extension_name }}-${{ matrix.duckdb_arch }}
           path: dist/pypi/
           if-no-files-found: error
+          # Intra-run handoff to the publish_pypi job; once on PyPI it's dead
+          # weight. At ~240 extensions x platforms these dominate Actions
+          # storage, so expire them fast (short retry-without-rebuild window).
+          retention-days: 2
 
       - name: Build npm leaf package
         if: ${{ inputs.publish_registries && steps.platmap.outputs.skip == 'false' }}
@@ -697,6 +701,9 @@ jobs:
           name: npm-leaf-${{ inputs.extension_name }}-${{ inputs.duckdb_version }}-${{ matrix.duckdb_arch }}
           path: dist/npm-leaf.tar.gz
           if-no-files-found: error
+          # Intra-run handoff to the publish_npm job; once on npm it's dead
+          # weight. Expire fast — these dominate Actions storage at scale.
+          retention-days: 2
 
   # ------------------------------------------------------------------
   # Registry publish (PyPI + npm) is the consolidated reusable workflow
