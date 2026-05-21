@@ -1,0 +1,15 @@
+docs:
+  extended_description: For more information regarding usage, see the [documentation](https://query.farm/duckdb_extension_vgi.html).
+extension:
+  build: cmake
+  description: VGI (Vector Gateway Interface) — DuckDB extension for extending DuckDB in any language over Apache Arrow IPC. No C++/compilation required.
+  language: C++
+  license: MIT
+  maintainers:
+  - rustyconover
+  name: airport
+  requires_toolchains: parser_tools
+  version: '2026052101'
+repo:
+  github: query-farm/vgi
+  ref: b93266783352f3cd070cf02703780e88990e8c1c
