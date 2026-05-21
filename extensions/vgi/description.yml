@@ -7,7 +7,7 @@ extension:
   license: MIT
   maintainers:
   - rustyconover
-  name: airport
+  name: vgi
   requires_toolchains: parser_tools
   version: '2026052101'
 repo:
