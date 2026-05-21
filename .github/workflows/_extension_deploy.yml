@@ -1,30 +1,31 @@
 # Reusable workflow that deploys a built extension to the Haybarn
-# community R2 bucket (legacy single-slot path + per-commit immutable
-# path with signed manifest), and optionally publishes a pip wheel +
-# npm leaves/meta to PyPI and npm when the extension's descriptor opts
-# in via `publish_registries: true`.
+# community R2 bucket and optionally publishes npm leaf packages when the
+# extension's descriptor opts in via `publish_registries: true`. (PyPI is
+# temporarily disabled while it's rate-limited — see CHANNELS in the deploy
+# job and the downstream publish_pypi `if:`.)
 #
-# Differences from upstream's duckdb/community-extensions/_extension_deploy.yml:
-#   - Bucket target:        haybarn-community-extensions (was duckdb-community-extensions)
-#   - Signing key secret:   HAYBARN_EXTENSION_SIGNING_PK (was S3_DUCKDB_ORG_COMMUNITY_SIGNING_PK)
-#   - S3 creds:             HAYBARN_COMMUNITY_S3_* (was DUCKDB_COMMUNITY_EXTENSION_S3_*)
-#   - DuckDB checkout:      Query-farm-haybarn/haybarn (was duckdb/duckdb)
-#   - extension-ci-tools:   Query-farm-haybarn/haybarn-extension-ci-tools (was duckdb/extension-ci-tools)
+# A SINGLE deploy job handles every architecture: it downloads all the
+# per-arch build artifacts, then runs the shared
+# ci-tools/scripts/publish/publish_extensions.py (the same generic publisher
+# core uses) which signs + compresses each arch in parallel and ships the
+# whole R2 tree with a few `aws s3 sync` calls. This replaced a per-arch
+# matrix whose every leg re-ran the checkouts / pip install / GPG import.
 #
-# The deploy_script path is `./duckdb/scripts/extension-upload-single.sh`
-# which Haybarn carries unchanged — the script reads bucket name + signing
-# key from env, so we don't need to modify it.
+# R2 layout written (under the shared core bucket, `community/` prefix):
 #
-# Per-commit immutable R2 layout (in addition to legacy single-slot):
+#   mutable "latest" (engine INSTALL fetches this; --write-latest):
+#     s3://<bucket>/community/<duckdb_version>/<arch>/<name>.duckdb_extension.gz
 #
-#   s3://<bucket>/community/<duckdb_version>/<arch>/<name>/<ext_commit_short>/
-#       <name>.duckdb_extension.gz       ← binary
-#       manifest.json                    ← signed per-build metadata
-#       manifest.json.asc
+#   per-commit immutable:
+#     s3://<bucket>/community/<duckdb_version>/<arch>/<name>/<ext_commit_short>/
+#         <name>.duckdb_extension.gz       ← binary
+#         manifest.json                    ← signed per-build metadata
+#         manifest.json.asc
 #
-#   s3://<bucket>/community/<duckdb_version>/<arch>/<name>/
-#       current.json                     ← signed pointer to latest commit
-#       current.json.asc
+#   mutable pointer:
+#     s3://<bucket>/community/<duckdb_version>/<arch>/<name>/
+#         current.json                     ← signed pointer to latest commit
+#         current.json.asc
 #
 # See ideas/extension-version-pinning.md for the full design.
 
@@ -121,62 +122,25 @@ on:
         default: ""
 
 jobs:
-  generate_matrix:
-    name: Generate matrix
-    runs-on: ubuntu-latest
-    outputs:
-      deploy_matrix: ${{ steps.parse-matrices.outputs.deploy_matrix }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          repository: 'Query-farm-haybarn/haybarn-extension-ci-tools'
-          ref: ${{ inputs.ci_tools_version }}
-          path: extension-ci-tools
-
-      - id: parse-matrices
-        run: |
-          python3 ./extension-ci-tools/scripts/modify_distribution_matrix.py \
-            --input ./extension-ci-tools/config/distribution_matrix.json \
-            --deploy_matrix --output deploy_matrix.json \
-            --exclude "${{ inputs.exclude_archs }}" \
-            --opt_in "${{ inputs.opt_in_archs }}" \
-            --pretty --reduced_ci_mode ${{ inputs.reduced_ci_mode }}
-          # --pretty produces multi-line JSON; GITHUB_OUTPUT can't take a
-          # single `name=value` line for that. Heredoc form is required for
-          # any multi-line value. (Run 25963459910 failed with "Invalid
-          # format '  \"include\": [' "; run 25964378414 then failed with
-          # "Matching delimiter not found 'HAYBARN_OUTPUT_EOF'" — that one
-          # is because the JSON file lacks a trailing newline, so the
-          # closing delim ends up on the same line as the last `}` and
-          # GH's heredoc parser doesn't see a standalone delimiter line.
-          # `printf '\n'` before the closing delimiter forces the newline.)
-          {
-            printf 'deploy_matrix<<HAYBARN_OUTPUT_EOF\n'
-            cat deploy_matrix.json
-            printf '\nHAYBARN_OUTPUT_EOF\n'
-          } >> "$GITHUB_OUTPUT"
-          echo "--- deploy_matrix.json ---"
-          cat deploy_matrix.json
-          echo "--- end deploy_matrix.json ---"
-
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    needs: generate_matrix
-    if: ${{ needs.generate_matrix.outputs.deploy_matrix != '{}' && needs.generate_matrix.outputs.deploy_matrix != '' }}
-    strategy:
-      matrix: ${{ fromJson(needs.generate_matrix.outputs.deploy_matrix) }}
-      # Don't cascade-cancel other legs when one fails — for waddle we
-      # want every successful platform's wheel/leaf to still publish.
-      fail-fast: false
-    # NOTE: a job-level `concurrency:` group referencing ${{ matrix.X }} is
-    # not currently supported by GitHub Actions (causes startup_failure on
-    # workflow validation). The per-(ext, version, arch) current.json
-    # writes don't race within a single run anyway — each matrix leg
-    # targets a different per-arch path. Cross-run races (two pushes for
-    # the same extension landing simultaneously) remain possible but
-    # uncommon for our smoke-test workflow; can be addressed later with
-    # If-Match retry or a non-matrix follow-up job if needed.
+    # One job for ALL architectures. The old design fanned a matrix leg per
+    # arch — each leg re-ran 3 checkouts (incl. a full-depth engine clone),
+    # `pip install awscli`, a GPG import, and ~5 `aws s3 cp` calls, to do a
+    # few seconds of real work, and a separate generate_matrix job computed the
+    # arch list. We now do that setup ONCE, derive the arch list from the
+    # downloaded build artifacts (the build already produced exactly the
+    # arches we deploy — same exclude/opt_in filter), sign + compress every
+    # arch in parallel (in memory, via the shared publish_extensions.py used
+    # by core), and ship the whole R2 tree with a handful of `aws s3 sync`
+    # calls.
+    concurrency:
+      # Serialize runs for the same (extension, version) so two pushes don't
+      # race the mutable current.json pointer. (A matrix job couldn't carry a
+      # concurrency group keyed on the arch; a single job can.)
+      group: deploy-${{ inputs.extension_name }}-${{ inputs.duckdb_version }}
+      cancel-in-progress: false
     outputs:
       version: ${{ steps.calver.outputs.version }}
       ext_commit: ${{ steps.extsrc.outputs.ext_commit }}
@@ -188,20 +152,21 @@ jobs:
           ref: ${{ inputs.ref }}
           submodules: 'false'
 
-      # Haybarn engine checkout — supplies the extension-upload-single.sh
-      # script and the version-tag-derivation logic the deploy step uses below.
+      # Engine checkout (SHALLOW) — only to read the engine commit SHA stamped
+      # into each manifest's haybarn-engine-commit. duckdb_version is an explicit
+      # input now, so we no longer derive it from tags and depth-1 is enough.
+      # (The old per-arch deploy did a full-depth clone here, once per leg.)
       - uses: actions/checkout@v4
         with:
           repository: 'Query-farm-haybarn/haybarn'
           ref: ${{ inputs.duckdb_version }}
           path: duckdb
-          fetch-depth: 0
+          fetch-depth: 1
 
-      # ci-tools checkout (under ci-tools/) supplies the shared publish
-      # helpers (compute_calver, generate_haybarn_metadata, r2_build_manifest,
-      # pypi_build_wheel, npm_build_leaf) from scripts/publish/. Tracks the
-      # `haybarn` branch tip — single source of truth shared with the engine
-      # repo's haybarn-extensions.yml.
+      # ci-tools checkout (under ci-tools/) supplies publish_extensions.py and
+      # the shared publish helpers from scripts/publish/. Tracks the `haybarn`
+      # branch tip — single source of truth shared with the engine repo's
+      # haybarn-extensions-publish.yml.
       - uses: actions/checkout@v4
         with:
           repository: 'Query-farm-haybarn/haybarn-extension-ci-tools'
@@ -214,25 +179,16 @@ jobs:
         run: |
           set -euo pipefail
           git config --global --add safe.directory '*'
-          EXT_COMMIT=$(git log -1 --format=%H)
-          EXT_COMMIT_TS=$(git log -1 --format=%ct)
-          EXT_COMMIT_SHORT=$(git log -1 --format=%h)
-          BUILT_AT=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
           {
-            echo "ext_commit=$EXT_COMMIT"
-            echo "ext_commit_ts=$EXT_COMMIT_TS"
-            echo "ext_commit_short=$EXT_COMMIT_SHORT"
-            echo "built_at=$BUILT_AT"
+            echo "ext_commit=$(git log -1 --format=%H)"
+            echo "ext_commit_ts=$(git log -1 --format=%ct)"
+            echo "ext_commit_short=$(git log -1 --format=%h)"
           } >> "$GITHUB_OUTPUT"
-          echo "::notice::extension source commit ${EXT_COMMIT_SHORT} (ts=${EXT_COMMIT_TS}, built_at=${BUILT_AT})"
 
       - name: Capture haybarn engine commit
         id: engine
         shell: bash
-        run: |
-          ENGINE_COMMIT=$(git -C duckdb log -1 --format=%H)
-          echo "engine_commit=$ENGINE_COMMIT" >> "$GITHUB_OUTPUT"
-          echo "::notice::haybarn engine commit ${ENGINE_COMMIT}"
+        run: echo "engine_commit=$(git -C duckdb rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Compute pip/npm version (semver if descriptor has one, else CalVer)
         id: calver
@@ -247,462 +203,137 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "::notice::pip/npm version: $VERSION"
 
-      - uses: actions/download-artifact@v4
+      - name: Download all built extension artifacts
+        uses: actions/download-artifact@v4
         with:
-          name: ${{ inputs.extension_name }}-${{ inputs.duckdb_version }}-extension-${{ matrix.duckdb_arch }}${{ inputs.artifact_postfix }}${{ startsWith(matrix.duckdb, 'wasm') && '.wasm' || '' }}
-          path: /tmp/extension
+          # One artifact per arch: <ext>-<dv>-extension-<arch>[<postfix>][.wasm].
+          # No merge-multiple → each lands in its own dl/<artifact-name>/ subdir.
+          pattern: ${{ inputs.extension_name }}-${{ inputs.duckdb_version }}-extension-*
+          path: dl
 
-      - name: Deploy
-        shell: bash
-        # Reuse the same R2_* org-secret credentials used by haybarn-extensions.yml
-        # Community extensions now share the core bucket
-        # (haybarn-extensions.query.farm), distinguished by a top-level
-        # `community/` key prefix instead of a separate bucket+subdomain.
-        # The upload script's $5 (bucket name) accepts "<bucket>/<prefix>"
-        # — aws s3 cp treats anything after the bucket as the object key,
-        # so `s3://<core>/community/<name>/<extver>/<duckdbver>/<arch>/...`
-        # works without script changes. URL the engine fetches becomes
-        # `https://haybarn-extensions.query.farm/community/<duckdbver>/<arch>/<name>.duckdb_extension.gz`.
-        env:
-          AWS_ACCESS_KEY_ID:     ${{ secrets.R2_ACCESS_KEY_ID }}
-          # The org secret is named R2_SECRET_KEY_ID (not the more
-          # conventional R2_SECRET_ACCESS_KEY). See companion fix in
-          # haybarn/.github/workflows/haybarn-extensions.yml.
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_KEY_ID }}
-          AWS_ENDPOINT_URL:      ${{ secrets.R2_ENDPOINT }}
-          AWS_DEFAULT_REGION:    auto
-          # Cloudflare R2 rejects new sigv4 checksum headers added
-          # in awscli ≥ 1.36 / v2 ≥ 2.23 (surfaces as AccessDenied on
-          # PutObject). Pin to pre-2024 checksum behavior.
-          AWS_REQUEST_CHECKSUM_CALCULATION:  when_required
-          AWS_RESPONSE_CHECKSUM_VALIDATION:  when_required
-          BUCKET_NAME:           ${{ secrets.R2_BUCKET }}/community
-          # SAME private key Haybarn uses to sign core extensions. The
-          # engine's `community_public_keys[]` and `public_keys[]` both
-          # reference the matching HAYBARN_TRUST_ROOT constant.
-          DUCKDB_EXTENSION_SIGNING_PK: ${{ secrets.HAYBARN_EXTENSION_SIGNING_PK }}
-          DUCKDB_DEPLOY_SCRIPT_MODE: for_real
-          PIP_BREAK_SYSTEM_PACKAGES: 1
-        run: |
-          python3 -m pip install awscli
-          if [ -n "${{ inputs.duckdb_tag }}" ]; then
-            export DUCKDB_VERSION="${{ inputs.duckdb_tag }}"
-          else
-            git config --global --add safe.directory '*'
-            cd duckdb
-            git fetch --tags
-            DUCKDB_VERSION=$(git tag --points-at HEAD)
-            DUCKDB_VERSION=${DUCKDB_VERSION:=$(git log -1 --format=%h)}
-            export DUCKDB_VERSION
-            cd ..
-          fi
-          git fetch --tags --no-recurse-submodules
-          EXT_VERSION=$(git tag --points-at HEAD)
-          EXT_VERSION=${EXT_VERSION:=$(git log -1 --format=%h)}
-          export EXT_VERSION
-          ${{ inputs.deploy_script }} \
-            ${{ inputs.extension_name }} \
-            "$EXT_VERSION" "$DUCKDB_VERSION" \
-            ${{ matrix.duckdb_arch }} \
-            "$BUCKET_NAME" \
-            ${{ inputs.deploy_latest || 'true' && 'false' }} \
-            ${{ inputs.deploy_versioned || 'true' && 'false' }}
-
-      # ------------------------------------------------------------------
-      # New per-commit immutable R2 layout (Phase 1 of extension-version-pinning).
-      # Runs alongside the legacy upload above. Produces its own signed +
-      # compressed binary (the legacy script deletes its copy on exit, so
-      # we re-do the dance to have something to upload to the new path and
-      # to hand off to the pip/npm publish steps if registries are opted-in).
-      # Signing is deterministic (RSA-PKCS1-v1_5 over a fixed input), so
-      # the bytes produced here are byte-identical to what the legacy step
-      # uploaded.
-      # ------------------------------------------------------------------
-
-      - name: Re-sign and compress for new layout
-        id: signpack
+      - name: Assemble repo tree for publish_extensions.py
         shell: bash
         env:
-          DUCKDB_EXTENSION_SIGNING_PK: ${{ secrets.HAYBARN_EXTENSION_SIGNING_PK }}
-        run: |
-          set -euo pipefail
-          EXT='${{ inputs.extension_name }}'
-          ARCH='${{ matrix.duckdb_arch }}'
-          mkdir -p stage
-
-          if [[ "$ARCH" == wasm* ]]; then
-            SRC="/tmp/extension/${EXT}.duckdb_extension.wasm"
-            DEST="stage/${EXT}.duckdb_extension.wasm"
-            COMPRESSED_SUFFIX="wasm"
-          else
-            SRC="/tmp/extension/${EXT}.duckdb_extension"
-            DEST="stage/${EXT}.duckdb_extension.gz"
-            COMPRESSED_SUFFIX="gz"
-          fi
-
-          # Same dance extension-upload-single.sh runs: copy → truncate
-          # last 256 bytes (placeholder signature) → hash → sign → append
-          # signature → compress.
-          cp "$SRC" stage/work.append
-          ( command -v truncate && truncate -s -256 stage/work.append ) \
-            || ( command -v gtruncate && gtruncate -s -256 stage/work.append ) \
-            || { echo "::error::no truncate/gtruncate available"; exit 1; }
-
-          if [[ -n "${DUCKDB_EXTENSION_SIGNING_PK:-}" ]]; then
-            echo "$DUCKDB_EXTENSION_SIGNING_PK" > stage/private.pem
-            duckdb/scripts/compute-extension-hash.sh stage/work.append > stage/work.hash
-            openssl pkeyutl -sign -in stage/work.hash -inkey stage/private.pem \
-              -pkeyopt digest:sha256 -out stage/work.sign
-            rm -f stage/private.pem
-          else
-            # Should never hit this in CI — the key is set in repo secrets —
-            # but mirror the script's fallback for parity.
-            dd if=/dev/zero of=stage/work.sign bs=256 count=1
-          fi
-
-          cat stage/work.sign >> stage/work.append
-          rm stage/work.sign
-
-          # Preserve the signed-but-UNCOMPRESSED binary for the npm leaf — npm
-          # gzips the tarball itself, so shipping the .gz would double-compress
-          # it (and force a redundant decompress on install). R2 + the pip wheel
-          # still use the compressed $DEST below.
-          SIGNED_UNCOMPRESSED="stage/${EXT}.duckdb_extension"
-          cp stage/work.append "$SIGNED_UNCOMPRESSED"
-
-          if [[ "$COMPRESSED_SUFFIX" == "wasm" ]]; then
-            brotli < stage/work.append > "$DEST"
-          else
-            gzip < stage/work.append > "$DEST"
-          fi
-          rm stage/work.append stage/work.hash
-
-          # Hash the COMPRESSED SIGNED binary — that's what consumers
-          # download and what the lockfile verifies against.
-          SHA=$(openssl dgst -sha256 -binary "$DEST" | xxd -p -c 64)
-          SIZE=$(stat -c %s "$DEST" 2>/dev/null || stat -f %z "$DEST")
-          {
-            echo "binary_path=$DEST"
-            echo "binary_basename=$(basename "$DEST")"
-            echo "signed_binary_path=$SIGNED_UNCOMPRESSED"
-            echo "signed_binary_basename=$(basename "$SIGNED_UNCOMPRESSED")"
-            echo "sha256=$SHA"
-          } >> "$GITHUB_OUTPUT"
-          echo "::notice::signed+compressed binary $DEST (sha256=$SHA, size=$SIZE)"
-
-      - name: Generate haybarn-metadata.json
-        id: metadata
-        shell: bash
-        run: |
-          set -euo pipefail
-          # Strip the leading 'v' from the engine version for the metadata
-          # blob ("1.5.2", not "v1.5.2") — matches the package-name suffix
-          # convention from extension-version-pinning.md.
-          HAYBARN_VERSION="${DV#v}"
-          python3 ci-tools/scripts/publish/generate_haybarn_metadata.py \
-            --extension '${{ inputs.extension_name }}' \
-            --ext-commit '${{ steps.extsrc.outputs.ext_commit }}' \
-            --haybarn-version "$HAYBARN_VERSION" \
-            --ext-version-label '${{ inputs.extension_version_label }}' \
-            --sha256 '${{ steps.signpack.outputs.sha256 }}' \
-            --built-at '${{ steps.extsrc.outputs.built_at }}' \
-            --out stage/haybarn-metadata.json
-          cat stage/haybarn-metadata.json
-        env:
+          EXT: ${{ inputs.extension_name }}
           DV: ${{ inputs.duckdb_version }}
+          POSTFIX: ${{ inputs.artifact_postfix }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          mkdir -p repo
+          # Each downloaded artifact dir is dl/<ext>-<dv>-extension-<arch>[<postfix>]
+          # and holds one <ext>.duckdb_extension (.wasm for wasm). Derive the arch
+          # from the dir name and lay the binary out as <dv>/<arch>/<bin> — the
+          # tree shape publish_extensions.py iterates. No generate_matrix job
+          # needed: the build produced exactly the arches we deploy.
+          PREFIX="${EXT}-${DV}-extension-"
+          n=0
+          for adir in dl/*/; do
+            adir="${adir%/}"
+            name="$(basename "$adir")"
+            arch="${name#"$PREFIX"}"
+            arch="${arch%"$POSTFIX"}"
+            if [[ -f "$adir/${EXT}.duckdb_extension.wasm" ]]; then
+              bin="${EXT}.duckdb_extension.wasm"
+            elif [[ -f "$adir/${EXT}.duckdb_extension" ]]; then
+              bin="${EXT}.duckdb_extension"
+            else
+              echo "::error::no extension binary in $adir"; ls -la "$adir" 2>/dev/null || true; exit 1
+            fi
+            mkdir -p "repo/${DV}/${arch}"
+            cp "$adir/$bin" "repo/${DV}/${arch}/${bin}"
+            n=$((n+1))
+          done
+          echo "::notice::assembled $n arch(es)"
+          [[ "$n" -gt 0 ]] || { echo "::error::no extension artifacts downloaded"; exit 1; }
+          find repo -type f | sort
 
-      - name: Look up previous_commit from existing current.json
-        id: prev
+      - name: Sign, compress, and publish to R2 (+ stage npm leaves)
         shell: bash
+        # Same R2_* org-secret credentials used by haybarn-extensions-publish.yml.
+        # Community shares the core bucket under a top-level `community/` prefix
+        # (--r2-prefix community). The engine fetches INSTALL binaries from
+        # https://haybarn-extensions.query.farm/community/<dv>/<arch>/<name>.duckdb_extension.gz
+        # — the mutable "latest" path that --write-latest produces.
         env:
           AWS_ACCESS_KEY_ID:     ${{ secrets.R2_ACCESS_KEY_ID }}
+          # The org secret is named R2_SECRET_KEY_ID (not R2_SECRET_ACCESS_KEY).
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_KEY_ID }}
           AWS_ENDPOINT_URL:      ${{ secrets.R2_ENDPOINT }}
           AWS_DEFAULT_REGION:    auto
-          # Cloudflare R2 rejects new sigv4 checksum headers added
-          # in awscli ≥ 1.36 / v2 ≥ 2.23 (surfaces as AccessDenied on
-          # PutObject). Pin to pre-2024 checksum behavior.
+          # Cloudflare R2 rejects the new sigv4 checksum headers added in
+          # awscli ≥ 1.36 / v2 ≥ 2.23 (AccessDenied on PutObject). Pin to
+          # pre-2024 checksum behavior.
           AWS_REQUEST_CHECKSUM_CALCULATION:  when_required
           AWS_RESPONSE_CHECKSUM_VALIDATION:  when_required
+          # SAME signing key Haybarn uses for core extensions (RSA binary sig).
+          DUCKDB_EXTENSION_SIGNING_PK: ${{ secrets.HAYBARN_EXTENSION_SIGNING_PK }}
+          # GPG key for the manifest / current.json detached signatures.
+          HAYBARN_GPG_PRIVATE_KEY: ${{ secrets.HAYBARN_GPG_PRIVATE_KEY }}
+          HAYBARN_GPG_PASSPHRASE:  ${{ secrets.HAYBARN_GPG_PASSPHRASE }}
+          PIP_BREAK_SYSTEM_PACKAGES: 1
+          DV: ${{ inputs.duckdb_version }}
         run: |
           set -euo pipefail
-          PTR="s3://${{ secrets.R2_BUCKET }}/community/${{ inputs.duckdb_version }}/${{ matrix.duckdb_arch }}/${{ inputs.extension_name }}/current.json"
-          # Fetching may legitimately fail on the first build of this
-          # (extension, version, arch) tuple — that's fine, previous_commit
-          # stays empty.
-          if aws s3 cp "$PTR" stage/prev-current.json 2>/dev/null; then
-            PREV=$(python3 -c "import json; print(json.load(open('stage/prev-current.json')).get('latest',''))")
-            echo "::notice::previous_commit=$PREV"
-          else
-            PREV=""
-            echo "::notice::no existing current.json — first build of this tuple"
-          fi
-          echo "previous_commit=$PREV" >> "$GITHUB_OUTPUT"
-
-      - name: Build R2 manifest.json
-        shell: bash
-        run: |
-          set -euo pipefail
-          # Channels list reflects what this build will actually be published to.
+          python3 -m pip install --quiet awscli cryptography tqdm
+          command -v brotli >/dev/null || sudo apt-get install -y --no-install-recommends brotli
+          # Channels gate which registry artifacts get built. PyPI is
+          # temporarily disabled (rate-limited; the downstream publish_pypi job
+          # is also `if: false`), so we build npm leaves only. Re-enable by
+          # adding 'pypi' back here AND flipping that downstream `if:`.
           if [[ '${{ inputs.publish_registries }}' == 'true' ]]; then
-            CHANNELS='r2-community,pypi,npm'
+            CHANNELS='r2-community,npm'
           else
             CHANNELS='r2-community'
           fi
-          python3 ci-tools/scripts/publish/r2_build_manifest.py \
-            --extension '${{ inputs.extension_name }}' \
-            --duckdb-version '${{ inputs.duckdb_version }}' \
-            --platform '${{ matrix.duckdb_arch }}' \
-            --ext-commit '${{ steps.extsrc.outputs.ext_commit }}' \
+          python3 ci-tools/scripts/publish/publish_extensions.py \
+            --repo-dir          repo \
+            --engine-commit     '${{ steps.engine.outputs.engine_commit }}' \
+            --ext-commit        '${{ steps.extsrc.outputs.ext_commit }}' \
+            --ext-commit-ts     '${{ steps.extsrc.outputs.ext_commit_ts }}' \
             --ext-version-label '${{ inputs.extension_version_label }}' \
-            --sha256 '${{ steps.signpack.outputs.sha256 }}' \
-            --object '${{ steps.signpack.outputs.binary_basename }}' \
-            --built-at '${{ steps.extsrc.outputs.built_at }}' \
-            --haybarn-engine-commit '${{ steps.engine.outputs.engine_commit }}' \
-            --signed-by 'haybarn-extension-signing-2026' \
-            --channels "$CHANNELS" \
-            --previous-commit '${{ steps.prev.outputs.previous_commit }}' \
-            --out stage/manifest.json
-          cat stage/manifest.json
-
-      - name: GPG-sign manifest.json and current.json
-        shell: bash
-        env:
-          HAYBARN_GPG_PRIVATE_KEY: ${{ secrets.HAYBARN_GPG_PRIVATE_KEY }}
-          HAYBARN_GPG_PASSPHRASE:  ${{ secrets.HAYBARN_GPG_PASSPHRASE }}
-        run: |
-          set -euo pipefail
-
-          # The HAYBARN_GPG_PRIVATE_KEY org secret is hex-encoded (per the
-          # gotcha documented in haybarn/CLAUDE.md). Decode and import.
-          # Probe a couple of shapes for resilience to future re-stores.
-          import_ok=0
-          for decoder in "xxd -r -p" "base64 -d" "cat"; do
-            if echo "$HAYBARN_GPG_PRIVATE_KEY" | eval "$decoder" 2>/dev/null \
-                | gpg --batch --pinentry-mode loopback \
-                      --passphrase "$HAYBARN_GPG_PASSPHRASE" \
-                      --import 2>/dev/null; then
-              echo "::notice::GPG key imported via: $decoder"
-              import_ok=1
-              break
-            fi
-          done
-          if [[ "$import_ok" != "1" ]]; then
-            echo "::error::could not import HAYBARN_GPG_PRIVATE_KEY in any known shape"
-            exit 1
-          fi
-
-          # Build current.json pointing at this commit (will be uploaded
-          # after we've finished signing both files).
-          python3 -c "
-          import json, datetime
-          print(json.dumps({
-              'latest': '${{ steps.extsrc.outputs.ext_commit }}',
-              'updated_at': datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
-          }, indent=2, sort_keys=True) + '\n')
-          " > stage/current.json
-
-          # Find the key fingerprint we just imported (filter for our uid)
-          KEY_ID=$(gpg --list-secret-keys --keyid-format LONG \
-                     | awk '/sec/{gsub(/.*\//,"",$2); print $2; exit}')
-          echo "::notice::signing with GPG key $KEY_ID"
-
-          for f in stage/manifest.json stage/current.json; do
-            gpg --batch --yes --pinentry-mode loopback \
-                --passphrase "$HAYBARN_GPG_PASSPHRASE" \
-                --local-user "$KEY_ID" \
-                --detach-sign --armor \
-                --output "${f}.asc" "$f"
-          done
-
-          ls -la stage/
-
-      - name: Upload binary + manifest to per-commit immutable R2 path
-        shell: bash
-        env:
-          AWS_ACCESS_KEY_ID:     ${{ secrets.R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_KEY_ID }}
-          AWS_ENDPOINT_URL:      ${{ secrets.R2_ENDPOINT }}
-          AWS_DEFAULT_REGION:    auto
-          # Cloudflare R2 rejects new sigv4 checksum headers added
-          # in awscli ≥ 1.36 / v2 ≥ 2.23 (surfaces as AccessDenied on
-          # PutObject). Pin to pre-2024 checksum behavior.
-          AWS_REQUEST_CHECKSUM_CALCULATION:  when_required
-          AWS_RESPONSE_CHECKSUM_VALIDATION:  when_required
-        run: |
-          set -euo pipefail
-          # Per-commit immutable path: same content for the life of the URL,
-          # so cache forever. Without explicit Cache-Control, R2 stores
-          # objects with no metadata and Cloudflare's zone default (~4h)
-          # applies — fine for staleness here but wastes cache space for
-          # immutable assets that could be held indefinitely.
-          IMMUTABLE_CC="public, max-age=31536000, immutable"
-          PREFIX="s3://${{ secrets.R2_BUCKET }}/community/${{ inputs.duckdb_version }}/${{ matrix.duckdb_arch }}/${{ inputs.extension_name }}/${{ steps.extsrc.outputs.ext_commit_short }}"
-          aws s3 cp '${{ steps.signpack.outputs.binary_path }}' "${PREFIX}/${{ steps.signpack.outputs.binary_basename }}" --cache-control "$IMMUTABLE_CC"
-          aws s3 cp stage/manifest.json     "${PREFIX}/manifest.json"     --cache-control "$IMMUTABLE_CC" --content-type application/json
-          aws s3 cp stage/manifest.json.asc "${PREFIX}/manifest.json.asc" --cache-control "$IMMUTABLE_CC" --content-type application/pgp-signature
-
-      - name: Update current.json pointer
-        shell: bash
-        env:
-          AWS_ACCESS_KEY_ID:     ${{ secrets.R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_KEY_ID }}
-          AWS_ENDPOINT_URL:      ${{ secrets.R2_ENDPOINT }}
-          AWS_DEFAULT_REGION:    auto
-          # Cloudflare R2 rejects new sigv4 checksum headers added
-          # in awscli ≥ 1.36 / v2 ≥ 2.23 (surfaces as AccessDenied on
-          # PutObject). Pin to pre-2024 checksum behavior.
-          AWS_REQUEST_CHECKSUM_CALCULATION:  when_required
-          AWS_RESPONSE_CHECKSUM_VALIDATION:  when_required
-        run: |
-          set -euo pipefail
-          # Concurrency group above serializes runs for the same
-          # (extension, version, arch). The pointer is the only mutable
-          # surface; per-build binary + manifest live at immutable paths.
-          # Short Cache-Control so the Cloudflare edge serves the just-
-          # updated pointer within seconds — without it the zone default
-          # (~4h) holds the prior pointer and `INSTALL <ext>` keeps
-          # resolving the previous commit.
-          MUTABLE_CC="public, max-age=10, must-revalidate"
-          PTR="s3://${{ secrets.R2_BUCKET }}/community/${{ inputs.duckdb_version }}/${{ matrix.duckdb_arch }}/${{ inputs.extension_name }}/current.json"
-          aws s3 cp stage/current.json     "$PTR"        --cache-control "$MUTABLE_CC" --content-type application/json
-          aws s3 cp stage/current.json.asc "${PTR}.asc"  --cache-control "$MUTABLE_CC" --content-type application/pgp-signature
-
-      # ------------------------------------------------------------------
-      # PyPI + npm registry publishing (opt-in via descriptor).
-      # ------------------------------------------------------------------
-
-      - name: Map duckdb_arch → PyPI platform tag + npm os/cpu/libc
-        # Was previously gated by a hardcoded allowlist of 11 names. Now
-        # driven by the caller's `publish_registries` input — community
-        # build.yml defaults that to true so every merged descriptor
-        # auto-publishes; other callers (engine, build-forks) keep the
-        # input default of false and stay R2-only unless they opt in.
-        if: ${{ inputs.publish_registries }}
-        id: platmap
-        shell: bash
-        run: |
-          set -euo pipefail
-          # PyPI tags follow PEP 600 / 656. npm uses (os, cpu, libc).
-          # The "-" libc value means "omit the libc field" (per
-          # npm_build_leaf.py's contract).
-          case '${{ matrix.duckdb_arch }}' in
-            linux_amd64)       PY=manylinux_2_28_x86_64;  NOS=linux;  NCPU=x64;   NLIBC=glibc ;;
-            linux_arm64)       PY=manylinux_2_28_aarch64; NOS=linux;  NCPU=arm64; NLIBC=glibc ;;
-            linux_amd64_musl)  PY=musllinux_1_2_x86_64;   NOS=linux;  NCPU=x64;   NLIBC=musl  ;;
-            linux_arm64_musl)  PY=musllinux_1_2_aarch64;  NOS=linux;  NCPU=arm64; NLIBC=musl  ;;
-            osx_amd64)         PY=macosx_11_0_x86_64;     NOS=darwin; NCPU=x64;   NLIBC=-     ;;
-            osx_arm64)         PY=macosx_11_0_arm64;      NOS=darwin; NCPU=arm64; NLIBC=-     ;;
-            windows_amd64)     PY=win_amd64;              NOS=win32;  NCPU=x64;   NLIBC=-     ;;
-            windows_arm64)     PY=win_arm64;              NOS=win32;  NCPU=arm64; NLIBC=-     ;;
-            wasm_*|windows_amd64_mingw)
-              # No PyPI / npm publish for wasm or the MinGW Windows variant
-              # (npm os/cpu can't distinguish MinGW from MSVC; we'd be
-              # publishing a duplicate-platform leaf). Skip silently.
-              echo "skip=true" >> "$GITHUB_OUTPUT"
-              exit 0
-              ;;
-            *)
-              echo "::error::no PyPI/npm platform mapping for ${{ matrix.duckdb_arch }}"
-              exit 1
-              ;;
-          esac
-          # Build the leaf slug — '-' libc gets no suffix; explicit libc
-          # gets appended as -musl etc. (glibc is the default → no suffix).
-          case "$NLIBC" in
-            musl) LEAF_SUFFIX="$NOS-$NCPU-musl" ;;
-            *)    LEAF_SUFFIX="$NOS-$NCPU"     ;;
-          esac
-          {
-            echo "skip=false"
-            echo "pypi_platform_tag=$PY"
-            echo "npm_os=$NOS"
-            echo "npm_cpu=$NCPU"
-            echo "npm_libc=$NLIBC"
-            echo "npm_leaf_suffix=$LEAF_SUFFIX"
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Build pip wheel
-        if: ${{ inputs.publish_registries && steps.platmap.outputs.skip == 'false' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p dist/pypi
-          python3 ci-tools/scripts/publish/pypi_build_wheel.py \
-            --extension '${{ inputs.extension_name }}' \
-            --haybarn-version "${DV#v}" \
-            --version '${{ steps.calver.outputs.version }}' \
-            --platform-tag '${{ steps.platmap.outputs.pypi_platform_tag }}' \
-            --binary '${{ steps.signpack.outputs.binary_path }}' \
-            --haybarn-metadata stage/haybarn-metadata.json \
-            --license ce/LICENSE \
-            --source-repo '${{ inputs.extension_source_repo }}' \
-            --out-dir dist/pypi/
-        env:
-          DV: ${{ inputs.duckdb_version }}
-
-      - name: Upload pip wheel artifact (for publish_pypi job)
-        if: ${{ inputs.publish_registries && steps.platmap.outputs.skip == 'false' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: pypi-wheel-${{ inputs.extension_name }}-${{ matrix.duckdb_arch }}
-          path: dist/pypi/
-          if-no-files-found: error
-          # Intra-run handoff to the publish_pypi job; once on PyPI it's dead
-          # weight. At ~240 extensions x platforms these dominate Actions
-          # storage, so expire them fast (short retry-without-rebuild window).
-          retention-days: 2
-
-      - name: Build npm leaf package
-        if: ${{ inputs.publish_registries && steps.platmap.outputs.skip == 'false' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          EXT='${{ inputs.extension_name }}'
-          HV="${DV#v}"
-          # Same suffix derivation as the pip wheel — needed for the
-          # leaf package name.
-          HSUFFIX="h${HV//./-}"
-          META_PKG="@haybarn/ext-${EXT}-${HSUFFIX}"
-          LEAF_PKG="${META_PKG}-${{ steps.platmap.outputs.npm_leaf_suffix }}"
-
-          STAGE_DIR="dist/npm-leaf"
-          mkdir -p "$STAGE_DIR/bin"
-          # npm leaf ships the signed-but-uncompressed .duckdb_extension (npm
-          # gzips the tarball itself — the .gz would be double-compressed).
-          cp '${{ steps.signpack.outputs.signed_binary_path }}' \
-             "$STAGE_DIR/bin/${{ steps.signpack.outputs.signed_binary_basename }}"
-          cp stage/haybarn-metadata.json "$STAGE_DIR/haybarn-metadata.json"
-
-          STAGE="$STAGE_DIR" \
-          PKG="$LEAF_PKG" \
-          VERSION='${{ steps.calver.outputs.version }}' \
-          EXTENSION="$EXT" \
-          HAYBARN_VERSION="$HV" \
-          OS='${{ steps.platmap.outputs.npm_os }}' \
-          CPU='${{ steps.platmap.outputs.npm_cpu }}' \
-          LIBC='${{ steps.platmap.outputs.npm_libc }}' \
-          LICENSE='${{ inputs.extension_license }}' \
-          EXTENSION_DESCRIPTION='${{ inputs.extension_description }}' \
-          EXTENSION_SOURCE_REPO='${{ inputs.extension_source_repo }}' \
-          HAYBARN_METADATA="$STAGE_DIR/haybarn-metadata.json" \
-            python3 ci-tools/scripts/publish/npm_build_leaf.py
-
-          # Tar the staged dir for the publish_npm job
-          (cd "$STAGE_DIR" && tar -czf "$GITHUB_WORKSPACE/dist/npm-leaf.tar.gz" .)
-          ls -la dist/
-        env:
-          DV: ${{ inputs.duckdb_version }}
+            --version           '${{ steps.calver.outputs.version }}' \
+            --haybarn-version   "${DV#v}" \
+            --duckdb-version    '${{ inputs.duckdb_version }}' \
+            --r2-bucket         '${{ secrets.R2_BUCKET }}' \
+            --r2-prefix         community \
+            --license           ce/LICENSE \
+            --license-str       '${{ inputs.extension_license }}' \
+            --description       '${{ inputs.extension_description }}' \
+            --source-repo       '${{ inputs.extension_source_repo }}' \
+            --dist-dir          dist \
+            --signed-by         haybarn-extension-signing-2026 \
+            --channels          "$CHANNELS" \
+            --artifact-shape    per-extension \
+            --write-latest \
+            --deploy            true
 
       - name: Upload npm leaf artifact (for publish_npm job)
-        if: ${{ inputs.publish_registries && steps.platmap.outputs.skip == 'false' }}
+        if: ${{ inputs.publish_registries }}
         uses: actions/upload-artifact@v4
         with:
-          name: npm-leaf-${{ inputs.extension_name }}-${{ inputs.duckdb_version }}-${{ matrix.duckdb_arch }}
-          path: dist/npm-leaf.tar.gz
+          # Single combined artifact: dist/npm/ holds one <leaf>.tar.gz per
+          # publishable arch. The downstream per-extension publish_npm job
+          # globs `npm-leaf-<ext>-<dv>-*` and extracts every tarball it finds.
+          name: npm-leaf-${{ inputs.extension_name }}-${{ inputs.duckdb_version }}-all
+          path: dist/npm/
           if-no-files-found: error
-          # Intra-run handoff to the publish_npm job; once on npm it's dead
-          # weight. Expire fast — these dominate Actions storage at scale.
+          # Intra-run handoff to publish_npm; expire fast — these dominate
+          # Actions storage at scale.
+          retention-days: 2
+
+      # PyPI wheel upload — DISABLED while PyPI is rate-limited (the wheels
+      # aren't even built: 'pypi' is omitted from CHANNELS above, and the
+      # downstream publish_pypi job is `if: false`). Left here so re-enabling
+      # is a one-line flip (set `if: ${{ inputs.publish_registries }}` and add
+      # 'pypi' back to CHANNELS).
+      - name: Upload pip wheel artifact (for publish_pypi job)
+        if: ${{ false }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: pypi-wheel-${{ inputs.extension_name }}-all
+          path: dist/pypi/
+          if-no-files-found: error
           retention-days: 2
 
   # ------------------------------------------------------------------
@@ -724,7 +355,6 @@ jobs:
   call_publish_registries:
     name: Publish PyPI + npm
     needs:
-      - generate_matrix
       - deploy
     if: ${{ always() && needs.deploy.result != 'cancelled' && inputs.publish_registries && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') }}
     uses: Query-farm-haybarn/haybarn-extension-ci-tools/.github/workflows/_extension_registry_publish.yml@haybarn
