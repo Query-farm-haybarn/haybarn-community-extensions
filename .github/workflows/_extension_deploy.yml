@@ -363,6 +363,13 @@ jobs:
           cat stage/work.sign >> stage/work.append
           rm stage/work.sign
 
+          # Preserve the signed-but-UNCOMPRESSED binary for the npm leaf — npm
+          # gzips the tarball itself, so shipping the .gz would double-compress
+          # it (and force a redundant decompress on install). R2 + the pip wheel
+          # still use the compressed $DEST below.
+          SIGNED_UNCOMPRESSED="stage/${EXT}.duckdb_extension"
+          cp stage/work.append "$SIGNED_UNCOMPRESSED"
+
           if [[ "$COMPRESSED_SUFFIX" == "wasm" ]]; then
             brotli < stage/work.append > "$DEST"
           else
@@ -377,6 +384,8 @@ jobs:
           {
             echo "binary_path=$DEST"
             echo "binary_basename=$(basename "$DEST")"
+            echo "signed_binary_path=$SIGNED_UNCOMPRESSED"
+            echo "signed_binary_basename=$(basename "$SIGNED_UNCOMPRESSED")"
             echo "sha256=$SHA"
           } >> "$GITHUB_OUTPUT"
           echo "::notice::signed+compressed binary $DEST (sha256=$SHA, size=$SIZE)"
@@ -655,8 +664,10 @@ jobs:
 
           STAGE_DIR="dist/npm-leaf"
           mkdir -p "$STAGE_DIR/bin"
-          cp '${{ steps.signpack.outputs.binary_path }}' \
-             "$STAGE_DIR/bin/${{ steps.signpack.outputs.binary_basename }}"
+          # npm leaf ships the signed-but-uncompressed .duckdb_extension (npm
+          # gzips the tarball itself — the .gz would be double-compressed).
+          cp '${{ steps.signpack.outputs.signed_binary_path }}' \
+             "$STAGE_DIR/bin/${{ steps.signpack.outputs.signed_binary_basename }}"
           cp stage/haybarn-metadata.json "$STAGE_DIR/haybarn-metadata.json"
 
           STAGE="$STAGE_DIR" \
