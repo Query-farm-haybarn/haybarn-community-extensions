@@ -5,6 +5,10 @@ extension:
   description: VGI (Vector Gateway Interface) — DuckDB extension for extending DuckDB in any language over Apache Arrow IPC. No C++/compilation required.
   language: C++
   license: MIT
+  # vgi is POSIX-only (Unix-domain sockets, sigaction/SIGPIPE, sys/select.h);
+  # its headers #error on Windows. Exclude both Windows targets until Windows
+  # support is implemented upstream.
+  excluded_platforms: windows_amd64;windows_amd64_mingw
   maintainers:
   - rustyconover
   name: vgi
