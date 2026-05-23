@@ -1,0 +1,102 @@
+# Republish an already-built extension's npm packages WITHOUT rebuilding.
+#
+# Why this exists: a bulk sweep (build_all.yml) runs with
+# publish_registries=false, so it deploys binaries to R2 but never produces
+# the npm leaf packages. The per-arch build artifacts are still retained on
+# each build run, though — so we can stage + publish the npm leaves from those
+# artifacts directly, skipping the (expensive) rebuild.
+#
+# It reuses build.yml's `prepare` job (descriptor → name/license/description/
+# source repo) and the shared `_extension_deploy.yml`, which now takes:
+#   - source_run_id:      pull the per-arch artifacts from THAT build run
+#   - republish_npm_only: CHANNELS=npm + dry-run publish_extensions.py so R2
+#                         is NOT re-touched (binaries already live there); the
+#                         leaf tarballs are still staged + handed to the
+#                         downstream call_publish_registries job, which signs
+#                         + publishes the leaves and builds/publishes the meta.
+#
+# Dispatch one per extension; the driver resolves each extension's most-recent
+# successful build run id and passes it as source_run_id.
+
+name: Republish npm (no rebuild)
+
+run-name: "📦 republish-npm ${{ inputs.extension_name }} (run ${{ inputs.source_run_id }})"
+
+on:
+  workflow_dispatch:
+    inputs:
+      extension_name:
+        description: "Extension to republish (must have a successful build run)."
+        type: string
+        required: true
+      source_run_id:
+        description: "build.yml run id whose retained per-arch artifacts to use."
+        type: string
+        required: true
+      duckdb_version:
+        description: "Engine version / URL segment. Empty → v1.5.3."
+        type: string
+        required: false
+        default: ''
+
+# A called reusable workflow's jobs are capped by the caller's granted token
+# permissions. _extension_deploy.yml's cross-run artifact download needs
+# actions:read; its nested call_publish_registries needs id-token:write for
+# npm --provenance. Grant the same set build_all.yml grants.
+permissions:
+  contents: read
+  actions: read
+  id-token: write
+
+jobs:
+  prepare:
+    outputs:
+      COMMUNITY_EXTENSION_NAME: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_NAME }}
+      COMMUNITY_EXTENSION_GITHUB: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_GITHUB }}
+      COMMUNITY_EXTENSION_REF: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_REF }}
+      COMMUNITY_EXTENSION_LICENSE: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_LICENSE }}
+      COMMUNITY_EXTENSION_DESCRIPTION: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_DESCRIPTION }}
+      COMMUNITY_EXTENSION_SOURCE_REPO: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_SOURCE_REPO }}
+    env:
+      DUCKDB_LATEST_STABLE: 'v1.5.3'
+      DUCKDB_VERSION: ${{ inputs.duckdb_version || 'v1.5.3' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse description file
+        id: parse
+        env:
+          ALL_CHANGED_FILES: ${{ format('extensions/{0}/description.yml', inputs.extension_name) }}
+          PIP_BREAK_SYSTEM_PACKAGES: 1
+        run: |
+          pip install pyyaml
+          python scripts/build.py
+          cat env.sh >> $GITHUB_OUTPUT
+          echo `cat $GITHUB_OUTPUT`
+
+  deploy:
+    needs: prepare
+    if: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_NAME != '' }}
+    uses: ./.github/workflows/_extension_deploy.yml
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    secrets: inherit
+    with:
+      # Republish path: npm leaves only, sourced from the original build run's
+      # retained artifacts; R2 is left untouched (deploy_latest stays false and
+      # republish_npm_only forces publish_extensions.py into dry-run).
+      republish_npm_only: true
+      publish_registries: true
+      deploy_latest: false
+      source_run_id: ${{ inputs.source_run_id }}
+      duckdb_version: ${{ inputs.duckdb_version || 'v1.5.3' }}
+      ci_tools_version: haybarn
+      extension_name: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_NAME }}
+      extension_license: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_LICENSE }}
+      extension_description: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_DESCRIPTION }}
+      extension_source_repo: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_SOURCE_REPO }}
+      repository: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_GITHUB }}
+      ref: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_REF }}

@@ -120,6 +120,24 @@ on:
         required: false
         type: string
         default: ""
+      # Build run whose per-arch artifacts to deploy. Empty → current run
+      # (the normal build→deploy chain). Non-empty → cross-run download from
+      # that build's `<ext>-<dv>-extension-*` artifacts. Used by
+      # republish_npm.yml to publish npm leaves from an ALREADY-built run
+      # without rebuilding (the artifacts are still retained on the run).
+      source_run_id:
+        required: false
+        type: string
+        default: ""
+      # npm-only republish mode. When true: build npm leaves ONLY (CHANNELS=npm,
+      # no pypi/r2) and run publish_extensions.py in dry-run (--deploy false, no
+      # --write-latest) so R2 is NOT re-touched — the binaries are already on R2
+      # from the original build's deploy. The leaf tarballs are still staged +
+      # uploaded as the npm-leaf artifact for the downstream publish job.
+      republish_npm_only:
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   deploy:
@@ -210,6 +228,11 @@ jobs:
           # No merge-multiple → each lands in its own dl/<artifact-name>/ subdir.
           pattern: ${{ inputs.extension_name }}-${{ inputs.duckdb_version }}-extension-*
           path: dl
+          # source_run_id set → pull artifacts from that build run (npm
+          # republish path); empty → current run (normal build→deploy chain).
+          # github-token is required for cross-run download (needs actions:read).
+          run-id: ${{ inputs.source_run_id != '' && inputs.source_run_id || github.run_id }}
+          github-token: ${{ github.token }}
 
       - name: Assemble repo tree for publish_extensions.py
         shell: bash
@@ -281,7 +304,17 @@ jobs:
           # temporarily disabled (rate-limited; the downstream publish_pypi job
           # is also `if: false`), so we build npm leaves only. Re-enable by
           # adding 'pypi' back here AND flipping that downstream `if:`.
-          if [[ '${{ inputs.publish_registries }}' == 'true' ]]; then
+          #
+          # republish_npm_only: npm leaves ONLY, and run in dry-run so R2 is
+          # NOT re-touched (binaries are already on R2 from the original build's
+          # deploy). publish_extensions.py still STAGES dist/npm/ in dry-run —
+          # only the aws s3 sync uploads + the previous-pointer read are gated
+          # off — so the leaf tarballs are produced for the downstream npm job.
+          DEPLOY_ARGS=( --write-latest --deploy true )
+          if [[ '${{ inputs.republish_npm_only }}' == 'true' ]]; then
+            CHANNELS='npm'
+            DEPLOY_ARGS=( --deploy false )   # dry-run: no R2 writes, no --write-latest
+          elif [[ '${{ inputs.publish_registries }}' == 'true' ]]; then
             CHANNELS='r2-community,npm'
           else
             CHANNELS='r2-community'
@@ -305,8 +338,7 @@ jobs:
             --signed-by         haybarn-extension-signing-2026 \
             --channels          "$CHANNELS" \
             --artifact-shape    per-extension \
-            --write-latest \
-            --deploy            true
+            "${DEPLOY_ARGS[@]}"
 
       - name: Upload npm leaf artifact (for publish_npm job)
         if: ${{ inputs.publish_registries }}
