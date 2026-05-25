@@ -1,10 +1,4 @@
 extension:
-  # Haybarn: disabled because the extension does not yet build
-  # against DuckDB 1.5.2 — upstream community-extensions also has
-  # no v1.5.2 binary. Re-enable when upstream lands a v1.5.2-
-  # compatible release (sync_from_upstream will pick up the bump).
-  # Tracker: https://github.com/martin-conur/quackformers/issues/22
-  excluded_platforms: linux_amd64;linux_arm64;linux_amd64_musl;linux_arm64_musl;osx_amd64;osx_arm64;windows_amd64;windows_arm64;windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
   name: quackformers
   description: Bert-based embedding extension.
   version: 0.1.5.2
@@ -17,7 +11,7 @@ extension:
   - martin-conur
 repo:
   github: martin-conur/quackformers
-  ref: fae2564d2766daef094b40a6c40c86023080da43
+  ref: efdf6dd9ea5d9409252ea7b2a7efe13e7aacfa1a
 docs:
   hello_world: "SELECT embed('this is an embeddable sentence'); -- This is vanilla\
     \ BERT (https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2)\nSELECT\

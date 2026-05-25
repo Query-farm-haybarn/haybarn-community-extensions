@@ -2,7 +2,7 @@ extension:
   name: raster
   description: DuckDB extension for reading and writing geospatial raster data using
     SQL.
-  version: 1.0.0
+  version: 1.1.0
   language: C++
   build: cmake
   excluded_platforms: windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
@@ -11,7 +11,7 @@ extension:
   - ahuarte47
 repo:
   github: ahuarte47/duckdb-raster
-  ref: 6eab8f18cce95d9f9ffef97cb7d75eeeef4905d3
+  ref: c54d3be08cf76f472954da19947bc828f8e39489
 docs:
   hello_world: "-- List available GDAL raster drivers and formats:\nSELECT short_name,\
     \ long_name, help_url FROM RT_Drivers();\n\n\u250C\u2500\u2500\u2500\u2500\u2500\
@@ -142,102 +142,65 @@ docs:
     \            ])\n        WHERE ST_Intersects(__clip_layer.geom, geometry)\n  \
     \  ),\n    __clipped AS (\n        SELECT\n            RT_CubeClip(databand_1,\n\
     \                        tile_x,\n                        tile_y,\n          \
-    \             (metadata->'blocksize_x')::INTEGER,\n                       (metadata->'blocksize_y')::INTEGER,\n\
-    \                       (metadata->'transform')::DOUBLE[],\n                 \
-    \       __clip_layer.geom,\n                       (metadata->'bands'->0->'nodata')::DOUBLE\n\
-    \            ) AS databand,\n            * EXCLUDE(databand_1)\n        FROM __clip_layer,\
-    \ __dataset\n    )\n    SELECT geometry, databand FROM __clipped\n)\nTO 'path/to/output/clipped.tiff'\n\
+    \              metadata,\n                        __clip_layer.geom,\n       \
+    \                (metadata->'bands'->0->'nodata')::DOUBLE\n            ) AS databand,\n\
+    \            * EXCLUDE(databand_1)\n        FROM __clip_layer, __dataset\n   \
+    \ )\n    SELECT geometry, databand FROM __clipped\n)\nTO 'path/to/output/clipped.tiff'\n\
     WITH (\n    FORMAT RASTER,\n    DRIVER 'GTiff',\n    CREATION_OPTIONS ('COMPRESS=LZW'),\n\
     \    RESAMPLING 'nearest',\n    SRS 'EPSG:32630',\n    GEOMETRY_COLUMN 'geometry',\n\
     \    DATABAND_COLUMNS ['databand']\n);\n"
-  extended_description: 'Extension for DuckDB for reading and writing raster files
-    using SQL.
-
-
-    The main purpose with this extension is to be able to read raster files as tables
-    in DuckDB, and then perform band algebra operations on the raster data using SQL.
-
-    A raster is just a datacube, and the idea is to be able to manipulate it as such.
-
-
-    The extension uses the [GDAL library](https://gdal.org/) to read raster files,
-    and it supports a wide range of raster formats.
-
-
-    The `RT_Read` function is the main function to read raster files, extract metadata,
-    and perform basic operations on the raster data before returning a geoparquet-like
-
-    DuckDB table. The function takes the path to the raster file as an argument, and
-    other optional parameters, and returns a table with the following columns:
-
-
-    - `id`: A unique identifier for each tile.
-
-    - `x`: The center x coordinate of the tile.
-
-    - `y`: The center y coordinate of the tile.
-
-    - `bbox`: The bounding box of the tile, represented as a struct with the following
-    fields: `xmin`, `ymin`, `xmax`, `ymax`.
-
-    - `geometry`: The geometry of the tile, represented as a polygon.
-
-    - `level`: The zoom level of the tile.
-
-    - `tile_x`: The x coordinate of the tile in the zoom level.
-
-    - `tile_y`: The y coordinate of the tile in the zoom level.
-
-    - `cols`: The number of columns in the tile.
-
-    - `rows`: The number of rows in the tile.
-
-    - `metadata`: A JSON object with the metadata of the tile.
-
-    - `databand_x`: A BLOB with the data of the x-th band of the tile. The number
-    of bands and their names can be obtained from the `metadata` column.
-
-
-    The `RT_Read` function provides a `datacube` option that allows to return a single
-    `datacube` BLOB column with the N-dimensional array with the
-
-    data of all the bands of the tile, instead of one BLOB per band.
-
-
-    `RT_Read` supports filter pushdown on the non-BLOB columns, which allows you to
-    prefilter the tiles that are loaded based on their metadata or
-
-    spatial location. For example, you can filter the tiles that intersect with a
-    certain geometry or that have a certain value in the metadata.
-
-
-    `COPY TO` with `FORMAT RASTER` allows to export a table with the same structure
-    as the one returned by `RT_Read` to a new raster file.
-
-    You can specify the driver and several creation options:
-
-
-    - `DRIVER`: The GDAL driver to use for writing the raster file. For example, `GTiff`
-    or `COG`.
-
-    - `CREATION_OPTIONS`: A list of creation options to pass to the GDAL driver, specified
-    as strings in the format `KEY=VALUE`.
-
-    - `RESAMPLING`: The resampling method to use when writing the raster file. For
-    example, `nearest`, `bilinear`, `cubic`, etc.
-
-    - `ENVELOPE`: The spatial extent of the raster file, specified as a list of four
-    values: `[xmin, ymin, xmax, ymax]`.
-
-    - `SRS`: The spatial reference system of the raster file, specified as an EPSG
-    code (e.g. `EPSG:4326`) or a WKT string.
-
-    - `GEOMETRY_COLUMN`: The name of the column that contains the geometry of the
-    tiles. This column will be used to determine the spatial location and the resolution
-    of the tiles in the output raster file.
-
-    - `DATABAND_COLUMNS`: A list with the names of the columns that contain the data
-    of the bands. The order of the columns in the list will determine the order of
-    the bands in the output raster file.
-
-    '
+  extended_description: "Extension for DuckDB for reading and writing raster files\
+    \ using SQL.\n\nThe main purpose with this extension is to be able to read raster\
+    \ files as tables in DuckDB, and then perform band algebra operations on the raster\
+    \ data using SQL.\nA raster is just a datacube, and the idea is to be able to\
+    \ manipulate it as such.\n\nThe extension uses the [GDAL library](https://gdal.org/)\
+    \ to read raster files, and it supports a wide range of raster formats.\n\nThe\
+    \ `RT_Read` function is the main function to read raster files, extract metadata,\
+    \ and perform basic operations on the raster data before returning a geoparquet-like\n\
+    DuckDB table. The function takes the path to the raster file as an argument, and\
+    \ other optional parameters, and returns a table with the following columns:\n\
+    \n- `id`: A unique identifier for each tile.\n- `x`: The center x coordinate of\
+    \ the tile.\n- `y`: The center y coordinate of the tile.\n- `bbox`: The bounding\
+    \ box of the tile, represented as a struct with the following fields: `xmin`,\
+    \ `ymin`, `xmax`, `ymax`.\n- `geometry`: The geometry of the tile, represented\
+    \ as a polygon.\n- `level`: The zoom level of the tile.\n- `tile_x`: The x coordinate\
+    \ of the tile in the zoom level.\n- `tile_y`: The y coordinate of the tile in\
+    \ the zoom level.\n- `cols`: The number of columns in the tile.\n- `rows`: The\
+    \ number of rows in the tile.\n- `metadata`: A JSON object with the metadata of\
+    \ the tile.\n- `databand_x`: A BLOB with the data of the x-th band of the tile.\
+    \ The number of bands and their names can be obtained from the `metadata` column.\n\
+    \nThe `RT_Read` function provides a `datacube` option that allows to return a\
+    \ single `datacube` BLOB column with the N-dimensional array with the\ndata of\
+    \ all the bands of the tile, instead of one BLOB per band.\n\n`RT_Read` supports\
+    \ filter pushdown on the non-BLOB columns, which allows you to prefilter the tiles\
+    \ that are loaded based on their metadata or\nspatial location. For example, you\
+    \ can filter the tiles that intersect with a certain geometry or that have a certain\
+    \ value in the metadata.\n\nYou can also read raster data at the pixel level using\
+    \ the `RT_ReadCells` function, which returns one row per value cell in the raster,\n\
+    along with its pixels and spatial coordinates.\n\nThis is the list of columns\
+    \ returned by `RT_ReadCells`:\n\n- `id` is a unique identifier for each cell of\
+    \ the raster.\n- `x` the coordinates of the center of each cell in the raster.\
+    \ The coordinate reference system is the same as the one of the raster file.\n\
+    - `y` the coordinates of the center of each cell in the raster. The coordinate\
+    \ reference system is the same as the one of the raster file.\n- `geometry` is\
+    \ the point geometry of each cell.\n- `col` is the column index of each cell in\
+    \ the raster, where 0 is the leftmost column.\n- `row` is the row index of each\
+    \ cell in the raster, where 0 is the topmost row.\n- `band_1`, `band_2`, \u2026\
+    \ are numeric columns, each containing the pixel values of a cell in the raster.\
+    \ The number of bands depends on the input file, and the data type depends on\
+    \ the raster data type.\n\n`COPY TO` with `FORMAT RASTER` allows to export a table\
+    \ with the same structure as the one returned by `RT_Read` to a new raster file.\n\
+    You can specify the driver and several creation options:\n\n- `DRIVER`: The GDAL\
+    \ driver to use for writing the raster file. For example, `GTiff` or `COG`.\n\
+    - `CREATION_OPTIONS`: A list of creation options to pass to the GDAL driver, specified\
+    \ as strings in the format `KEY=VALUE`.\n- `RESAMPLING`: The resampling method\
+    \ to use when writing the raster file. For example, `nearest`, `bilinear`, `cubic`,\
+    \ etc.\n- `ENVELOPE`: The spatial extent of the raster file, specified as a list\
+    \ of four values: `[xmin, ymin, xmax, ymax]`.\n- `SRS`: The spatial reference\
+    \ system of the raster file, specified as an EPSG code (e.g. `EPSG:4326`) or a\
+    \ WKT string.\n- `GEOMETRY_COLUMN`: The name of the column that contains the geometry\
+    \ of the tiles. This column will be used to determine the spatial location and\
+    \ the resolution of the tiles in the output raster file.\n- `DATABAND_COLUMNS`:\
+    \ A list with the names of the columns that contain the data of the bands. The\
+    \ order of the columns in the list will determine the order of the bands in the\
+    \ output raster file.\n"

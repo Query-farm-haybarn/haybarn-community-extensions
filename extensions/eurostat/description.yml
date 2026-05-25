@@ -11,7 +11,7 @@ extension:
   - ahuarte47
 repo:
   github: ahuarte47/duckdb-eurostat
-  ref: 53c5570856578e2be8efe22cecd0b23caa709bb6
+  ref: 8a025d71e0390e4cb7425224f1159441609d958f
 docs:
   hello_world: "SELECT * FROM EUROSTAT_DataStructure('ESTAT', 'DEMO_R_D2JAN', language\
     \ := 'en');\n\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\

@@ -1,8 +1,8 @@
 extension:
   name: ducksmiles
   description: Cheminformatics toolkit for DuckDB - SMILES, InChI, MOL/SDF, PDB, SELFIES,
-    Wildman-Crippen LogP, and Morgan/ECFP fingerprints from SQL
-  version: 0.3.0
+    Wildman-Crippen LogP, Morgan/ECFP fingerprints, and Tanimoto similarity from SQL
+  version: 0.4.0
   language: C++
   build: cmake
   license: MIT
@@ -10,49 +10,116 @@ extension:
   - nkwork9999
 repo:
   github: nkwork9999/duckSMILES
-  ref: 85dfe3cae4ba15e9e59887a0c8d0ba16201d919e
+  ref: f6e4c76169193e7f521578720e75aa2b952df7ac
 docs:
-  hello_world: "-- Validate SMILES\nSELECT mol_is_valid('CCO');          -- true\n\
-    SELECT mol_is_valid('invalid_xyz');  -- false\n\n-- Molecular formula (Hill system)\n\
-    SELECT mol_formula('CCO');           -- C2H6O  (ethanol)\nSELECT mol_formula('c1ccccc1');\
-    \      -- C6H6   (benzene)\nSELECT mol_formula('O');             -- H2O    (water)\n\
-    \n-- Molecular weight\nSELECT round(mol_weight('c1ccccc1'), 2);  -- 78.11\n\n\
-    -- Wildman-Crippen LogP (matches RDKit Crippen.MolLogP)\nSELECT round(logp_crippen('c1ccccc1'),\
-    \ 4);            -- 1.6866 (benzene)\nSELECT round(logp_crippen('CC(=O)Oc1ccccc1C(=O)O'),\
-    \ 4); -- aspirin\n\n-- Expand implicit hydrogens to explicit [H] atoms in SMILES\n\
-    SELECT add_hydrogens('CCO');         -- [C]([C]([O][H])([H])[H])([H])([H])[H]\n\
-    \n-- Morgan/ECFP fingerprint as a 2048-bit BLOB (ECFP4 default)\nSELECT bit_count(CAST(morgan_fp_bits('CC(=O)Oc1ccccc1C(=O)O')\
-    \ AS BIT));  -- 26 (aspirin)\n\n-- Tanimoto similarity between two SMILES (CAST\
-    \ BLOB to BIT to use bitwise ops)\nWITH x AS (\n  SELECT CAST(morgan_fp_bits('CCO')\
-    \ AS BIT) AS a,\n         CAST(morgan_fp_bits('CCN') AS BIT) AS b\n)\nSELECT bit_count(a\
-    \ & b)::DOUBLE / bit_count(a | b) AS tanimoto FROM x;  -- 0.3333\n\n-- InChI layer\
-    \ extraction\nSELECT inchi_formula('InChI=1S/C2H4O2/c1-2(3)4/h1H3,(H,3,4)'); \
-    \ -- C2H4O2\n\n-- Convert SMILES to SELFIES (ML-friendly notation)\nSELECT smiles_to_selfies('CCO');\n\
-    \n-- Batch processing\nSELECT smiles, mol_formula(smiles) AS formula, mol_num_atoms(smiles)\
-    \ AS atoms\nFROM (VALUES ('CCO'), ('c1ccccc1'), ('CC(=O)Oc1ccccc1C(=O)O')) AS\
-    \ t(smiles);\n"
-  extended_description: "Cheminformatics toolkit for DuckDB \u2014 analyze molecular\
-    \ structures directly from SQL\nwithout leaving your database. Pure Rust implementation\
-    \ with no external chemistry\nlibrary dependencies (no RDKit required).\n\n**Supported\
-    \ Formats:**\n- SMILES: Molecular validation, formula, weight, atom/bond counts,\
-    \ LogP\n- InChI/InChIKey: Layer extraction, stereochemistry detection, skeleton\
-    \ matching\n- MOL/SDF: V2000/V3000 block parsing, molecule counting\n- PDB/CIF/XYZ:\
-    \ Protein structure analysis (atom, chain, residue, model counts)\n- SELFIES:\
-    \ Bidirectional SMILES-SELFIES conversion for ML pipelines\n\n**38 scalar SQL\
-    \ functions** for molecular property extraction, format conversion,\nstructural\
-    \ comparison, and physicochemical property prediction. Ideal for\ncheminformatics\
-    \ datasets, drug discovery pipelines, and molecular ML feature\nengineering.\n\
-    \n**LogP:** `logp_crippen()` implements the Wildman-Crippen atom-contribution\n\
-    method (110 SMARTS patterns, 68 atom types) and matches RDKit's\n`Crippen.MolLogP`\
-    \ exactly for small molecules.\n\n**Hydrogen expansion:** `add_hydrogens()` returns\
-    \ a SMILES with all implicit\nH atoms broken out as explicit `[H]` vertices (verbose\
-    \ bracket form, round-trips\nthrough the parser). Useful as a preprocessing primitive\
-    \ for any descriptor\nthat needs explicit hydrogens, and composes safely with\
-    \ `logp_crippen` (the\ninternal H expansion is idempotent).\n\n**Morgan / ECFP\
-    \ fingerprint:** `morgan_fp_bits()` ports RDKit's MorganGenerator\n(layered BFS\
-    \ + hash_combine + dead-atom dedup) to Rust and returns a fixed-width\nbit vector\
-    \ as `BLOB`. Defaults to ECFP4 (radius=2, 2048 bit); 3-arg overload\n`morgan_fp_bits(smi,\
-    \ radius, n_bits)` exposes full control. Combine with\n`CAST(... AS BIT)` for\
-    \ SQL-level Tanimoto similarity:\n`bit_count(a & b)::DOUBLE / bit_count(a | b)`.\n\
-    \n**Architecture:** Rust (core logic, 5 crates) + C++ (DuckDB integration via\
-    \ FFI)\n"
+  hello_world: '-- Parse SMILES and get molecular formula
+
+    SELECT mol_formula(''CCO'');
+
+    -- C2H6O
+
+
+    -- Calculate molecular weight
+
+    SELECT round(mol_weight(''c1ccccc1''), 2);
+
+    -- 78.11
+
+
+    -- Wildman-Crippen LogP (matches RDKit)
+
+    SELECT round(logp_crippen(''CCO''), 4);
+
+    -- -0.0014
+
+
+    -- Morgan/ECFP fingerprint as 2048-bit BLOB (ECFP4 default)
+
+    SELECT bit_count(CAST(morgan_fp_bits(''CC(=O)Oc1ccccc1C(=O)O'') AS BIT));
+
+    -- 26   (aspirin popcount)
+
+
+    -- Tanimoto similarity between two fingerprint BLOBs (no CAST AS BIT needed)
+
+    SELECT round(tanimoto_bit(morgan_fp_bits(''CCO''), morgan_fp_bits(''CCN'')), 4);
+
+    -- 0.3333
+
+
+    -- Validate and extract InChI layers
+
+    SELECT inchi_formula(''InChI=1S/C2H4O2/c1-2(3)4/h1H3,(H,3,4)'');
+
+    -- C2H4O2
+
+
+    -- Convert SMILES to SELFIES (ML-friendly notation)
+
+    SELECT smiles_to_selfies(''CCO'');
+
+    '
+  extended_description: 'Cheminformatics toolkit for DuckDB - analyze molecular structures
+    directly from SQL
+
+    without leaving your database. Pure Rust implementation with no external chemistry
+
+    library dependencies (no RDKit required).
+
+
+    **Supported Formats:**
+
+    - SMILES: Molecular validation, formula, weight, atom/bond counts, LogP
+
+    - InChI/InChIKey: Layer extraction, stereochemistry detection, skeleton matching
+
+    - MOL/SDF: V2000/V3000 block parsing, molecule counting
+
+    - PDB/CIF/XYZ: Protein structure analysis (atom, chain, residue, model counts)
+
+    - SELFIES: Bidirectional SMILES-SELFIES conversion for ML pipelines
+
+
+    **39 scalar SQL functions** for molecular property extraction, format conversion,
+
+    structural comparison, and physicochemical property prediction. Ideal for
+
+    cheminformatics datasets, drug discovery pipelines, and molecular ML feature
+
+    engineering.
+
+
+    **LogP:** `logp_crippen()` implements the Wildman-Crippen atom-contribution
+
+    method (110 SMARTS patterns, 68 atom types) and matches RDKit''s
+
+    `Crippen.MolLogP` exactly for small molecules.
+
+
+    **Morgan / ECFP fingerprint:** `morgan_fp_bits()` ports RDKit''s MorganGenerator
+
+    (layered BFS + hash_combine + dead-atom dedup) to Rust and returns a fixed-width
+
+    bit vector as `BLOB`. Defaults to ECFP4 (radius=2, 2048 bit); 3-arg overload
+
+    `morgan_fp_bits(smi, radius, n_bits)` exposes full control.
+
+
+    **Tanimoto similarity:** `tanimoto_bit(BLOB, BLOB) -> DOUBLE` computes
+
+    `popcount(a & b) / popcount(a | b)` directly on raw BLOB bytes (no
+
+    `CAST AS BIT` round-trip), processing 8 bytes at a time via `count_ones()`
+
+    so it lowers to POPCNT on x86_64 / CNT on aarch64. Mismatched lengths raise
+
+    a clear `InvalidInputException`; empty-vs-empty returns `0.0` (RDKit
+
+    convention). The SQL-level `bit_count(a & b)::DOUBLE / bit_count(a | b)`
+
+    is still available and produces bit-exact identical results.
+
+
+    **Architecture:** Rust (core logic, 5 crates) + C++ (DuckDB integration via FFI)
+
+    '
