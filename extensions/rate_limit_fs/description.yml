@@ -1,7 +1,7 @@
 extension:
   name: rate_limit_fs
   description: Perform rate and burst limit on filesystem operations
-  version: 0.0.6
+  version: 0.0.7
   language: C++
   build: cmake
   license: MIT
@@ -10,7 +10,7 @@ extension:
   - dentiny
 repo:
   github: dentiny/duckdb-rate-limit-filesystem
-  ref: 5f9119fcbd65d9e767a2cc01a106d2c5b6db3efa
+  ref: 01bcb1b2a06faf09396c3bec33cc887a8ae2cde1
 docs:
   hello_world: 'SELECT rate_limit_fs_wrap(''RateLimitFsFakeFileSystem'');
 

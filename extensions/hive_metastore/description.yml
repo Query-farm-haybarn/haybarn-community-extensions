@@ -1,8 +1,8 @@
 extension:
   name: hive_metastore
-  description: Connect to your Hive Metastore, attach it as a native DuckDB catalog
-    and query the data inside with ease!
-  version: 0.1.0
+  description: Attach Apache Hive Metastore as a native DuckDB catalog and read/write
+    the data inside with ease!
+  version: 0.2.0
   language: C++
   build: cmake
   license: MIT
@@ -10,67 +10,86 @@ extension:
   vcpkg_commit: 84bab45d415d22042bd0b9081aea57f362da3f35
   requires_toolchains: parser_tools
   maintainers:
+  - ilum-cloud
   - thijs-s
 repo:
   github: ilum-cloud/duckdb-hive-metastore
-  ref: d8a504cb9924cebc52d342666d1f59c4b2c9bc2f
+  next: 358bab899039c5934507aee66c67df3d37671ce0
+  ref: 182aea05140728a50cddc79eecce3399617da1ce
 docs:
   hello_world: '-- Attach the Hive Metastore as a catalog in DuckDB
 
     ATTACH ''thrift://<host>:<port>'' AS <catalog_name> (TYPE hive_metastore);
 
 
-    -- You are ready to rock!
+    -- Query any HMS table as if it were native DuckDB
 
     SELECT * FROM <catalog_name>.<schema_name>.<table_name>;
 
 
-    -- For querying tables from object storages, you still need to set up the storage
-    extensions (e.g. s3)
+    -- For object-storage-backed tables, configure storage secrets as usual
 
     CREATE SECRET s3 (TYPE S3, KEY_ID ''access-key'', SECRET ''secret-key'', ENDPOINT
     ''localhost:9000'');
 
-    '
-  extended_description: 'DuckDB Hive Metastore extension enables DuckDB to connect
-    to Apache Hive Metastore via Thrift protocol and query tables stored in DuckDB-supported
-    formats. The extension provides seamless integration with the Hive ecosystem while
-    leveraging DuckDB''s powerful analytical capabilities.
 
+    -- Create a managed table (requires WAREHOUSE_LOCATION on ATTACH)
 
-    ## Key Features
+    ATTACH ''thrift://localhost:9083'' AS hms (TYPE hive_metastore, WAREHOUSE_LOCATION
+    ''s3a://my-bucket/warehouse'');
 
-    - Implementation of Hive catalog as a native DuckDB catalog
+    CREATE TABLE hms.default.events (id INT, ts TIMESTAMP, payload VARCHAR);
 
-    - Automatic schema discovery, including support for complex data types such as
-    arrays and maps
-
-    - Support for Parquet, CSV, Iceberg, Delta, ORC, and Avro
-
-
-    ## Usage
-
-    The usage of the extension revolves around attaching the Hive Metastore as a catalog
-    in DuckDB and then querying the tables as if they were native DuckDB tables. The
-    attach command looks like any other DuckDB attach command:
-
-
-    ```sql
-
-    ATTACH ''thrift://<host>:<port>'' AS <catalog_name> (<args>);
-
-    ```
-
-
-    Supported arguments include:
-
-    - `TYPE` (required): Must be set to `hive_metastore` to indicate that we want
-    to use the Hive Metastore extension
-
-    - `WAREHOUSE_LOCATION`: The warehouse location path. Used for table storage location
-    resolution (mostly not required, but can be useful in some cases).
-
-    - `DEFAULT_SCHEMA`: The database/schema name to use when queries don''t specify
-    one. Defaults to `default` if not provided.
+    INSERT INTO hms.default.events VALUES (1, NOW(), ''hello'');
 
     '
+  extended_description: "The DuckDB Hive Metastore extension connects DuckDB to an\
+    \ Apache Hive Metastore over the Thrift protocol and\nexposes HMS databases and\
+    \ tables as a first-class DuckDB catalog.\nReads, writes, and table creation are\
+    \ all implemented natively,\nwith DuckDB's format scanners handling the underlying\
+    \ data files.\n\n## Supported table formats\n\n| Format       | SELECT   | INSERT\
+    \                | CTAS | CREATE TABLE         |\n|--------------|----------|-----------------------|------|----------------------|\n\
+    | Parquet      | yes      | yes (non-partitioned) | yes  | yes               \
+    \   |\n| CSV / Text   | yes      | yes (non-partitioned) | yes  | yes        \
+    \          |\n| Delta Lake   | yes      | via `delta` extension | no   | no  \
+    \                 |\n| Iceberg      | yes\xB9     | no                    | no\
+    \   | no                   |\n| Avro         | yes      | no (read-only)     \
+    \   | no   | metastore entry only |\n| ORC          | partial\xB2 | no       \
+    \             | no   | partial\xB2             |\n\n\xB9 Iceberg tables created\
+    \ by Spark may require `unsafe_enable_version_guessing = true`.\n\xB2 ORC support\
+    \ depends on DuckDB's underlying ORC scanner.\n\nUPDATE, DELETE, and `COPY TO`\
+    \ against HMS tables are not supported - this matches Hive's append-only semantics.\n\
+    \n## Key capabilities\n\n- Direct Thrift communication with the metastore - no\
+    \ REST catalog or Hadoop classpath needed\n- Automatic format detection from HMS\
+    \ `inputFormat` / `outputFormat` / SerDe metadata\n- Schema and database discovery,\
+    \ including complex types (struct, array, map) from Spark-created tables\n- Hive-style\
+    \ partitioning automatically applied at scan time\n- S3-compatible object storage\
+    \ (AWS S3, MinIO, etc.) via DuckDB's `httpfs`\n- Path normalization for Alibaba\
+    \ OSS (`oss://`), Tencent COS (`cos://`, `cosn://`) - rewritten to `s3://` so\
+    \ any S3-compatible secret works\n- Avro logical-type handling: `date`, `timestamp-micros`,\
+    \ and `decimal` round-trip with correct SQL types\n- INSERT and CTAS write a single\
+    \ `data_<uuid>.<ext>` file per statement to the table's `LOCATION`; concurrent\
+    \ writers do not collide\n- CREATE TABLE creates managed (`MANAGED_TABLE`) or\
+    \ external (`EXTERNAL_TABLE`) entries with proper Hive type strings, interoperable\
+    \ with Spark and Trino readers\n\n## Attaching a metastore\n\n```sql\nATTACH 'thrift://<host>:<port>'\
+    \ AS <catalog_name> (<options>);\n```\n\nOptions:\n\n- `TYPE` (required) - must\
+    \ be `hive_metastore`\n- `WAREHOUSE_LOCATION` - default base path for managed\
+    \ tables created via `CREATE TABLE` without an explicit `LOCATION`. When set,\
+    \ managed tables land at `<warehouse>/<db>/<table>`.\n- `DEFAULT_SCHEMA` - schema\
+    \ used when a query omits the schema name. Defaults to `default`.\n\n## Creating\
+    \ tables\n\n```sql\nATTACH 'thrift://localhost:9083' AS hms\n  (TYPE hive_metastore,\
+    \ WAREHOUSE_LOCATION 's3a://my-bucket/warehouse');\n\n-- Managed Parquet table\
+    \ (default format)\nCREATE TABLE hms.default.sales (id INT, amount DECIMAL(10,2),\
+    \ region VARCHAR);\n\n-- External table with explicit format and location\nCREATE\
+    \ TABLE hms.default.events (id INT, ts TIMESTAMP)\n  WITH (location='s3a://my-bucket/events',\
+    \ format='parquet');\n\n-- Avro: metastore entry only, written by Spark/Hive\n\
+    CREATE TABLE hms.default.shipments (id INT, ship_date DATE)\n  WITH (location='s3a://my-bucket/shipments',\
+    \ format='avro');\n```\n\nFormat and location are passed via standard SQL `WITH\
+    \ (...)` tags.\nIf neither `LOCATION` nor `WAREHOUSE_LOCATION` is available, `CREATE\
+    \ TABLE` fails with a clear error.\n\n## Reading Delta, Iceberg, and Avro\n\n\
+    The extension delegates data reads to DuckDB's format scanners.\nInstall and load\
+    \ the relevant extension before querying:\n\n```sql\nINSTALL delta;    LOAD delta;\n\
+    INSTALL iceberg;  LOAD iceberg;\nINSTALL avro;     LOAD avro;\n```\n\nObject-storage\
+    \ credentials use the standard DuckDB `CREATE SECRET` flow:\n\n```sql\nCREATE\
+    \ SECRET s3 (\n  TYPE S3,\n  KEY_ID 'access-key',\n  SECRET 'secret-key',\n  ENDPOINT\
+    \ 's3.amazonaws.com'\n);\n```\n"

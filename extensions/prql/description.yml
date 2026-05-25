@@ -1,10 +1,4 @@
 extension:
-  # Haybarn: disabled because the extension does not yet build
-  # against DuckDB 1.5.2 — upstream community-extensions also has
-  # no v1.5.2 binary. Re-enable when upstream lands a v1.5.2-
-  # compatible release (sync_from_upstream will pick up the bump).
-  # Tracker: https://github.com/ywelsch/duckdb-prql/issues/23
-  excluded_platforms: linux_amd64;linux_arm64;linux_amd64_musl;linux_arm64_musl;osx_amd64;osx_arm64;windows_amd64;windows_arm64;windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
   name: prql
   description: Support for PRQL, the Pipelined Relational Query Language
   version: 1.0.0
@@ -12,11 +6,12 @@ extension:
   build: cmake
   requires_toolchains: rust
   license: MIT
+  excluded_platforms: linux_amd64;linux_arm64;linux_amd64_musl;linux_arm64_musl;osx_amd64;osx_arm64;windows_amd64;windows_arm64;windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
   maintainers:
   - ywelsch
 repo:
   github: ywelsch/duckdb-prql
-  ref: 0b411575bb454e96cd5bd8aa97ba1d73ed689a34
+  ref: 1f491bb79de4ccbc6287f952ab8bad7daa17e196
 docs:
   hello_world: "let invoices = s\"select * from 'https://raw.githubusercontent.com/PRQL/prql/0.8.0/prql-compiler/tests/integration/data/chinook/invoices.csv'\"\
     \nlet customers = s\"select * from 'https://raw.githubusercontent.com/PRQL/prql/0.8.0/prql-compiler/tests/integration/data/chinook/customers.csv'\"\
