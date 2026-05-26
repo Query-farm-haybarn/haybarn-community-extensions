@@ -9,7 +9,7 @@ extension:
   - rustyconover
   name: vgi
   requires_toolchains: parser_tools
-  version: '2026052501'
+  version: '2026052502'
 repo:
   github: query-farm/vgi
-  ref: 38b89e59e9cd460764da16f358b39216dea1da6a
+  ref: 18860e1daf108995066bad7cff45fb903e2d37ec
