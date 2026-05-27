@@ -11,19 +11,23 @@
 # whole R2 tree with a few `aws s3 sync` calls. This replaced a per-arch
 # matrix whose every leg re-ran the checkouts / pip install / GPG import.
 #
-# R2 layout written (under the shared core bucket, `community/` prefix):
+# R2 layout written (under the shared core bucket, `community/` prefix). The
+# <version> segment is the engine semver vX.Y.Z: we pass duckdb_version as the
+# engine git tag (haybarn-v1.5.3-rc3), and publish_extensions.py normalizes it
+# to v1.5.3 for the path (and to 1.5.3 for the npm version) — that's the segment
+# the engine INSTALLs from. See normalize_engine_version() in that script.
 #
 #   mutable "latest" (engine INSTALL fetches this; --write-latest):
-#     s3://<bucket>/community/<duckdb_version>/<arch>/<name>.duckdb_extension.gz
+#     s3://<bucket>/community/<version>/<arch>/<name>.duckdb_extension.gz
 #
 #   per-commit immutable:
-#     s3://<bucket>/community/<duckdb_version>/<arch>/<name>/<ext_commit_short>/
+#     s3://<bucket>/community/<version>/<arch>/<name>/<ext_commit_short>/
 #         <name>.duckdb_extension.gz       ← binary
 #         manifest.json                    ← signed per-build metadata
 #         manifest.json.asc
 #
 #   mutable pointer:
-#     s3://<bucket>/community/<duckdb_version>/<arch>/<name>/
+#     s3://<bucket>/community/<version>/<arch>/<name>/
 #         current.json                     ← signed pointer to latest commit
 #         current.json.asc
 #
@@ -349,7 +353,7 @@ jobs:
             --ext-commit-ts     "$EXT_COMMIT_TS" \
             --ext-version-label "$EXT_VERSION_LABEL" \
             --version           "$CALVER_VERSION" \
-            --haybarn-version   "${DV#v}" \
+            --haybarn-version   "$DV" \
             --duckdb-version    "$DV" \
             --r2-bucket         "$R2_BUCKET" \
             --r2-prefix         community \

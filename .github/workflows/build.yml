@@ -14,12 +14,13 @@
 #      curated patch stack) rather than upstream DuckDB.
 #   2. `duckdb_version` carries the Haybarn engine *git tag* we build against
 #      (currently `haybarn-v1.5.3-rc3`) — that's the ref the ci-tools fork
-#      clones + checks out as the engine source. It is stripped back to the
+#      clones + checks out as the engine source. It is normalized back to the
 #      plain `v1.5.3` semver in the two places that need it: the binary's
 #      reported `DUCKDB_VERSION` (ci-tools' OVERRIDE_GIT_DESCRIBE, which must
-#      map `haybarn-v1.5.3*` → `v1.5.3`) and the R2 URL segment (the
-#      calver-deploy action strips `haybarn-v*(-rcN)?` → `vX.Y.Z`). So extension
-#      loading/storage compat stays `v1.5.3` and we deploy under
+#      map `haybarn-v1.5.3*` → `v1.5.3`) and the R2 URL segment + npm version
+#      (publish_extensions.py's normalize_engine_version() maps
+#      `haybarn-v*(-rcN)?` → `vX.Y.Z` for the path, `X.Y.Z` for npm). So
+#      extension loading/storage compat stays `v1.5.3` and we deploy under
 #      `/v1.5.3/<arch>/<name>.duckdb_extension.gz`; the engine looks there.
 name: Community Extension Build
 
