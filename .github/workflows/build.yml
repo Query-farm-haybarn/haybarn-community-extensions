@@ -261,12 +261,16 @@ jobs:
   # non-existent generate_docs.yml even when gated by `if: false`. Wire it
   # back in once we add generate_docs.yml.
 
+  # Source archiving is DISABLED for now — we skip snapshotting each
+  # extension's source zip to R2 (archived_sources/<name>/...). To re-enable,
+  # restore the branch gate: `if: ${{ (github.head_ref || github.ref_name) ==
+  # 'main' }}`. Job left wired (uses:/with: intact) so it's a one-line flip.
   archive:
     needs:
       - prepare
       - build
     uses: ./.github/workflows/_extension_archive.yml
-    if: ${{ (github.head_ref || github.ref_name) == 'main' }}
+    if: ${{ false }}
     secrets: inherit
     with:
       extension_name: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_NAME }}
