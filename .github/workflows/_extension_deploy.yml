@@ -211,12 +211,17 @@ jobs:
       - name: Compute pip/npm version (semver if descriptor has one, else CalVer)
         id: calver
         shell: bash
+        # Templated values via env (see publish step) so a descriptor-supplied
+        # version label can't break quoting or inject into this script.
+        env:
+          EXT_VERSION_LABEL: ${{ inputs.extension_version_label }}
+          EXT_COMMIT_TS:     ${{ steps.extsrc.outputs.ext_commit_ts }}
         run: |
           set -euo pipefail
-          if [[ -n "${{ inputs.extension_version_label }}" ]]; then
-            VERSION=$(python3 ci-tools/scripts/publish/compute_calver.py --semver "${{ inputs.extension_version_label }}")
+          if [[ -n "$EXT_VERSION_LABEL" ]]; then
+            VERSION=$(python3 ci-tools/scripts/publish/compute_calver.py --semver "$EXT_VERSION_LABEL")
           else
-            VERSION=$(python3 ci-tools/scripts/publish/compute_calver.py --commit-ts "${{ steps.extsrc.outputs.ext_commit_ts }}")
+            VERSION=$(python3 ci-tools/scripts/publish/compute_calver.py --commit-ts "$EXT_COMMIT_TS")
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "::notice::pip/npm version: $VERSION"
@@ -296,6 +301,24 @@ jobs:
           HAYBARN_GPG_PASSPHRASE:  ${{ secrets.HAYBARN_GPG_PASSPHRASE }}
           PIP_BREAK_SYSTEM_PACKAGES: 1
           DV: ${{ inputs.duckdb_version }}
+          # Pass every templated value through env rather than interpolating it
+          # into the script below. Descriptor-derived fields (description,
+          # license, source repo) are free-form text that regularly contain
+          # apostrophes, parentheses, etc.; splicing them into a quoted shell
+          # arg breaks the quoting (and would let a crafted description.yml
+          # inject commands into this credentialed/signing job). Referenced as
+          # "$VAR", a value is never re-parsed as shell.
+          ENGINE_COMMIT:         ${{ steps.engine.outputs.engine_commit }}
+          EXT_COMMIT:            ${{ steps.extsrc.outputs.ext_commit }}
+          EXT_COMMIT_TS:         ${{ steps.extsrc.outputs.ext_commit_ts }}
+          EXT_VERSION_LABEL:     ${{ inputs.extension_version_label }}
+          CALVER_VERSION:        ${{ steps.calver.outputs.version }}
+          R2_BUCKET:             ${{ secrets.R2_BUCKET }}
+          EXTENSION_LICENSE:     ${{ inputs.extension_license }}
+          EXTENSION_DESCRIPTION: ${{ inputs.extension_description }}
+          EXTENSION_SOURCE_REPO: ${{ inputs.extension_source_repo }}
+          REPUBLISH_NPM_ONLY:    ${{ inputs.republish_npm_only }}
+          PUBLISH_REGISTRIES:    ${{ inputs.publish_registries }}
         run: |
           set -euo pipefail
           python3 -m pip install --quiet awscli cryptography tqdm
@@ -311,29 +334,29 @@ jobs:
           # only the aws s3 sync uploads + the previous-pointer read are gated
           # off — so the leaf tarballs are produced for the downstream npm job.
           DEPLOY_ARGS=( --write-latest --deploy true )
-          if [[ '${{ inputs.republish_npm_only }}' == 'true' ]]; then
+          if [[ "$REPUBLISH_NPM_ONLY" == 'true' ]]; then
             CHANNELS='npm'
             DEPLOY_ARGS=( --deploy false )   # dry-run: no R2 writes, no --write-latest
-          elif [[ '${{ inputs.publish_registries }}' == 'true' ]]; then
+          elif [[ "$PUBLISH_REGISTRIES" == 'true' ]]; then
             CHANNELS='r2-community,npm'
           else
             CHANNELS='r2-community'
           fi
           python3 ci-tools/scripts/publish/publish_extensions.py \
             --repo-dir          repo \
-            --engine-commit     '${{ steps.engine.outputs.engine_commit }}' \
-            --ext-commit        '${{ steps.extsrc.outputs.ext_commit }}' \
-            --ext-commit-ts     '${{ steps.extsrc.outputs.ext_commit_ts }}' \
-            --ext-version-label '${{ inputs.extension_version_label }}' \
-            --version           '${{ steps.calver.outputs.version }}' \
+            --engine-commit     "$ENGINE_COMMIT" \
+            --ext-commit        "$EXT_COMMIT" \
+            --ext-commit-ts     "$EXT_COMMIT_TS" \
+            --ext-version-label "$EXT_VERSION_LABEL" \
+            --version           "$CALVER_VERSION" \
             --haybarn-version   "${DV#v}" \
-            --duckdb-version    '${{ inputs.duckdb_version }}' \
-            --r2-bucket         '${{ secrets.R2_BUCKET }}' \
+            --duckdb-version    "$DV" \
+            --r2-bucket         "$R2_BUCKET" \
             --r2-prefix         community \
             --license           ce/LICENSE \
-            --license-str       '${{ inputs.extension_license }}' \
-            --description       '${{ inputs.extension_description }}' \
-            --source-repo       '${{ inputs.extension_source_repo }}' \
+            --license-str       "$EXTENSION_LICENSE" \
+            --description       "$EXTENSION_DESCRIPTION" \
+            --source-repo       "$EXTENSION_SOURCE_REPO" \
             --dist-dir          dist \
             --signed-by         haybarn-extension-signing-2026 \
             --channels          "$CHANNELS" \
