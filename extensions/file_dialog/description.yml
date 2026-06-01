@@ -11,7 +11,7 @@ extension:
   - yutannihilation
 repo:
   github: yutannihilation/duckdb-ext-file-dialog
-  ref: c4524d3138c9f8c6f0f4940df636ca8355cc649e
+  ref: 1dc7e177e2cbb4605604d17efba8c09734389872
 docs:
   hello_world: 'FROM read_csv(choose_file());
 

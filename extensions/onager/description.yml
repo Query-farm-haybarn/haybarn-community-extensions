@@ -11,7 +11,7 @@ extension:
   requires_toolchains: rust
 repo:
   github: CogitatorTech/onager
-  ref: b5fe9c95964d784f3c0f187b8b76ea5b052ec90e
+  ref: d8abadf9422ffd0c15c22cbc079b20dca630474f
 docs:
   hello_world: '-- 1. Check extension version
 
