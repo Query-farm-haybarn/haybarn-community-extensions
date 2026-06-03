@@ -1,7 +1,7 @@
 extension:
   name: duckhts
   description: DuckDB extension for reading HTS file formats via htslib
-  version: 1.2.1
+  version: 1.3.0
   language: C
   build: cmake
   license: MIT
@@ -11,7 +11,7 @@ extension:
   - sounkou-bioinfo
 repo:
   github: RGenomicsETL/duckhts
-  ref: 5c775a2ecef10cfcd59ce8f05e43ed779c76cba8
+  ref: 37b2034088843d18a6909f2934af9862d23bb4d0
 docs:
   hello_world: '-- Load the extension
 
@@ -40,129 +40,109 @@ docs:
     \ sequencing (HTS) formats using htslib. Query VCF, BCF, BAM, CRAM, FASTA, FASTQ,\
     \ GTF, GFF, and tabix-indexed files directly in SQL.\n\nThe extension also includes\
     \ sequence utility UDFs, SAM flag predicate helpers, and HTS metadata helpers.\n\
-    \nFunctions included in this extension:\n\n### Readers\n- `read_bcf(path, region\
-    \ := NULL, index_path := NULL, tidy_format := FALSE, additional_csq_column_types\
-    \ := NULL)`: Read VCF and BCF variant data with typed INFO, FORMAT, typed CSQ/ANN/BCSQ\
-    \ subfields, optional tidy sample output, and optional bcftools-style CSQ type\
-    \ overrides.\n- `read_bam(path, standard_tags := FALSE, auxiliary_tags := FALSE,\
-    \ region := NULL, index_path := NULL, reference := NULL, sequence_encoding :=\
-    \ 'string', quality_representation := 'string', decompression_threads := 2)`:\
+    \nFunctions included in this extension:\n\n### Diagnostics\n- `duckhts_simd_backend()`:\
+    \ Return the current DuckHTS SIMD dispatch label. For explicit scalar or concrete\
+    \ backend requests this is the requested policy; for auto it is the single selected\
+    \ backend when all logical kernels resolve to the same backend, or mixed when\
+    \ per-kernel auto-dispatch resolves to multiple backends. Use duckhts_simd_kernel_info()\
+    \ for per-kernel details.\n- `duckhts_simd_requested_backend()`: Return the current\
+    \ explicit SIMD backend request, usually auto unless `SELECT backend FROM duckhts_simd_set_backend('auto'|'scalar'|backend)`\
+    \ was called. The selected per-kernel backend may differ under auto-dispatch across\
+    \ x86, ARM, wasm, and scalar-only builds.\n- `duckhts_simd_backend_compiled(backend)`:\
+    \ Return whether a concrete DuckHTS SIMD backend was compiled into this build.\
+    \ This is independent of whether the current CPU/runtime supports executing that\
+    \ backend; for example avx512 can be compiled but not CPU-supported on the running\
+    \ host.\n- `duckhts_simd_backend_cpu_supported(backend)`: Return whether the current\
+    \ CPU/runtime supports a concrete DuckHTS SIMD backend, independent of whether\
+    \ DuckHTS compiled an implementation for it. Availability is the intersection\
+    \ of compiled and CPU-supported.\n- `duckhts_simd_backend_available(backend)`:\
+    \ Return whether a concrete SIMD backend is usable in the current process. Availability\
+    \ means the backend is compiled into DuckHTS and supported by the current CPU/runtime.\
+    \ auto is a selection request rather than a concrete backend and is not reported\
+    \ as available here.\n- `duckhts_simd_info()`: Return one row per known concrete\
+    \ DuckHTS SIMD backend with extension-owned selectable, compiled, CPU-supported,\
+    \ available, selected, requested, and dispatch-mode diagnostics. Availability\
+    \ is the intersection of compiled and CPU/runtime-supported. selectable reports\
+    \ whether the backend has a selectable implementation path; explicit selection\
+    \ still requires available = TRUE. selected is TRUE when the current dispatch\
+    \ table uses that backend for at least one logical kernel. auto is a selection\
+    \ request and is not a concrete backend row.\n- `duckhts_simd_kernel_info()`:\
+    \ Return one row per logical DuckHTS SIMD kernel showing the concrete backend\
+    \ selected by the current immutable dispatch table, the selected capability, the\
+    \ requested backend policy, whether scalar was used as a per-kernel fallback,\
+    \ and the dispatch mode. This is the authoritative diagnostic for mixed auto-dispatch\
+    \ when different kernels resolve to different backends.\n- `duckhts_simd_set_backend(backend)`:\
+    \ Explicitly select the DuckHTS SIMD dispatch policy for this process using a\
+    \ one-row table-function call and return the current dispatch label in a backend\
+    \ column. Use auto for per-kernel runtime dispatch or scalar for a portable baseline;\
+    \ unavailable platform-specific requests such as avx512 on non-AVX-512 CPUs raise\
+    \ an error instead of silently falling back.\n\n### Readers\n- `read_bcf(path,\
+    \ region := NULL, index_path := NULL, tidy_format := FALSE, additional_csq_column_types\
+    \ := NULL, decompression_threads := 0)`: Read VCF and BCF variant data with typed\
+    \ INFO, FORMAT, typed CSQ/ANN/BCSQ subfields, optional tidy sample output, optional\
+    \ bcftools-style CSQ type overrides, and optional htslib decompression worker\
+    \ threads via decompression_threads (default 0 for single-threaded reads).\n-\
+    \ `read_bam(path, standard_tags := FALSE, auxiliary_tags := FALSE, region := NULL,\
+    \ index_path := NULL, reference := NULL, sequence_encoding := 'string', quality_representation\
+    \ := 'string', cigar_representation := 'string', decompression_threads := 2)`:\
     \ Read SAM, BAM, and CRAM alignments with optional typed SAMtags and auxiliary\
-    \ tag maps. Use sequence_encoding := 'nt16' to return SEQ as UTINYINT[] and quality_representation\
-    \ := 'phred' to return QUAL as UTINYINT[] instead of VARCHAR. decompression_threads\
+    \ tag maps. Use sequence_encoding := 'nt16' to return SEQ as UTINYINT[], quality_representation\
+    \ := 'phred' to return QUAL as UTINYINT[], and cigar_representation := 'binary'\
+    \ to return packed BAM CIGAR operations as UINTEGER[] instead of SAM text. decompression_threads\
     \ controls per-file htslib worker threads and defaults to 2; use 0 to disable\
-    \ worker threads.\n- `read_fasta(path, region := NULL, index_path := NULL, sequence_encoding\
-    \ := 'string')`: Read FASTA records or indexed FASTA regions as sequence rows.\
-    \ Use sequence_encoding := 'nt16' to return SEQUENCE as UTINYINT[] (htslib nt16\
-    \ 4-bit codes) instead of VARCHAR.\n- `read_bed(path, region := NULL, index_path\
-    \ := NULL)`: Read BED3-BED12 interval files with canonical typed columns and optional\
-    \ tabix-backed region filtering.\n- `fasta_nuc(path, bed_path := NULL, bin_width\
-    \ := NULL, region := NULL, index_path := NULL, bed_index_path := NULL, include_seq\
+    \ worker threads.\n- `read_fasta(path, region := NULL, index_path := NULL, gzi_path\
+    \ := NULL, sequence_encoding := 'string')`: Read FASTA records or indexed FASTA\
+    \ regions as sequence rows. Use sequence_encoding := 'nt16' to return SEQUENCE\
+    \ as UTINYINT[] (htslib nt16 4-bit codes) instead of VARCHAR. For bgzipped FASTA,\
+    \ gzi_path may point to an explicit .gzi sidecar when it is not colocated with\
+    \ the FASTA.\n- `read_bed(path, region := NULL, index_path := NULL)`: Read BED3-BED12\
+    \ interval files with canonical typed columns and optional tabix-backed region\
+    \ filtering.\n- `fasta_nuc(path, bed_path := NULL, bin_width := NULL, region :=\
+    \ NULL, index_path := NULL, gzi_path := NULL, bed_index_path := NULL, include_seq\
     \ := FALSE)`: Compute bedtools nuc-style nucleotide composition for supplied BED\
-    \ intervals or generated fixed-width bins over a FASTA reference.\n- `read_fastq(path,\
-    \ interleaved := FALSE, mate_path := NULL, sequence_encoding := 'string', quality_representation\
-    \ := 'string', input_quality_encoding := 'phred33')`: Read single-end, paired-end,\
-    \ or interleaved FASTQ files with optional legacy quality decoding. By default,\
-    \ FASTQ qualities are interpreted as modern Phred+33 input. Use sequence_encoding\
-    \ := 'nt16' to return SEQUENCE as UTINYINT[] and quality_representation := 'phred'\
-    \ to return QUALITY as UTINYINT[] instead of VARCHAR. input_quality_encoding accepts\
-    \ 'phred33', 'auto', 'phred64', or 'solexa64'.\n- `read_gff(path, header_names\
-    \ := NULL, header := FALSE, column_types := NULL, auto_detect := FALSE, attributes_map\
-    \ := FALSE, attributes_list := FALSE, attributes_pairs := FALSE, strict := FALSE,\
-    \ region := NULL, index_path := NULL)`: Read GFF annotations with optional raw\
-    \ scalar and richer list/pair parsed attribute columns, strict GFF3 structural\
-    \ validation, and indexed region filtering.\n- `read_gtf(path, header_names :=\
-    \ NULL, header := FALSE, column_types := NULL, auto_detect := FALSE, attributes_map\
-    \ := FALSE, attributes_list := FALSE, attributes_pairs := FALSE, region := NULL,\
-    \ index_path := NULL)`: Read GTF annotations with optional raw scalar and richer\
-    \ list/pair parsed attribute columns and indexed region filtering.\n- `read_tabix(path,\
-    \ header_names := NULL, header := FALSE, column_types := NULL, auto_detect :=\
-    \ FALSE, region := NULL, index_path := NULL)`: Read generic tabix-indexed text\
-    \ data with optional header handling and type inference.\n- `fasta_index(path,\
-    \ index_path := NULL)`: Build a FASTA index (.fai) and return a single row with\
-    \ columns success (BOOLEAN) and index_path (VARCHAR).\n- `hts_union_query(reader,\
+    \ intervals or generated fixed-width bins over a FASTA reference. For bgzipped\
+    \ FASTA, gzi_path may point to an explicit .gzi sidecar when it is not colocated\
+    \ with the FASTA.\n- `read_fastq(path, interleaved := FALSE, mate_path := NULL,\
+    \ sequence_encoding := 'string', quality_representation := 'string', input_quality_encoding\
+    \ := 'phred33')`: Read single-end, paired-end, or interleaved FASTQ files with\
+    \ optional legacy quality decoding. By default, FASTQ qualities are interpreted\
+    \ as modern Phred+33 input. Use sequence_encoding := 'nt16' to return SEQUENCE\
+    \ as UTINYINT[] and quality_representation := 'phred' to return QUALITY as UTINYINT[]\
+    \ instead of VARCHAR. input_quality_encoding accepts 'phred33', 'auto', 'phred64',\
+    \ or 'solexa64'.\n- `read_gff(path, header_names := NULL, header := FALSE, column_types\
+    \ := NULL, auto_detect := FALSE, attributes_map := FALSE, attributes_list := FALSE,\
+    \ attributes_pairs := FALSE, strict := FALSE, region := NULL, index_path := NULL)`:\
+    \ Read GFF annotations with optional raw scalar and richer list/pair parsed attribute\
+    \ columns, strict GFF3 structural validation, and indexed region filtering.\n\
+    - `read_gtf(path, header_names := NULL, header := FALSE, column_types := NULL,\
+    \ auto_detect := FALSE, attributes_map := FALSE, attributes_list := FALSE, attributes_pairs\
+    \ := FALSE, region := NULL, index_path := NULL)`: Read GTF annotations with optional\
+    \ raw scalar and richer list/pair parsed attribute columns and indexed region\
+    \ filtering.\n- `read_tabix(path, header_names := NULL, header := FALSE, column_types\
+    \ := NULL, auto_detect := FALSE, region := NULL, index_path := NULL)`: Read generic\
+    \ tabix-indexed text data with optional header handling and type inference.\n\
+    - `fasta_index(path, index_path := NULL)`: Build a FASTA index (.fai) and return\
+    \ a single row with columns success (BOOLEAN) and index_path (VARCHAR).\n- `hts_union_query(reader,\
     \ pattern, params := '')`: Generate a UNION ALL BY NAME query string that reads\
     \ every file matching a glob pattern through the named reader function. The result\
     \ includes a 'filename' column identifying the source file for each row. Assign\
     \ to a variable with SET VARIABLE and execute via query(getvariable(...)). Optional\
     \ params string is appended to each reader call. In R, use the typed rduckhts_*_multi()\
     \ helpers instead, which accept file vectors with optional per-file parameters\
-    \ and create DuckDB tables directly.\n\n### Intervals\n- `duckhts_cgranges_create(name)`:\
-    \ Create an empty session-scoped cgranges registry entry that can be populated\
-    \ with intervals and finalized for overlap queries.\n- `duckhts_cgranges_add(name,\
-    \ chrom, start, end[, label])`: Append an interval to a session-scoped cgranges\
-    \ registry entry before finalization. Labels may be BIGINT-like, DOUBLE, VARCHAR,\
-    \ or BOOLEAN.\n- `duckhts_cgranges_index(name)`: Finalize a populated cgranges\
-    \ registry entry and build its immutable overlap index for subsequent queries.\n\
-    - `duckhts_cgranges_destroy(name)`: Destroy a session-scoped cgranges registry\
-    \ entry and release its indexed interval storage when it is not in active use.\n\
-    - `duckhts_cgranges_from_query(name, query, chrom_col, start_col, end_col[, label_col])`:\
-    \ Execute a SQL query on an extension-owned DuckDB connection, append its interval\
-    \ rows into a session-scoped cgranges registry entry, and leave the populated\
-    \ index ready for explicit finalization with duckhts_cgranges_index(...).\n- `duckhts_cgranges_from_table(name,\
-    \ table_name, chrom_col, start_col, end_col[, label_col])`: Reserved convenience\
-    \ constructor for bulk cgranges population from a table name. The current implementation\
-    \ is intentionally deferred and directs callers to duckhts_cgranges_from_query(...).\n\
-    - `duckhts_cgranges_has_overlap(name, chrom, start, end[, mode])`: Vectorized\
-    \ scalar predicate for streaming provider rows through a finalized session-scoped\
-    \ cgranges index. Returns TRUE when the query interval overlaps at least one indexed\
-    \ interval, or when mode = 'contain' and it fully contains at least one indexed\
-    \ interval; NULL inputs return NULL.\n- `duckhts_cgranges_count_overlaps(name,\
-    \ chrom, start, end[, mode])`: Vectorized scalar overlap counter for streaming\
-    \ provider rows through a finalized session-scoped cgranges index. Returns the\
-    \ number of indexed intervals that overlap the query interval, or with mode =\
-    \ 'contain' the number fully contained by it; NULL inputs return NULL.\n- `duckhts_cgranges_overlaps_list(name,\
-    \ chrom, start, end[, mode])`: Vectorized scalar overlap expander for streaming\
-    \ provider rows through a finalized session-scoped cgranges index. Returns a LIST\
-    \ of hit STRUCTs that can be expanded with UNNEST, preserving provider columns\
-    \ while emitting one row per matching indexed interval. Because scalar return\
-    \ types are fixed, labels are returned as text with label_type describing the\
-    \ original cgranges label kind; NULL inputs return NULL.\n- `duckhts_cgranges_overlaps(name,\
-    \ chrom, start, end, mode := 'overlap', query_row_id := NULL)`: Query a finalized\
-    \ session-scoped cgranges registry entry and return one row per overlapping or\
-    \ containing indexed interval, preserving the original label type and interval\
-    \ coordinates.\n- `duckhts_cgranges_overlaps_bulk(name, query, chrom_col, start_col,\
-    \ end_col, mode := 'overlap', query_row_id_col := NULL)`: Run a SQL query that\
-    \ yields overlap probes, stream those rows through a finalized session-scoped\
-    \ cgranges registry entry, and return one row per matching indexed interval. The\
-    \ probe query runs on the extension-owned helper connection, so it must reference\
-    \ regular tables/views rather than connection-local temp tables. When query_row_id_col\
-    \ is omitted, query_row_id defaults to the 1-based probe row ordinal.\n\n### Metadata\n\
-    - `detect_quality_encoding(path, max_records := 10000)`: Inspect a FASTQ file's\
-    \ observed quality ASCII range and report compatible legacy encodings with a heuristic\
-    \ guessed encoding.\n- `duckhts_samtools_idxstats(path, output := NULL, index_path\
-    \ := NULL, threads := 0, overwrite := FALSE)`: Write samtools idxstats-compatible\
-    \ TAB-delimited output for BAM, CRAM, or SAM input. Indexed BAM uses `hts_idx_get_stat(...)`\
-    \ for the fast path; CRAM, SAM, and unindexed BAM fall back to a full scan while\
-    \ preserving samtools-style contig rows plus the final `*` row.\n- `read_hts_header(path,\
-    \ format := NULL, mode := NULL)`: Inspect HTS headers in parsed, raw, or combined\
-    \ form across supported formats.\n- `read_hts_index(path, format := NULL, index_path\
-    \ := NULL)`: Inspect high-level HTS index metadata such as sequence names and\
-    \ mapped counts.\n- `read_hts_index_spans(path, format := NULL, index_path :=\
-    \ NULL)`: Expand index metadata into span and chunk rows suitable for low-level\
-    \ index inspection.\n- `read_hts_index_raw(path, format := NULL, index_path :=\
-    \ NULL)`: Return the raw on-disk HTS index blob together with basic identifying\
-    \ metadata.\n\n### Compression\n- `bgzip(path, output_path := NULL, threads :=\
-    \ 4, level := -1, keep := TRUE, overwrite := FALSE)`: Compress a plain file to\
-    \ BGZF and return the created output path and byte counts.\n- `bgunzip(path, output_path\
-    \ := NULL, threads := 4, keep := TRUE, overwrite := FALSE)`: Decompress a BGZF-compressed\
-    \ file and return the created output path and byte counts.\n\n### Indexing\n-\
-    \ `bam_index(path, index_path := NULL, min_shift := 0, threads := 4)`: Build a\
-    \ BAM or CRAM index and report the written index path and format.\n- `bcf_index(path,\
-    \ index_path := NULL, min_shift := NULL, threads := 4)`: Build a TBI or CSI index\
-    \ for a VCF or BCF file and report the written index path and format.\n- `tabix_index(path,\
-    \ preset := 'vcf', index_path := NULL, min_shift := 0, threads := 4, seq_col :=\
-    \ NULL, start_col := NULL, end_col := NULL, comment_char := NULL, skip_lines :=\
-    \ NULL)`: Build a tabix index for a BGZF-compressed text file using a preset or\
-    \ explicit coordinate columns.\n\n### Coverage\n- `bam_bin_counts(path, bin_width,\
-    \ chrom := NULL, reference := NULL, index_path := NULL, mapq := 0, require_flags\
-    \ := 0, exclude_flags := 0, rmdup := 'none', stats := NULL)`: Count BAM or CRAM\
-    \ read starts into fixed-width bins. Returns one row per bin across the selected\
-    \ contig span, including zero-count bins, with total, forward, and reverse counts;\
-    \ `rmdup := 'streaming'` applies the WisecondorX-style larp/larp2 consecutive-position\
-    \ deduplication, `rmdup := 'flag'` drops SAM duplicate-flagged reads, and `stats\
-    \ := 'gc'`, `'mq'`, or `'gc,mq'` adds per-bin pre/post-filter GC and MAPQ sufficient\
-    \ statistics, including reference GC when `reference` is provided.\n- `duckhts_bam_bed_coverage(path,\
+    \ and create DuckDB tables directly.\n\n### Coverage\n- `read_pileup(path, region\
+    \ := NULL, index_path := NULL, min_mapq := 0, flag_mask := 1796)`: Construct a\
+    \ region-scoped BAM pileup with one row per covered position, emitting chrom,\
+    \ 1-based position, depth, observed bases, and Phred+33 qualities after SAM flag\
+    \ and MAPQ filtering. This is a compact htslib pileup view, not samtools mpileup\
+    \ text parity.\n- `bam_bin_counts(path, bin_width, chrom := NULL, reference :=\
+    \ NULL, index_path := NULL, mapq := 0, require_flags := 0, exclude_flags := 0,\
+    \ rmdup := 'none', stats := NULL)`: Count BAM or CRAM read starts into fixed-width\
+    \ bins. Returns one row per bin across the selected contig span, including zero-count\
+    \ bins, with total, forward, and reverse counts; `rmdup := 'streaming'` applies\
+    \ the WisecondorX-style larp/larp2 consecutive-position deduplication, `rmdup\
+    \ := 'flag'` drops SAM duplicate-flagged reads, and `stats := 'gc'`, `'mq'`, or\
+    \ `'gc,mq'` adds per-bin pre/post-filter GC and MAPQ sufficient statistics, including\
+    \ reference GC when `reference` is provided.\n- `duckhts_bam_bed_coverage(path,\
     \ bed_path, reference := NULL, index_path := NULL, bed_index_path := NULL, mapq\
     \ := 0, min_baseq := 0, min_read_len := 0, require_flags := 0, exclude_flags :=\
     \ 1796, min_depth := 1, max_depth := 1000000, decompression_threads := 0, fragment_mode\
@@ -189,20 +169,147 @@ docs:
     \ `fasta` is required for CRAM when htslib needs a reference, `precision_digits`\
     \ controls decimal places in the text outputs, and `processing_threads` enables\
     \ parallel contig processing (0 = sequential, >0 = number of worker threads).\n\
-    \n### Variants\n- `bcftools_liftover(chrom, pos, ref, alt, chain_path, dst_fasta_ref,\
-    \ src_fasta_ref, max_snp_gap, max_indel_inc, lift_mt, end_pos, no_left_align)`:\
-    \ Row-oriented liftover kernel intended to mirror bcftools +liftover semantics\
-    \ as closely as possible while returning one STRUCT per input row with fields:\
-    \ src_chrom, src_pos, src_ref, src_alt, dest_chrom, dest_pos, dest_end, dest_ref,\
-    \ dest_alt, mapped, reverse_complemented, swap, reject_reason, and note. Set no_left_align\
-    \ := true to skip post-liftover left-alignment of lifted indels (mirrors --no-left-align\
-    \ in bcftools +liftover).\n- `duckdb_liftover(table_name, chrom_col, pos_col,\
-    \ ref_col := NULL, alt_col := NULL, chain_path := NULL, dst_fasta_ref := NULL,\
-    \ src_fasta_ref := NULL, max_snp_gap := 1, max_indel_inc := 250, lift_mt := false,\
-    \ end_pos_col := NULL, no_left_align := false)`: DuckDB-specific wrapper over\
-    \ bcftools_liftover that takes either a table name or a derived-table expression\
+    \n### Intervals\n- `duckhts_cgranges_create(name)`: Create an empty session-scoped\
+    \ cgranges registry entry that can be populated with intervals and finalized for\
+    \ overlap queries.\n- `duckhts_cgranges_add(name, chrom, start, end[, label])`:\
+    \ Append an interval to a session-scoped cgranges registry entry before finalization.\
+    \ Labels may be BIGINT-like, DOUBLE, VARCHAR, or BOOLEAN.\n- `duckhts_cgranges_index(name)`:\
+    \ Finalize a populated cgranges registry entry and build its immutable overlap\
+    \ index for subsequent queries.\n- `duckhts_cgranges_destroy(name)`: Destroy a\
+    \ session-scoped cgranges registry entry and release its indexed interval storage\
+    \ when it is not in active use.\n- `duckhts_cgranges_from_query(name, query, chrom_col,\
+    \ start_col, end_col[, label_col])`: Execute a SQL query on an extension-owned\
+    \ DuckDB connection, append its interval rows into a session-scoped cgranges registry\
+    \ entry, and leave the populated index ready for explicit finalization with duckhts_cgranges_index(...).\n\
+    - `duckhts_cgranges_from_table(name, table_name, chrom_col, start_col, end_col[,\
+    \ label_col])`: Reserved convenience constructor for bulk cgranges population\
+    \ from a table name. The current implementation is intentionally deferred and\
+    \ directs callers to duckhts_cgranges_from_query(...).\n- `duckhts_cgranges_has_overlap(name,\
+    \ chrom, start, end[, mode])`: Vectorized scalar predicate for streaming provider\
+    \ rows through a finalized session-scoped cgranges index. Returns TRUE when the\
+    \ query interval overlaps at least one indexed interval, or when mode = 'contain'\
+    \ and it fully contains at least one indexed interval; NULL inputs return NULL.\n\
+    - `duckhts_cgranges_count_overlaps(name, chrom, start, end[, mode])`: Vectorized\
+    \ scalar overlap counter for streaming provider rows through a finalized session-scoped\
+    \ cgranges index. Returns the number of indexed intervals that overlap the query\
+    \ interval, or with mode = 'contain' the number fully contained by it; NULL inputs\
+    \ return NULL.\n- `duckhts_cgranges_overlaps_list(name, chrom, start, end[, mode])`:\
+    \ Vectorized scalar overlap expander for streaming provider rows through a finalized\
+    \ session-scoped cgranges index. Returns a LIST of hit STRUCTs that can be expanded\
+    \ with UNNEST, preserving provider columns while emitting one row per matching\
+    \ indexed interval. Because scalar return types are fixed, labels are returned\
+    \ as text with label_type describing the original cgranges label kind; NULL inputs\
+    \ return NULL.\n- `duckhts_cgranges_overlaps(name, chrom, start, end, mode :=\
+    \ 'overlap', query_row_id := NULL)`: Query a finalized session-scoped cgranges\
+    \ registry entry and return one row per overlapping or containing indexed interval,\
+    \ preserving the original label type and interval coordinates.\n- `duckhts_cgranges_overlaps_bulk(name,\
+    \ query, chrom_col, start_col, end_col, mode := 'overlap', query_row_id_col :=\
+    \ NULL)`: Run a SQL query that yields overlap probes, stream those rows through\
+    \ a finalized session-scoped cgranges registry entry, and return one row per matching\
+    \ indexed interval. The probe query runs on the extension-owned helper connection,\
+    \ so it must reference regular tables/views rather than connection-local temp\
+    \ tables. When query_row_id_col is omitted, query_row_id defaults to the 1-based\
+    \ probe row ordinal.\n- `regionkey(chrom, start, end, strand := 0)`: Encode a\
+    \ genomic interval as an official RegionKey-compatible 64-bit unsigned integer.\
+    \ Start and end use 0-based half-open interval semantics, matching BED-style coordinates;\
+    \ strand accepts -1, 0, or 1.\n- `regionkey_hex(rk)`: Render a RegionKey as its\
+    \ lowercase 16-character hexadecimal string representation.\n- `parse_regionkey_hex(hex)`:\
+    \ Parse a 16-character hexadecimal RegionKey string back into its UBIGINT code.\
+    \ Invalid or non-hex strings return NULL.\n- `encode_regionkey(chrom_code, start,\
+    \ end, strand_code)`: Encode the raw upstream RegionKey fields directly: chromosome\
+    \ code, 0-based start, 0-based end, and strand code (0 = unknown, 1 = +, 2 = -).\n\
+    - `extract_regionkey_chrom(rk)`: Extract the raw upstream RegionKey chromosome\
+    \ code.\n- `extract_regionkey_startpos(rk)`: Extract the raw upstream RegionKey\
+    \ 0-based start position.\n- `extract_regionkey_endpos(rk)`: Extract the raw upstream\
+    \ RegionKey 0-based end position.\n- `extract_regionkey_strand(rk)`: Extract the\
+    \ raw upstream RegionKey strand code (0 = unknown, 1 = +, 2 = -).\n- `decode_regionkey(rk)`:\
+    \ Decode a RegionKey into its raw upstream numeric fields: chrom_code, start,\
+    \ end, and strand_code.\n- `reverse_regionkey(rk)`: Decode a RegionKey into a\
+    \ STRUCT with chrom, chrom_code, start, end, strand, and strand_code.\n- `extend_regionkey(rk,\
+    \ size)`: Extend a RegionKey interval by a fixed number of bases on both sides,\
+    \ clamping to the official 28-bit RegionKey position range.\n- `are_overlapping_regions(chrom_a,\
+    \ start_a, end_a, chrom_b, start_b, end_b)`: Return TRUE when two explicit 0-based\
+    \ half-open intervals overlap on the same canonical chromosome.\n- `are_overlapping_region_regionkey(chrom,\
+    \ start, end, rk)`: Return TRUE when a 0-based half-open interval overlaps the\
+    \ supplied RegionKey interval.\n- `are_overlapping_regionkeys(rka, rkb)`: Return\
+    \ TRUE when two RegionKeys overlap.\n\n### Metadata\n- `detect_quality_encoding(path,\
+    \ max_records := 10000)`: Inspect a FASTQ file's observed quality ASCII range\
+    \ and report compatible legacy encodings with a heuristic guessed encoding.\n\
+    - `duckhts_samtools_idxstats(path, output := NULL, index_path := NULL, threads\
+    \ := 0, overwrite := FALSE)`: Write samtools idxstats-compatible TAB-delimited\
+    \ output for BAM, CRAM, or SAM input. Indexed BAM uses `hts_idx_get_stat(...)`\
+    \ for the fast path; CRAM, SAM, and unindexed BAM fall back to a full scan while\
+    \ preserving samtools-style contig rows plus the final `*` row.\n- `read_hts_header(path,\
+    \ format := NULL, mode := NULL)`: Inspect HTS headers in parsed, raw, or combined\
+    \ form across supported formats.\n- `read_hts_index(path, format := NULL, index_path\
+    \ := NULL)`: Inspect high-level HTS index metadata such as sequence names and\
+    \ mapped counts.\n- `read_hts_index_spans(path, format := NULL, index_path :=\
+    \ NULL)`: Expand index metadata into span and chunk rows suitable for low-level\
+    \ index inspection.\n- `read_hts_index_raw(path, format := NULL, index_path :=\
+    \ NULL)`: Return the raw on-disk HTS index blob together with basic identifying\
+    \ metadata.\n\n### Compression\n- `bgzip(path, output_path := NULL, threads :=\
+    \ 4, level := -1, keep := TRUE, overwrite := FALSE)`: Compress a plain file to\
+    \ BGZF and return the created output path and byte counts.\n- `bgunzip(path, output_path\
+    \ := NULL, threads := 4, keep := TRUE, overwrite := FALSE)`: Decompress a BGZF-compressed\
+    \ file and return the created output path and byte counts.\n\n### Indexing\n-\
+    \ `bam_index(path, index_path := NULL, min_shift := 0, threads := 4)`: Build a\
+    \ BAM or CRAM index and report the written index path and format.\n- `bcf_index(path,\
+    \ index_path := NULL, min_shift := NULL, threads := 4)`: Build a TBI or CSI index\
+    \ for a VCF or BCF file and report the written index path and format.\n- `tabix_index(path,\
+    \ preset := 'vcf', index_path := NULL, min_shift := 0, threads := 4, seq_col :=\
+    \ NULL, start_col := NULL, end_col := NULL, comment_char := NULL, skip_lines :=\
+    \ NULL)`: Build a tabix index for a BGZF-compressed text file using a preset or\
+    \ explicit coordinate columns.\n\n### Variants\n- `variantkey(chrom, pos, ref,\
+    \ alt)`: Encode a normalized biallelic variant as an official VariantKey-compatible\
+    \ 64-bit unsigned integer. This DuckHTS wrapper accepts 1-based VCF/DuckHTS POS\
+    \ to match bcftools `%VKX` / `+add-variantkey`, internally converts to the upstream\
+    \ 0-based field, and preserves the official hashed nonreversible mode for large,\
+    \ ambiguous, and symbolic REF/ALT strings. Only CHROM, POS, REF, and ALT are encoded;\
+    \ END, SVLEN, mate breakend coordinates, and other SV metadata are not.\n- `variantkey_hex(vk)`:\
+    \ Render a VariantKey as its lowercase 16-character hexadecimal string representation.\n\
+    - `parse_variantkey_hex(hex)`: Parse a 16-character hexadecimal VariantKey string\
+    \ back into its UBIGINT code. Invalid or non-hex strings return NULL.\n- `encode_variantkey(chrom_code,\
+    \ pos0, refalt_code)`: Encode the raw upstream VariantKey fields directly: chromosome\
+    \ code, 0-based position, and 31-bit REF+ALT code.\n- `extract_variantkey_chrom(vk)`:\
+    \ Extract the raw upstream VariantKey chromosome code.\n- `extract_variantkey_pos(vk)`:\
+    \ Extract the raw upstream VariantKey 0-based position field.\n- `extract_variantkey_refalt(vk)`:\
+    \ Extract the raw upstream 31-bit VariantKey REF+ALT code.\n- `decode_variantkey(vk)`:\
+    \ Decode a VariantKey into its raw upstream numeric fields: chrom_code, pos0,\
+    \ and refalt_code.\n- `reverse_variantkey(vk)`: Decode a VariantKey into a STRUCT\
+    \ with chrom, chrom_code, 1-based pos, upstream 0-based pos0, ref, alt, refalt_code,\
+    \ and reversible. For hashed nonreversible keys, reversible is FALSE and ref/alt\
+    \ are returned as NULL because DuckHTS v1 does not ship the optional NRVK lookup\
+    \ sidecar.\n- `variantkey_range(chrom, pos_min, pos_max)`: Return the inclusive\
+    \ minimum and maximum VariantKey bounds for a chromosome plus 1-based VCF position\
+    \ range, suitable for numeric range filtering on precomputed VariantKeys.\n- `bcftools_liftover(chrom,\
+    \ pos, ref, alt, chain_path, dst_fasta_ref, src_fasta_ref, max_snp_gap, max_indel_inc,\
+    \ lift_mt, end_pos, no_left_align)`: Row-oriented liftover kernel intended to\
+    \ mirror bcftools +liftover semantics as closely as possible while returning one\
+    \ STRUCT per input row with fields: src_chrom, src_pos, src_ref, src_alt, dest_chrom,\
+    \ dest_pos, dest_end, dest_ref, dest_alt, mapped, reverse_complemented, swap,\
+    \ reject_reason, and note. Set no_left_align := true to skip post-liftover left-alignment\
+    \ of lifted indels (mirrors --no-left-align in bcftools +liftover).\n- `duckdb_liftover(table_name,\
+    \ chrom_col, pos_col, ref_col := NULL, alt_col := NULL, chain_path := NULL, dst_fasta_ref\
+    \ := NULL, src_fasta_ref := NULL, max_snp_gap := 1, max_indel_inc := 250, lift_mt\
+    \ := false, end_pos_col := NULL, no_left_align := false)`: DuckDB-specific wrapper\
+    \ over bcftools_liftover that takes either a table name or a derived-table expression\
     \ plus column-name strings for chrom/pos/ref/alt and returns the lifted table.\
     \ The no_left_align parameter mirrors --no-left-align in bcftools +liftover.\n\
+    - `bcftools_norm_row(chrom, pos, ref, alt, fasta_ref, end_pos := NULL, svlen :=\
+    \ NULL, fasta_index_path := NULL, gzi_path := NULL)`: Normalize one variant row\
+    \ with bcftools/vt-style left-alignment semantics against a FASTA reference. The\
+    \ alt argument may be either a comma-delimited VARCHAR or a VARCHAR[] list. The\
+    \ returned STRUCT contains pos_normed, end_pos_normed, ref_normed, alt_normed\
+    \ (always VARCHAR[]), normed (TRUE/FALSE/NULL), and norm_status. Symbolic <DEL>\
+    \ rows can use end_pos, and symbolic <DUP> rows can use svlen.\n- `duckhts_bcftools_norm(table_name,\
+    \ fasta_ref, chrom_col := 'chrom', pos_col := 'pos', ref_col := 'ref', alt_col\
+    \ := 'alt', split_multiallelic := FALSE, end_pos_col := NULL, svlen_col := NULL,\
+    \ fasta_index_path := NULL, gzi_path := NULL)`: DuckDB table macro wrapper over\
+    \ bcftools_norm_row that normalizes variants from a table or derived-table expression\
+    \ while preserving the original columns. The input ALT column may be either VARCHAR\
+    \ or VARCHAR[]. The result appends pos_normed, end_pos_normed, ref_normed, alt_normed,\
+    \ normed, and norm_status; with split_multiallelic := TRUE, multiallelic sites\
+    \ are split before normalization and alt_normed becomes VARCHAR plus alt_index.\n\
     - `bcftools_score(bcf_path, summary_path_or_list, use := NULL, columns := 'PLINK',\
     \ columns_file := NULL, q_score_thr := NULL, summaries_list_file := NULL, log_path\
     \ := NULL, use_variant_id := FALSE, counts := FALSE, samples := NULL, force_samples\
