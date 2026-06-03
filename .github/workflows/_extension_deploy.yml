@@ -13,7 +13,7 @@
 #
 # R2 layout written (under the shared core bucket, `community/` prefix). The
 # <version> segment is the engine semver vX.Y.Z: we pass duckdb_version as the
-# engine git tag (haybarn-v1.5.3-rc6), and publish_extensions.py normalizes it
+# engine git tag (haybarn-v1.5.3-rc7), and publish_extensions.py normalizes it
 # to v1.5.3 for the path (and to 1.5.3 for the npm version) — that's the segment
 # the engine INSTALLs from. See normalize_engine_version() in that script.
 #
