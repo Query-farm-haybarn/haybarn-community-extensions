@@ -13,7 +13,7 @@
 #
 # R2 layout written (under the shared core bucket, `community/` prefix). The
 # <version> segment is the engine semver vX.Y.Z: we pass duckdb_version as the
-# engine git tag (haybarn-v1.5.3-rc3), and publish_extensions.py normalizes it
+# engine git tag (haybarn-v1.5.3-rc6), and publish_extensions.py normalizes it
 # to v1.5.3 for the path (and to 1.5.3 for the npm version) — that's the segment
 # the engine INSTALLs from. See normalize_engine_version() in that script.
 #
@@ -166,6 +166,10 @@ jobs:
     outputs:
       version: ${{ steps.calver.outputs.version }}
       ext_commit: ${{ steps.extsrc.outputs.ext_commit }}
+      # 'true' when at least one per-arch artifact was assembled; 'false' when
+      # the extension is disabled on every platform (no artifacts to publish).
+      # Gates the downstream publish steps + call_publish_registries job.
+      has_artifacts: ${{ steps.assemble.outputs.has_artifacts }}
 
     steps:
       - uses: actions/checkout@v4
@@ -244,6 +248,7 @@ jobs:
           github-token: ${{ github.token }}
 
       - name: Assemble repo tree for publish_extensions.py
+        id: assemble
         shell: bash
         env:
           EXT: ${{ inputs.extension_name }}
@@ -277,10 +282,25 @@ jobs:
             n=$((n+1))
           done
           echo "::notice::assembled $n arch(es)"
-          [[ "$n" -gt 0 ]] || { echo "::error::no extension artifacts downloaded"; exit 1; }
+          # Zero artifacts after a SUCCESSFUL build means the extension is
+          # disabled on every platform (its descriptor excludes the entire
+          # platform set), so every build matrix leg was skipped and produced
+          # nothing. That's the only way to reach a successful deploy with no
+          # artifacts: a leg that ran and failed would fail the `build` job,
+          # whose result gates this deploy job's `needs:` and skips it. So
+          # treat it as "nothing to deploy" and exit cleanly instead of
+          # red-failing the whole run. The downstream publish steps + the
+          # call_publish_registries job key off has_artifacts to no-op too.
+          if [[ "$n" -eq 0 ]]; then
+            echo "has_artifacts=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::no built artifacts — extension is disabled on all platforms; skipping deploy"
+            exit 0
+          fi
+          echo "has_artifacts=true" >> "$GITHUB_OUTPUT"
           find repo -type f | sort
 
       - name: Sign, compress, and publish to R2 (+ stage npm leaves)
+        if: ${{ steps.assemble.outputs.has_artifacts == 'true' }}
         shell: bash
         # Same R2_* org-secret credentials used by haybarn-extensions-publish.yml.
         # Community shares the core bucket under a top-level `community/` prefix
@@ -368,7 +388,7 @@ jobs:
             "${DEPLOY_ARGS[@]}"
 
       - name: Upload npm leaf artifact (for publish_npm job)
-        if: ${{ inputs.publish_registries }}
+        if: ${{ inputs.publish_registries && steps.assemble.outputs.has_artifacts == 'true' }}
         uses: actions/upload-artifact@v4
         with:
           # Single combined artifact: dist/npm/ holds one <leaf>.tar.gz per
@@ -415,7 +435,10 @@ jobs:
     name: Publish PyPI + npm
     needs:
       - deploy
-    if: ${{ always() && needs.deploy.result != 'cancelled' && inputs.publish_registries && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') }}
+    # has_artifacts guards the "fully disabled" case: when the extension is
+    # excluded on every platform the deploy job is a clean no-op (nothing
+    # staged), so there are no npm leaves to publish — skip this job too.
+    if: ${{ always() && needs.deploy.result != 'cancelled' && needs.deploy.outputs.has_artifacts == 'true' && inputs.publish_registries && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') }}
     uses: Query-farm-haybarn/haybarn-extension-ci-tools/.github/workflows/_extension_registry_publish.yml@haybarn
     permissions:
       contents: read
