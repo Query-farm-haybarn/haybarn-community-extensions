@@ -5,7 +5,11 @@ extension:
   language: C++
   build: cmake
   license: MIT
-  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_rtools;windows_amd64;windows_amd64_mingw
+  # Haybarn: disabled 2026-05-27 — catalog dir 'slack' ≠ extension.name
+  # 'duckdb_slack', so the prepare step fails before building. Re-enable by
+  # renaming the dir to 'duckdb_slack' (or aligning the descriptor name).
+  # Prior excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_rtools;windows_amd64;windows_amd64_mingw
+  excluded_platforms: linux_amd64;linux_arm64;linux_amd64_musl;linux_arm64_musl;osx_amd64;osx_arm64;windows_amd64;windows_arm64;windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
   maintainers:
   - dentiny
 repo:
