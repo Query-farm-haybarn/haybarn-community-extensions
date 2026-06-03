@@ -1,0 +1,94 @@
+extension:
+  name: firebird
+  description: Federated read-only access to Firebird (3.0/4.0/5.0) databases from
+    DuckDB, with projection + filter pushdown, INT128 / DECIMAL(38) / TIMESTAMP_TZ
+    support, native ATTACH, and CHARACTER SET NONE handling (default win1252; strict
+    / iso8859_1 / blob also available) with filter-pushdown correctness on transcoded
+    columns.
+  version: 0.6.1
+  language: C++
+  build: cmake
+  license: MIT
+  maintainers:
+  - flozer
+  excluded_platforms: wasm_mvp;wasm_threads;wasm_eh
+repo:
+  github: flozer/duckdb-firebird
+  ref: v0.6.1
+docs:
+  hello_world: "LOAD firebird;\n\n-- 1. Live scan against a Firebird server.\nSELECT\
+    \ * FROM firebird_scan(\n    'firebird://APP_READONLY:secret@db.host:3050/srv:/data/prod.fdb?charset=UTF8',\n\
+    \    'EMPLOYEE') LIMIT 10;\n\n-- 2. Projection + filter pushdown \u2014 only EMP_NO,\
+    \ FIRST_NAME and the\n--    WHERE predicate are sent to Firebird.\nSELECT EMP_NO,\
+    \ FIRST_NAME\n  FROM firebird_scan('firebird://\u2026', 'EMPLOYEE')\n WHERE DEPT_NO\
+    \ = '600'\n   AND HIRE_DATE > DATE '2020-01-01';\n\n-- 3. Discover the schema.\n\
+    SELECT * FROM firebird_tables('firebird://\u2026');\n\n-- 4. Native ATTACH \u2014\
+    \ every Firebird table reachable through DuckDB's catalog.\nATTACH 'firebird://APP_READONLY:secret@host/path/db.fdb'\
+    \ AS fb (TYPE firebird);\nSELECT * FROM fb.main.EMPLOYEE WHERE DEPT_NO = '600';\n\
+    \n-- 5. Firebird-native diagnostics (v0.6).\nSELECT * FROM firebird_profile_table('fb.main.EMPLOYEE');\n\
+    SELECT * FROM firebird_pool_stats('fb');\n\n-- 6. Federated JOIN \u2014 Firebird\
+    \ \u22C8 Parquet.\nSELECT e.dept_no, COUNT(*), AVG(e.salary)\n  FROM firebird_scan('firebird://\u2026\
+    ', 'EMPLOYEE') e\n  JOIN read_parquet('s3://lake/departments/*.parquet') d\n \
+    \  ON e.dept_no = d.dept_no\n GROUP BY e.dept_no;\n\n-- 7. Legacy database declared\
+    \ CHARACTER SET NONE. Firebird does\n--    NOT transliterate NONE columns to UTF-8\
+    \ on the wire; pick\n--    the encoding the writing application used.\nSELECT\
+    \ * FROM firebird_scan(\n    'C:/legacy/company.fdb',\n    'TABENTRADASAIDA',\n\
+    \    none_encoding='win1252');\n"
+  extended_description: "duckdb-firebird exposes Firebird tables as DuckDB tables,\
+    \ with the\nDuckDB optimiser pushing projection and filter predicates down to\n\
+    the Firebird server. Big aggregations still happen inside DuckDB's\nvectorised\
+    \ executor; you just stop maintaining a parallel ETL\npipeline to export Firebird\
+    \ data to Parquet first.\n\n## Surface area\n\n- `firebird_scan(conn, table [,\
+    \ named params])` \u2014 single-table scan\n  with projection + filter pushdown\
+    \ and optional PK-range parallel\n  scan.\n- `firebird_tables(conn)` \u2014 list\
+    \ user tables (and views, external\n  tables, GTTs) with PK info.\n- `firebird_attach_sql(conn[,\
+    \ schema])` \u2014 emits the DDL for a\n  lightweight view-based attach when you\
+    \ don't want the full\n  `StorageExtension` lifetime.\n- `ATTACH 'firebird://\u2026\
+    ' AS fb (TYPE firebird)` \u2014 native read-only\n  catalog with `SELECT * FROM\
+    \ fb.main.TABLE`, federated joins,\n  `DESCRIBE`, case-insensitive lookup, and\
+    \ connection pooling.\n- `firebird_profile_table('fb.main.TABLE')` \u2014 v0.6\
+    \ factual diagnostics\n  for PKs, indexes, filter/watermark candidates, view risk,\
+    \ and\n  recommended partitions.\n- `firebird_pool_stats('fb')` \u2014 v0.6 connection-pool\
+    \ counters for one\n  attached Firebird catalog.\n\n## Pushdown\n\n- **Projection**:\
+    \ only requested columns travel the wire.\n- **Filters**: `=, <>, <, >, <=, >=,\
+    \ IS [NOT] NULL, BETWEEN, IN,\n  AND/OR, LIKE 'prefix%'` translate to Firebird\
+    \ SQL. Anything else\n  stays in DuckDB above the scan.\n- **PK-range parallel\
+    \ scan**: opt-in via the `partitions=N` named\n  parameter \u2014 recommended\
+    \ for remote / Classic Firebird servers\n  where parallelism is cheap.\n- **Manual\
+    \ `row_limit=N`**: emits Firebird's `ROWS N` directly.\n\n## Type mapping\n\n\
+    Firebird 3 + 4 + 5 server compatibility:\n\n- `INTEGER`, `BIGINT`, `SMALLINT`,\
+    \ `CHAR(N)`, `VARCHAR(N)`,\n  `NUMERIC/DECIMAL(p, s)` (up to 38 digits), `FLOAT`,\
+    \ `DOUBLE`,\n  `DATE`, `TIME`, `TIMESTAMP`, `BOOLEAN` \u2014 exact mapping.\n\
+    - `INT128` \u2192 `HUGEINT`; `DECIMAL(p > 18, s)` \u2192 `DECIMAL(38, s)`.\n-\
+    \ `TIMESTAMP WITH TIME ZONE` (including the FB4 extended-TZ form) \u2192\n  DuckDB\
+    \ `TIMESTAMP WITH TIME ZONE` (UTC instant preserved).\n- `TIME WITH TIME ZONE`\
+    \ \u2192 DuckDB `TIME WITH TIME ZONE`.\n- `BLOB SUB_TYPE 1` (text) \u2192 `VARCHAR`;\
+    \ other BLOBs \u2192 `BLOB`.\n- `DECFLOAT(16)` / `DECFLOAT(34)` \u2192 lossless\
+    \ `VARCHAR` via server-side\n  `CAST(... AS VARCHAR(64))` (v0.6).\n\n## Connection-string\
+    \ forms\n\n    firebird://USER:PASS@HOST:PORT/DB_PATH?charset=UTF8&dialect=3&role=\u2026\
+    \n    user=APP_READONLY;password=secret;database=server:/data/db.fdb;charset=UTF8\n\
+    \nA bare path (`/var/lib/firebird/test.fdb`, `C:/data/prod.fdb`) is\nalso accepted\
+    \ for local databases.\n\nOverride the user / password / charset / role / dialect\
+    \ / partitions\n/ row_limit at call time via named parameters.\n\n## Charset handling\n\
+    \nDuckDB stores strings as UTF-8 internally. The extension only\naccepts `UTF8`,\
+    \ `UTF-8`, `NONE`, or `OCTETS` for the client\ncharset; anything else is rejected\
+    \ at bind time.\n\nDatabases declared with a real character set (WIN1252, ISO8859_1,\n\
+    UTF8, \u2026) round-trip cleanly under the default `charset=UTF8`:\nFirebird transliterates\
+    \ server-side, so `S\xE3o Paulo`, `A\xE7\xFAcar`,\n`Cora\xE7\xE3o` arrive as valid\
+    \ UTF-8 without extra configuration.\n\nDatabases (or individual columns) declared\
+    \ `CHARACTER SET NONE`\nare different: Firebird returns the raw bytes the writing\n\
+    application stored, with no transliteration. The extension's\ndefault `win1252`\
+    \ mode decodes the bytes used by many legacy Brazilian\nand Western-European ERPs.\
+    \ The caller can still pick the encoding the\nsource application used:\n\n- `none_encoding='win1252'`\
+    \ (default) \u2014 decode bytes as\n  Windows-1252 \u2192 UTF-8.\n- `none_encoding='strict'`\
+    \          \u2014 accept only valid UTF-8.\n- `none_encoding='iso8859_1'` (alias\
+    \ `'latin1'`) \u2014 decode bytes\n  as ISO-8859-1 \u2192 UTF-8.\n- `none_encoding='blob'`\
+    \            \u2014 surface NONE text columns\n  as DuckDB `BLOB` (raw bytes).\n\
+    \nThe option is accepted both by `firebird_scan(\u2026)` and by the\n`ATTACH ...\
+    \ (TYPE firebird, none_encoding 'win1252')` form. While\n`none_encoding != 'strict'`,\
+    \ filter pushdown on NONE text columns\nis deliberately disabled \u2014 the SQL\
+    \ literal we'd send is UTF-8\nand would not match the raw bytes server-side. DuckDB\
+    \ applies\nthe post-transcode text filter above the scan.\n\n## Verified against\n\
+    \n- Firebird 3.0 (apt `firebird3.0-server`, CI fixture)\n- Firebird 4.0.x (`firebirdsql/firebird:4-noble`)\n\
+    - Firebird 5.0.4 (Windows local + `firebirdsql/firebird:5-noble`)\n- DuckDB v1.5.3\
+    \ (`StorageExtension::Register` API)\n"
