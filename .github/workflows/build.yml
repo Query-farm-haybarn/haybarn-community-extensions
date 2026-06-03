@@ -13,7 +13,7 @@
 #      That's how the extension gets built against Haybarn (with the Haybarn
 #      curated patch stack) rather than upstream DuckDB.
 #   2. `duckdb_version` carries the Haybarn engine *git tag* we build against
-#      (currently `haybarn-v1.5.3-rc3`) — that's the ref the ci-tools fork
+#      (currently `haybarn-v1.5.3-rc6`) — that's the ref the ci-tools fork
 #      clones + checks out as the engine source. It is normalized back to the
 #      plain `v1.5.3` semver in the two places that need it: the binary's
 #      reported `DUCKDB_VERSION` (ci-tools' OVERRIDE_GIT_DESCRIBE, which must
@@ -198,7 +198,7 @@ jobs:
       vcpkg_token: ${{ secrets.HAYBARN_VCPKG_TOKEN }}
     if: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_NAME != '' }}
     with:
-      duckdb_version: ${{ inputs.duckdb_version || 'haybarn-v1.5.3-rc3' }}
+      duckdb_version: ${{ inputs.duckdb_version || 'haybarn-v1.5.3-rc6' }}
       duckdb_tag: ${{ inputs.duckdb_tag || '' }}
       ci_tools_version: ${{ inputs.ci_tools_version || 'haybarn' }}
       # Phase C: pull the pre-built Linux build image from GHCR instead of
@@ -304,7 +304,7 @@ jobs:
     secrets: inherit
     with:
       deploy_latest: true
-      duckdb_version: ${{ inputs.duckdb_version || 'haybarn-v1.5.3-rc3' }}
+      duckdb_version: ${{ inputs.duckdb_version || 'haybarn-v1.5.3-rc6' }}
       duckdb_tag: ${{ inputs.duckdb_tag || '' }}
       ci_tools_version: ${{ inputs.ci_tools_version || 'haybarn' }}
       exclude_archs: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_EXCLUDE_PLATFORMS }}
