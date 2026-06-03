@@ -11,7 +11,7 @@ extension:
   - ywelsch
 repo:
   github: ywelsch/duckdb-prql
-  ref: 1f491bb79de4ccbc6287f952ab8bad7daa17e196
+  ref: 17368b6881efcd7a045dcbc26fc617edfaf2fd09
 docs:
   hello_world: "let invoices = s\"select * from 'https://raw.githubusercontent.com/PRQL/prql/0.8.0/prql-compiler/tests/integration/data/chinook/invoices.csv'\"\
     \nlet customers = s\"select * from 'https://raw.githubusercontent.com/PRQL/prql/0.8.0/prql-compiler/tests/integration/data/chinook/customers.csv'\"\
