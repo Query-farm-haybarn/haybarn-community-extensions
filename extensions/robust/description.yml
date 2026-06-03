@@ -1,0 +1,49 @@
+extension:
+  name: robust
+  description: 'A DuckDB extension that implements Predicate Transfer: derives filters
+    from join keys and propagates them across the join graph of a multi-join query,
+    so probe-side rows that can''t survive downstream joins are pruned early.'
+  version: 0.1.0
+  language: C++
+  build: cmake
+  license: MIT
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_rtools;windows_amd64;windows_amd64_mingw
+  maintainers:
+  - JP-Reddy
+repo:
+  github: robust-sql/robust
+  ref: 65dbd8c95ca56815913c21208209fb49dcfb6f98
+docs:
+  hello_world: "LOAD robust;\n\n-- Robust engages when a query has at least two equality\
+    \ joins. The optimizer\n-- inserts CREATE_FILTER above each build-side scan and\
+    \ PROBE_FILTER above\n-- each probe-side scan; the EXPLAIN below shows them in\
+    \ the plan.\nCREATE TEMP TABLE t1 AS SELECT i AS id, i % 100 AS k FROM range(1000)\
+    \ tbl(i);\nCREATE TEMP TABLE t2 AS SELECT i AS id              FROM range(500)\
+    \  tbl(i);\nCREATE TEMP TABLE t3 AS SELECT i AS k               FROM range(20)\
+    \   tbl(i);\n\nEXPLAIN\nSELECT count(*)\nFROM t1 JOIN t2 ON t1.id = t2.id\n  \
+    \      JOIN t3 ON t1.k  = t3.k;\n"
+  extended_description: "Robust implements **predicate transfer** for DuckDB. The\
+    \ optimizer extracts equality\njoins, partitions join columns into equivalence\
+    \ classes, builds a DAG over the base\ntables, and runs two passes that propagate\
+    \ filter information across the DAG:\n\n- **Forward pass** (leaves \u2192 root).\
+    \ Each child builds a filter from its join column\n  and registers it on the parent's\
+    \ probe-side scan as a dynamic table filter, so the\n  scan can skip rows that\
+    \ won't match downstream joins (zonemap-based row-group\n  skipping plus per-row\
+    \ filtering).\n- **Backward pass** (root \u2192 leaves). Filters discovered late\
+    \ in the plan are\n  broadcast across the equivalence classes they belong to and\
+    \ applied above\n  probe-side scans on tables that didn't directly participate\
+    \ in the originating\n  join, shrinking intermediate hash-join results before\
+    \ they have a chance to\n  explode.\n\nThe filter set is extensible. The current\
+    \ implementation uses bloom filters, min/max\nranges, and IN-lists, chosen automatically\
+    \ based on the build side's distinct-value\ncount.\n\n**How it differs from DuckDB's\
+    \ native join_filter_pushdown (JFP):** JFP forwards\nfilters down linear join\
+    \ spines, but bushy plans dilute the chain and there is no\nbackward propagation.\
+    \ Robust's DAG sees the whole join graph at once, propagates\nfilters across branches\
+    \ that JFP can't reach, and a backward pass shrinks early\nscans using filters\
+    \ derived from late joins. The two systems are complementary;\nfor measurement,\
+    \ JFP is typically disabled to isolate Robust's contribution.\n\n**When Robust\
+    \ engages:** queries with \u2265 2 equality joins on acyclic graphs.\nSingle-join\
+    \ queries pass through unchanged (JFP already handles them).\n\nSee https://github.com/robust-sql/robust\
+    \ for build instructions, benchmark\nmethodology (Join Order Benchmark), and the\
+    \ architecture document covering\nthe DAG construction, both passes, and operator\
+    \ internals.\n"
