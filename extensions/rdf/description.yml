@@ -1,7 +1,7 @@
 extension:
   name: rdf
   description: A DuckDB extension to read and write RDF
-  version: 2.7.0
+  version: 2.7.1
   language: C++
   build: cmake
   license: MIT
@@ -9,7 +9,7 @@ extension:
   - nonodename
 repo:
   github: nonodename/duck_rdf
-  ref: 1e79fecbdfbd390bda11172ff87488b1c5c6526b
+  ref: df32898a1b826bfa73eb8bd6aaa2e499370b77ac
 docs:
   hello_world: "-- 0. Assuming the extension is already installed and loaded\n\n--\
     \ 1. Get number of ntriples in a directory\nSELECT COUNT(*) FROM read_rdf('data/shards/*.nt');\n\
@@ -31,7 +31,10 @@ docs:
     \ NQuads (via R2RML mapping).\n\n### Reading RDF\n\n`read_rdf()` returns six columns:\
     \ `subject`, `predicate`, `object` (always populated),\nand `graph`, `language_tag`,\
     \ `datatype` (nullable). It accepts a file path or glob pattern;\nmultiple matched\
-    \ files are scanned in parallel.\n\n```sql\nSELECT subject, predicate FROM read_rdf('data.ttl');\n\
+    \ files are scanned in parallel. `.gz` and `.zst` compressed files are\nsupported\
+    \ (note that you need to load the parquet extension for the libzstd library to\
+    \ be \nloaded). The RDF format is auto-detected by file extension but can be overridden\
+    \ with the `file_type` parameter.\n\n```sql\nSELECT subject, predicate FROM read_rdf('data.ttl');\n\
     SELECT COUNT(*) FROM read_rdf('data/shards/*.nt');\nSELECT * FROM read_rdf('data/*.dat',\
     \ file_type = 'ttl', strict_parsing = false);\n```\n\n**Optional parameters:**\n\
     \n| Parameter | Default | Description |\n|---|---|---|\n| `strict_parsing` | `true`\
