@@ -1,0 +1,158 @@
+extension:
+  name: lpts
+  description: Optimized-plan inspection and cross-system SQL transpilation
+  version: 0.9.0
+  language: C++
+  build: cmake
+  license: MIT
+  maintainers:
+  - ila
+repo:
+  github: cwida/lpts
+  ref: 7a3eb5efc097ff1b749d41da3a977c0c157c52c4
+docs:
+  hello_world: "-- Set both input and output dialects to DuckDB for a first round\
+    \ trip.\nD SET lpts_input_dialect = 'duckdb';\nD SET lpts_dialect = 'duckdb';\n\
+    \nD CREATE TABLE users (id INTEGER, name VARCHAR, age INTEGER);\nD INSERT INTO\
+    \ users VALUES (1, 'Alice', 30), (2, 'Bob', 22), (3, 'Carol', 28);\n\n-- Return\
+    \ the optimized plan as readable CTE SQL.\nD PRAGMA lpts('SELECT name FROM users\
+    \ WHERE age > 25');\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2510\n\u2502 sql                                   \
+    \                                       \u2502\n\u2502 varchar               \
+    \                                                       \u2502\n\u251C\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502\
+    \ WITH scan_0 (t0_name) AS (SELECT name FROM memory.main.users WHERE age>25),\
+    \ \u2502\n\u2502 projection_1 (t1_name) AS (SELECT t0_name FROM scan_0)      \
+    \                \u2502\n\u2502 SELECT t1_name AS \"name\" FROM projection_1;\
+    \                                 \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n\n-- Check that the generated\
+    \ SQL returns the same bag of rows as the input query.\nD PRAGMA lpts_check('SELECT\
+    \ name FROM users WHERE age > 25');\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2510\n\u2502  match  \u2502\n\u2502 boolean \u2502\n\u251C\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 true    \u2502\
+    \n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n"
+  extended_description: "LPTS is a DuckDB extension for **optimized-plan inspection**\
+    \ and\n**cross-system SQL transpilation**. LPTS takes DuckDB's post-optimizer\n\
+    logical plan and reconstructs equivalent SQL as a sequence of named CTEs.\n\n\
+    ## PRAGMA Syntax\n\n```sql\nPRAGMA lpts('<query>');\n```\n\nExample:\n\n```sql\n\
+    -- Set both input and output dialects to DuckDB for a first round trip.\nD SET\
+    \ lpts_input_dialect = 'duckdb';\nD SET lpts_dialect = 'duckdb';\n\nD CREATE TABLE\
+    \ users (id INTEGER, name VARCHAR, age INTEGER);\nD INSERT INTO users VALUES (1,\
+    \ 'Alice', 30), (2, 'Bob', 22), (3, 'Carol', 28);\n\n-- Return the optimized plan\
+    \ as readable CTE SQL.\nD PRAGMA lpts('SELECT name FROM users WHERE age > 25');\n\
+    ```\n\n```text\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2510\n\u2502 sql                                         \
+    \                                 \u2502\n\u2502 varchar                     \
+    \                                                 \u2502\n\u251C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 WITH\
+    \ scan_0 (t0_name) AS (SELECT name FROM memory.main.users WHERE age>25), \u2502\
+    \n\u2502 projection_1 (t1_name) AS (SELECT t0_name FROM scan_0)              \
+    \        \u2502\n\u2502 SELECT t1_name AS \"name\" FROM projection_1;        \
+    \                         \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2518\n```\n\nLPTS plans the query through\
+    \ DuckDB, optimizes it, then serializes the\noptimized logical plan.\n\n## Supported\
+    \ Dialects\n\nThe dialect settings accept these values:\n\n| Dialect | Accepted\
+    \ values |\n|---|---|\n| DuckDB | `duckdb` |\n| PostgreSQL | `postgres`, `postgresql`\
+    \ |\n| Spark SQL | `spark` |\n| Hive | `hive` |\n| Trino / Presto | `trino`, `presto`\
+    \ |\n| Snowflake | `snowflake` |\n| BigQuery | `bigquery`, `bq` |\n| Redshift\
+    \ | `redshift` |\n| MySQL / MariaDB | `mysql`, `mariadb` |\n\n## Use Cases\n\n\
+    - Inspect optimized DuckDB plans as SQL.\n- Debug optimizer rewrites such as filter\
+    \ pushdown, join reordering, top-N,\n  materialized CTEs, and subquery decorrelation.\n\
+    - Generate a CTE program that communicates the optimized execution shape.\n- Emit\
+    \ SQL for another engine with `lpts_dialect`.\n- Convert other SQL dialect syntax\
+    \ to DuckDB SQL with `lpts_input_dialect`,\n  then execute or inspect it.\n\n\
+    ## Supported Operators\n\nLPTS is intended to cover all logical operators produced\
+    \ by optimized DuckDB\nSELECT plans. The current regression suite round-trips\
+    \ all 22 TPC-H queries\nand exercises joins, aggregates, windows, set operations,\
+    \ CTEs, recursive\nCTEs, table functions, DuckLake scans, and inserts.\n\nUnsupported\
+    \ optimizer edge cases fail explicitly with `NotImplementedException`.\n\n## Examples\n\
+    \n```sql\nD CREATE TABLE events (id INTEGER, ts TIMESTAMP, name VARCHAR, \"order\"\
+    \ INTEGER);\nD INSERT INTO events VALUES\n    (1, TIMESTAMP '2024-01-15 08:09:10',\
+    \ 'alpha', 10),\n    (11, TIMESTAMP '2024-01-16 11:12:13', 'beta', 20);\n\n--\
+    \ Render generated SQL for PostgreSQL.\nD SET lpts_dialect = 'postgres';\n\n--\
+    \ Return generated CTE SQL directly in the shell.\nD PRAGMA lpts(\n    'SELECT\
+    \ strftime(ts, ''%Y-%m-%d'') AS day\n     FROM events\n     WHERE id > 10\n  \
+    \   ORDER BY day'\n);\n\n-- Return generated CTE SQL as a table row, useful in\
+    \ scripts and tests.\nD SELECT sql\nFROM lpts_query(\n    'SELECT strftime(ts,\
+    \ ''%Y-%m-%d'') AS day\n     FROM events\n     WHERE id > 10\n     ORDER BY day'\n\
+    );\n```\n\n```text\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2510\n\u2502 sql                                                     \
+    \                               \u2502\n\u2502 varchar                       \
+    \                                                         \u2502\n\u251C\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 WITH scan_0\
+    \ (t0_ts) AS (SELECT ts FROM events WHERE id>10),                           \u2502\
+    \n\u2502 projection_1 (t1_day) AS (SELECT to_char(t0_ts, 'YYYY-MM-DD') FROM scan_0),\
+    \            \u2502\n\u2502 order_2 (t1_day) AS (SELECT t1_day FROM projection_1\
+    \ ORDER BY t1_day ASC NULLS LAST)   \u2502\n\u2502 SELECT t1_day AS \"day\" FROM\
+    \ order_2;                                                   \u2502\n\u2514\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n```\n\n```sql\n\
+    -- Switch back to DuckDB rendering.\nD SET lpts_dialect = 'duckdb';\n\n-- Execute\
+    \ the generated SQL and return the query result.\nD PRAGMA lpts_exec('SELECT name\
+    \ FROM events WHERE id > 10 ORDER BY name');\n\n-- Compare original and generated\
+    \ SQL using bag equality.\nD PRAGMA lpts_check('SELECT name FROM events WHERE\
+    \ id > 10 ORDER BY name');\n```\n\n```text\n\u250C\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2510\n\u2502  name   \u2502\n\u2502 varchar \u2502\n\
+    \u251C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 beta\
+    \    \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\
+    \n\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502\
+    \  match  \u2502\n\u2502 boolean \u2502\n\u251C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2524\n\u2502 true    \u2502\n\u2514\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2518\n```\n\n```sql\n-- Print the AST tree to\
+    \ stdout for interactive debugging.\nD PRAGMA print_ast('SELECT name FROM events\
+    \ WHERE id > 10 ORDER BY name');\n\n-- Return the AST tree as a table row, useful\
+    \ for tools and regression tests.\nD SELECT ast\nFROM print_ast_query('SELECT\
+    \ name FROM events WHERE id > 10 ORDER BY name');\n```\n\n```sql\n-- Normalize\
+    \ MySQL syntax before DuckDB parses and plans the query.\nD SET lpts_input_dialect\
+    \ = 'mysql';\n\n-- Return source-dialect SQL normalized to DuckDB SQL.\nD SELECT\
+    \ sql\nFROM lpts_normalize_query(\n    'SELECT `order`, DATE_FORMAT(ts, ''%Y-%m-%d\
+    \ %H:%i:%s'') AS formatted FROM events LIMIT 5, 10'\n);\n```\n\n```text\nSELECT\
+    \ \"order\", strftime(ts, '%Y-%m-%d %H:%M:%S') AS formatted FROM events LIMIT\
+    \ 10 OFFSET 5\n```\n"
