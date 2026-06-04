@@ -41,6 +41,14 @@ SINCE   ?= $(shell date -u +%Y-%m-%dT00:00:00Z)
 # behind the engine pin in main (haybarn-v1.5.3-rc6), so override explicitly
 # for any sweep built off main.
 DUCKDB_VERSION ?=
+# `make republish` npm version suffix. The published npm/pip version is a CalVer
+# derived from the EXTENSION SOURCE commit time, so an engine-only rebuild (the
+# extension source didn't change) recomputes the SAME version and npm SKIPs it
+# as already-published. Set VERSION_SUFFIX to a NUMERIC value to append it to the
+# patch component (202605.17.122351 -> 202605.17.1223512); the higher version
+# forces npm to accept the republish and makes it the real `latest`. Bump the
+# number each sweep so successive republishes stay monotonic. Empty -> no suffix.
+VERSION_SUFFIX ?=
 
 # Buildable extensions only. scripts/buildable_extensions.py drops any whose
 # descriptor excludes every build platform — the Haybarn "doesn't build yet"
@@ -69,9 +77,10 @@ help:
 	@echo "  make list-all   Print every extension dir (including disabled)."
 	@echo "  make list-disabled  Print the fully-disabled extensions that dispatch skips."
 	@echo
-	@echo "Overridable vars: REPO REF DEPLOY PUBLISH PAR SINCE DUCKDB_VERSION"
+	@echo "Overridable vars: REPO REF DEPLOY PUBLISH PAR SINCE DUCKDB_VERSION VERSION_SUFFIX"
 	@echo "  e.g.  make resubmit DEPLOY=true PUBLISH=false PAR=8"
 	@echo "  e.g.  make republish SINCE=2026-05-27T00:00:00Z DUCKDB_VERSION=haybarn-v1.5.3-rc6"
+	@echo "  e.g.  make republish DUCKDB_VERSION=haybarn-v1.5.3-rc7 VERSION_SUFFIX=2  # force npm republish (bump patch)"
 
 list:
 	@printf '%s\n' $(EXTS)
@@ -137,13 +146,14 @@ republish:
 	         --jq "[.[]|select(.createdAt > \"$(SINCE)\" and .conclusion==\"success\")] | group_by(.displayTitle) | map(max_by(.createdAt)) | .[] | \"\(.displayTitle|sub(\"^🐤 \";\"\")) \(.databaseId)\""); \
 	n=$$(printf '%s\n' "$$rows" | grep -c . || true); \
 	if [ "$$n" -eq 0 ]; then echo "  no successful runs found"; rm -f "$$tmp"; exit 0; fi; \
-	echo "Dispatching republish_npm.yml for $$n extension(s) → $(REPO)@$(REF) ($(PAR)-way)"; \
+	echo "Dispatching republish_npm.yml for $$n extension(s) → $(REPO)@$(REF) ($(PAR)-way)$(if $(VERSION_SUFFIX), version_suffix=$(VERSION_SUFFIX),)"; \
 	c=0; \
 	while read -r ext rid; do \
 	  [ -z "$$ext" ] && continue; \
 	  ( gh workflow run republish_npm.yml --repo "$(REPO)" --ref "$(REF)" \
 	      -f extension_name="$$ext" -f source_run_id="$$rid" \
 	      $(if $(DUCKDB_VERSION),-f duckdb_version="$(DUCKDB_VERSION)",) \
+	      $(if $(VERSION_SUFFIX),-f version_suffix="$(VERSION_SUFFIX)",) \
 	      >/dev/null 2>&1 && echo "OK" || echo "FAIL $$ext" ) >>"$$tmp" & \
 	  c=$$((c+1)); [ $$((c % $(PAR))) -eq 0 ] && wait; \
 	done <<<"$$rows"; \

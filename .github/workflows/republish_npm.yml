@@ -38,6 +38,11 @@ on:
         type: string
         required: false
         default: ''
+      version_suffix:
+        description: "Optional NUMERIC suffix appended to the patch component of the computed CalVer (e.g. '2' → 202605.17.1223512). Forces npm to accept a republish whose extension-source CalVer is otherwise unchanged (engine-only rebuild). Empty → no suffix."
+        type: string
+        required: false
+        default: ''
 
 # A called reusable workflow's jobs are capped by the caller's granted token
 # permissions. _extension_deploy.yml's cross-run artifact download needs
@@ -93,6 +98,7 @@ jobs:
       deploy_latest: false
       source_run_id: ${{ inputs.source_run_id }}
       duckdb_version: ${{ inputs.duckdb_version || 'v1.5.3' }}
+      version_suffix: ${{ inputs.version_suffix }}
       ci_tools_version: haybarn
       extension_name: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_NAME }}
       extension_license: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_LICENSE }}

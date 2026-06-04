@@ -100,6 +100,18 @@ on:
         required: false
         type: string
         default: ""
+      # Optional NUMERIC suffix appended to the PATCH (last) component of the
+      # computed version, e.g. "2" turns 202605.17.122351 into
+      # 202605.17.1223512. The result sorts HIGHER than the un-suffixed
+      # version (it's a larger patch integer), so npm accepts it and it becomes
+      # the real `latest`. Used to force a republish of an engine-only rebuild
+      # whose extension-source CalVer (commit-time derived) is unchanged and
+      # would otherwise collide with the already-published version. Empty → no
+      # suffix (the default build→deploy path).
+      version_suffix:
+        required: false
+        type: string
+        default: ""
       # SPDX license string from the descriptor's `extension.license`.
       # Passed to npm_build_leaf.py / npm_build_meta.py via the LICENSE
       # env var so the published package.json carries the upstream
@@ -224,12 +236,29 @@ jobs:
         env:
           EXT_VERSION_LABEL: ${{ inputs.extension_version_label }}
           EXT_COMMIT_TS:     ${{ steps.extsrc.outputs.ext_commit_ts }}
+          VERSION_SUFFIX:    ${{ inputs.version_suffix }}
         run: |
           set -euo pipefail
           if [[ -n "$EXT_VERSION_LABEL" ]]; then
             VERSION=$(python3 ci-tools/scripts/publish/compute_calver.py --semver "$EXT_VERSION_LABEL")
           else
             VERSION=$(python3 ci-tools/scripts/publish/compute_calver.py --commit-ts "$EXT_COMMIT_TS")
+          fi
+          # Optional numeric suffix: append to the PATCH (last dotted) component
+          # so the version sorts HIGHER and npm accepts a republish whose
+          # extension-source CalVer is otherwise unchanged. Concatenating onto
+          # the full string lands on the patch field, since patch is last.
+          if [[ -n "$VERSION_SUFFIX" ]]; then
+            if [[ ! "$VERSION_SUFFIX" =~ ^[0-9]+$ ]]; then
+              echo "::error::version_suffix must be numeric (got '$VERSION_SUFFIX')"; exit 1
+            fi
+            patch="${VERSION##*.}"
+            # Reject a result with a leading zero (invalid semver/PEP440) — only
+            # possible when the patch component is exactly 0 (commit at 00:00:00).
+            if [[ "$patch" == "0" ]]; then
+              echo "::error::cannot suffix a zero patch component ($VERSION); would create a leading-zero patch"; exit 1
+            fi
+            VERSION="${VERSION}${VERSION_SUFFIX}"
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "::notice::pip/npm version: $VERSION"
