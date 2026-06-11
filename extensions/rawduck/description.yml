@@ -13,4 +13,4 @@ extension:
   version: '0.0.1'
 repo:
   github: quackscience/rawduck
-  ref: 83979580c3f2f01f66ec3a504e0bf51b607d0323
+  ref: 4636fa82496213ec4e49579e164c29431e09e993
