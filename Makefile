@@ -38,7 +38,7 @@ SINCE   ?= $(shell date -u +%Y-%m-%dT00:00:00Z)
 # (<ext>-<DV>-extension-<arch>), and _extension_deploy.yml's cross-run
 # download-artifact pattern is keyed on it. If empty, republish_npm.yml's
 # workflow-level default (currently 'v1.5.3') is used; that default has drifted
-# behind the engine pin in main (haybarn-v1.5.3-rc6), so override explicitly
+# behind the engine pin in main (haybarn-v1.5.3-rc10), so override explicitly
 # for any sweep built off main.
 DUCKDB_VERSION ?=
 # `make republish` npm version suffix. The published npm/pip version is a CalVer
@@ -79,8 +79,8 @@ help:
 	@echo
 	@echo "Overridable vars: REPO REF DEPLOY PUBLISH PAR SINCE DUCKDB_VERSION VERSION_SUFFIX"
 	@echo "  e.g.  make resubmit DEPLOY=true PUBLISH=false PAR=8"
-	@echo "  e.g.  make republish SINCE=2026-05-27T00:00:00Z DUCKDB_VERSION=haybarn-v1.5.3-rc6"
-	@echo "  e.g.  make republish DUCKDB_VERSION=haybarn-v1.5.3-rc7 VERSION_SUFFIX=2  # force npm republish (bump patch)"
+	@echo "  e.g.  make republish SINCE=2026-05-27T00:00:00Z DUCKDB_VERSION=haybarn-v1.5.3-rc10"
+	@echo "  e.g.  make republish DUCKDB_VERSION=haybarn-v1.5.3-rc10 VERSION_SUFFIX=2  # force npm republish (bump patch)"
 
 list:
 	@printf '%s\n' $(EXTS)
