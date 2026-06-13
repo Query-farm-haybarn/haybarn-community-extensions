@@ -4,6 +4,7 @@ extension:
   build: cmake
   description: A extension that hooks into database events and sends JSON-formatted
     notifications to external programs.
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads
   language: C++
   license: Apache-2.0
   maintainers:
