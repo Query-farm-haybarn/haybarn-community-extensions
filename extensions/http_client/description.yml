@@ -39,7 +39,7 @@ docs:
 extension:
   build: cmake
   description: DuckDB HTTP Client Extension
-  excluded_platforms: windows_amd64_mingw
+  excluded_platforms: windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
   language: C++
   license: MIT
   maintainers:
