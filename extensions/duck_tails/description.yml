@@ -1,14 +1,9 @@
 extension:
-  # Haybarn: skip the per-extension test suite. The build itself
-  # succeeds — the test step fails on Haybarn (test/sql/integration.test:57 — extension test data)
-  # while building cleanly. The .duckdb_extension binary is signed
-  # and shipped to R2 + npm + PyPI as normal.
-  haybarn_skip_tests: true
   name: duck_tails
   description: Smart Development Intelligence for DuckDB - Git-aware data analysis
     capabilities that allow querying git history, accessing files at any revision,
     and performing version-aware data analysis with SQL.
-  version: 1.4.1
+  version: 1.4.2
   language: C++
   build: cmake
   license: MIT
@@ -16,9 +11,10 @@ extension:
   excluded_platforms: wasm_mvp;wasm_eh;wasm_threads
   maintainers:
   - teaguesterling
+  haybarn_skip_tests: true
 repo:
   github: teaguesterling/duck_tails
-  ref: dca8ff3b3f5d423beb474c11349b547c88e99e70
+  ref: db69b5579ccf46cab8208587e6a59f54cb5f224f
 docs:
   hello_world: "-- Load the extension\nLOAD 'duck_tails';\n\n-- Query git history\
     \ (defaults to current directory)\nSELECT commit_hash, author_name, message, author_date\n\

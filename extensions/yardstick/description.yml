@@ -1,7 +1,7 @@
 extension:
   name: yardstick
   description: Measure-aware SQL implementing Julian Hyde's 'Measures in SQL' paper
-  version: 0.6.0
+  version: 0.7.0
   language: C++
   build: cmake
   license: MIT
@@ -11,12 +11,12 @@ extension:
   - sidequery
 repo:
   github: sidequery/yardstick
-  ref: 8722d056d517ee46075082bbaa3fd45cc61433cf
+  ref: f19d73fa93f2601cfa81ca3ebad841dffcc5f609
 docs:
   hello_world: "-- Create a view with measures\nCREATE VIEW sales_v AS\nSELECT\n \
     \   year,\n    region,\n    SUM(amount) AS MEASURE revenue,\n    COUNT(*) AS MEASURE\
-    \ order_count\nFROM sales;\n\n-- Query with AGGREGATE() and AT modifiers\nSEMANTIC\
-    \ SELECT\n    year,\n    region,\n    AGGREGATE(revenue) AS revenue,\n    AGGREGATE(revenue)\
+    \ order_count\nFROM sales;\n\n-- Query with AGGREGATE() and AT modifiers\nSELECT\n\
+    \    year,\n    region,\n    AGGREGATE(revenue) AS revenue,\n    AGGREGATE(revenue)\
     \ AT (ALL region) AS year_total,\n    AGGREGATE(revenue) / AGGREGATE(revenue)\
     \ AT (ALL region) AS pct_of_year\nFROM sales_v;\n"
   extended_description: '`yardstick` implements Julian Hyde''s "Measures in SQL" paper
@@ -32,7 +32,7 @@ docs:
 
     ```sql
 
-    SEMANTIC SELECT region, AGGREGATE(revenue) / AGGREGATE(revenue) AT (ALL) AS pct
+    SELECT region, AGGREGATE(revenue) / AGGREGATE(revenue) AT (ALL) AS pct
 
     FROM sales_v;
 
@@ -43,7 +43,7 @@ docs:
 
     ```sql
 
-    SEMANTIC SELECT year, AGGREGATE(revenue) AT (SET year = year - 1) AS prior_year
+    SELECT year, AGGREGATE(revenue) AT (SET year = year - 1) AS prior_year
 
     FROM sales_v;
 

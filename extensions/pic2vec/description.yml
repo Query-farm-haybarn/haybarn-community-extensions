@@ -12,7 +12,7 @@ extension:
   - nkwork9999
 repo:
   github: nkwork9999/pic2vec
-  ref: d39ef33b1389e670e1b19861ec1b6a51c3717273
+  ref: 113ee24b4e48419e4d56dd3b4e8b0f49e9d184ee
 docs:
   hello_world: "-- Bundled EUPE ViT-T auto-loads on first call - zero setup\nSELECT\
     \ pic_embed('/path/to/image.jpg') AS embedding;\n\n-- Quick \"are these the same?\"\

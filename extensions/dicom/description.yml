@@ -6,16 +6,16 @@ extension:
     Medicine).
 
     '
-  version: 0.2.0
+  version: 0.3.0
   language: C++
   build: cmake
   excluded_platforms: wasm_mvp;wasm_eh;wasm_threads
-  licence: MIT
+  license: MIT
   maintainers:
   - nmontesg
 repo:
   github: nmontesg/duck-dicom
-  ref: v0.2.0
+  ref: v0.3.0
 docs:
   hello_world: 'INSTALL dicom FROM community;
 
@@ -24,20 +24,32 @@ docs:
     FROM read_dicom(''path/to/dicom_file.dcm'');
 
     '
-  extended_description: "The dicom extension for DuckDB provides functionality to\
-    \ import medical imaging data (DICOM,\nDigital Imaging and Communication in Medicine)\
-    \ directly into DuckDB. It uses the powerful DCMTK\nC++ library to read DICOM\
-    \ files and convert them into JSON format.\n\n-- read one file\nFROM read_dicom('path/to/dicom_file.dcm');\n\
-    \n-- use glob pattern\nFROM read_dicom('path/to/dicoms/**/*.dcm');\n\n-- import\
-    \ pixel data\nFROM read_dicom('path/to/dicom_file.dcm', load_pixel_data=true);\n\
-    \n-- extract series description per series instance\nSELECT\n    dicom_content->'0020000E'->'Value'\
-    \ AS series_instance_uid,\n    any_value(dicom_content->'0008103E'->'Value') AS\
-    \ series_description\nFROM read_dicom('/Users/nmontes/Downloads/slicer_export/**/*.dcm')\n\
-    GROUP BY 1;\n\n-- extract study description per study instance\nSELECT\n    dicom_content->'0020000D'->'Value'\
-    \ AS study_instance_uid,\n    any_value(dicom_content->'00081030'->'Value') AS\
-    \ study_description\nFROM read_dicom('/Users/nmontes/Downloads/slicer_export/**/*.dcm')\n\
-    GROUP BY 1;\n\nThis extension also supports reading from remote object storage\
-    \ using the httpfs extension:\n\nLOAD httpfs;\n\nCREATE OR REPLACE SECRET my_secret\
-    \ (\n    TYPE s3,\n    PROVIDER config,\n    KEY_ID 'my_key',\n    SECRET 'my_secret_key',\n\
-    \    URL_STYLE 'path'\n);\n\n-- read one file from an AWS S3 bucket\nFROM read_dicom('s3://my-bucket/path/to/dicom_file.dcm');\n\
-    \n-- use glob pattern\nFROM read_dicom('s3://my-bucket/path/to/dicoms/**/*.dcm');\n"
+  extended_description: 'The dicom extension for DuckDB provides functionality to
+    import medical imaging data (DICOM,
+
+    Digital Imaging and Communication in Medicine) directly into DuckDB. It uses the
+    powerful DCMTK
+
+    C++ library to read DICOM files and convert them into JSON format.
+
+
+    For full documentation and examples, see the project
+
+    [`README`](https://github.com/nmontesg/duck-dicom/blob/main/README.md).
+
+
+    **Key functionality:**
+
+
+    * `read_dicom()` - Table function to import DICOM files directly into DuckDB,
+    including support for local and remote
+
+    files.
+
+    * `DICOM_TAG` - Custom type to work with DICOM tags, including conversion to and
+    from `VARCHAR`.
+
+    * `tag_group()`, `tag_element()`, `tag_name()` - Scalar functions to work with
+    DICOM tags.
+
+    '
