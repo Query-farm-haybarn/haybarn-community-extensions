@@ -11,7 +11,7 @@ extension:
   - nkwork9999
 repo:
   github: nkwork9999/duck-orch
-  ref: 89645807397b8f33c10ab0d0c347cb989c1598bd
+  ref: d5fd7e076d237a0d912ac0f6cedafe244f1c7ac7
 docs:
   hello_world: "LOAD duckorch;\n\n-- 1. Set up state schema and register a directory\
     \ of *.sql task files.\nPRAGMA orch_init;\nPRAGMA orch_register('./tasks/');\n\

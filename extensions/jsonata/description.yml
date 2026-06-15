@@ -9,7 +9,7 @@ extension:
   maintainers:
   - rustyconover
   name: jsonata
-  version: 2026050501
+  version: 2025110901
 repo:
   github: query-farm/jsonata
-  ref: d97b0cc7318756e1df1098cd00461a5de2680d4c
+  ref: 418a6f5d1d44a43ecff2067e4ac91f260c6303d3

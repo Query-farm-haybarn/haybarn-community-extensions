@@ -9,7 +9,7 @@ extension:
   - nkwork9999
 repo:
   github: nkwork9999/bvh2sql
-  ref: 62e96ba71a1bc57175a18827a2ad807bff9bfe5f
+  ref: 774970f749ccab7a6e37271363882549e6d0e2f3
 docs:
   hello_world: "-- Load the extension\nLOAD bvh2sql;\n\n-- Read BVH file and get absolute\
     \ joint positions\nSELECT frame_id, time, joint_name, world_x, world_y, world_z\n\
