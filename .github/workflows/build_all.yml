@@ -15,8 +15,20 @@ name: Build all extensions
 # title. Otherwise every batch shows up as the same default name and you
 # have to click in to see scope. With a JSON-list input we just slice the
 # first few entries.
+#
+# The engine version tag (duckdb_version) is embedded in the run-name so
+# downstream consumers can tell which Haybarn engine this sweep built
+# against — it's a run-level dispatch input, not a per-job matrix dimension,
+# so the run title is the only place it surfaces. The haybarn-status page
+# parses `haybarn-v<X.Y.Z>` out of this title to scope the community build
+# matrix per engine version (a 1.5.3 rc page must not show a 1.5.2 sweep).
+# The `|| 'haybarn-v1.5.4-rc1'` default MUST stay in lockstep with build.yml's
+# `inputs.duckdb_version || 'haybarn-v1.5.4-rc1'` fallback (the version this
+# sweep actually builds against when dispatched with no duckdb_version).
 run-name: >-
-  ${{ inputs.build_extensions && format('🐝 sweep batch ({0})', inputs.build_extensions) || '🐝 sweep (all extensions)' }}
+  ${{ inputs.build_extensions
+      && format('🐝 sweep {0} batch ({1})', inputs.duckdb_version || 'haybarn-v1.5.4-rc1', inputs.build_extensions)
+      || format('🐝 sweep {0} (all extensions)', inputs.duckdb_version || 'haybarn-v1.5.4-rc1') }}
 
 on:
   workflow_dispatch:

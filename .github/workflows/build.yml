@@ -13,24 +13,31 @@
 #      That's how the extension gets built against Haybarn (with the Haybarn
 #      curated patch stack) rather than upstream DuckDB.
 #   2. `duckdb_version` carries the Haybarn engine *git tag* we build against
-#      (currently `haybarn-v1.5.3-rc10`) — that's the ref the ci-tools fork
+#      (currently `haybarn-v1.5.4-rc1`) — that's the ref the ci-tools fork
 #      clones + checks out as the engine source. It is normalized back to the
-#      plain `v1.5.3` semver in the two places that need it: the binary's
+#      plain `v1.5.4` semver in the two places that need it: the binary's
 #      reported `DUCKDB_VERSION` (ci-tools' OVERRIDE_GIT_DESCRIBE, which must
-#      map `haybarn-v1.5.3*` → `v1.5.3`) and the R2 URL segment + npm version
+#      map `haybarn-v1.5.4*` → `v1.5.4`) and the R2 URL segment + npm version
 #      (publish_extensions.py's normalize_engine_version() maps
 #      `haybarn-v*(-rcN)?` → `vX.Y.Z` for the path, `X.Y.Z` for npm). So
-#      extension loading/storage compat stays `v1.5.3` and we deploy under
-#      `/v1.5.3/<arch>/<name>.duckdb_extension.gz`; the engine looks there.
+#      extension loading/storage compat stays `v1.5.4` and we deploy under
+#      `/v1.5.4/<arch>/<name>.duckdb_extension.gz`; the engine looks there.
 name: Community Extension Build
 
 # Make each run's title carry the extension name when we know it, so the
-# Actions UI shows e.g. "🐤 h3" rather than the commit subject. Falls back
-# to the commit subject for path-filtered push triggers (where we don't
-# know which descriptor changed until build.py runs — too late for run-name,
-# which GitHub evaluates BEFORE any job).
+# Actions UI shows e.g. "🐤 h3 (haybarn-v1.5.4-rc1)" rather than the commit
+# subject. Falls back to the commit subject for path-filtered push triggers
+# (where we don't know which descriptor changed until build.py runs — too late
+# for run-name, which GitHub evaluates BEFORE any job).
+#
+# The engine version tag is appended (in parens, AFTER the extension name) so
+# the haybarn-status page can scope this build's status to the right engine
+# version. Consumers parse the extension via `🐤 <name>` (whitespace-delimited,
+# so the trailing parens don't interfere) and the version via `haybarn-v<X.Y.Z>`.
+# Keep the `|| 'haybarn-v1.5.4-rc1'` default in lockstep with the build job's
+# `inputs.duckdb_version || 'haybarn-v1.5.4-rc1'` fallback below.
 run-name: >-
-  ${{ inputs.extension_name && format('🐤 {0}', inputs.extension_name) ||
+  ${{ inputs.extension_name && format('🐤 {0} ({1})', inputs.extension_name, inputs.duckdb_version || 'haybarn-v1.5.4-rc1') ||
       format('push: {0}', github.event.head_commit.message || github.ref_name) }}
 
 on:
@@ -104,7 +111,7 @@ on:
 env:
   # Engine version the extension targets (== DUCKDB_VERSION reported by the
   # Haybarn binary). Drives the URL segment under which we deploy.
-  HAYBARN_DUCKDB_VERSION_DEFAULT: 'v1.5.3'
+  HAYBARN_DUCKDB_VERSION_DEFAULT: 'v1.5.4'
   # Branch/SHA of Query-farm-haybarn/haybarn-extension-ci-tools to use.
   # We track the `haybarn` branch tip so builds always pick up the latest
   # CI-tools fixes. Keep the `uses:` literals below in lockstep. (GHA doesn't
@@ -147,18 +154,18 @@ jobs:
       COMMUNITY_EXTENSION_IMAGE_VARIANT: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_IMAGE_VARIANT }}
       COMMUNITY_EXTENSION_VCPKG_URL: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_VCPKG_URL == '' && 'https://github.com/microsoft/vcpkg.git' || steps.parse.outputs.COMMUNITY_EXTENSION_VCPKG_URL }}
       # Haybarn: the upstream-versioned `case()` selecting different vcpkg pins
-      # per DuckDB version is collapsed: we only target v1.5.3 today. When/if
+      # per DuckDB version is collapsed: we only target v1.5.4 today. When/if
       # we move to a later DuckDB base, revisit this.
       COMMUNITY_EXTENSION_VCPKG_COMMIT: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_VCPKG_COMMIT == '' && '84bab45d415d22042bd0b9081aea57f362da3f35' || steps.parse.outputs.COMMUNITY_EXTENSION_VCPKG_COMMIT }}
     env:
       # The script honours both these env vars: DUCKDB_VERSION drives the
       # `ref_next` / `andium` selection, DUCKDB_LATEST_STABLE is the comparison
-      # baseline. For Haybarn we keep both pinned at v1.5.3 — the sync bot
+      # baseline. For Haybarn we keep both pinned at v1.5.4 — the sync bot
       # strips `andium` (DuckDB v1.4) and `ref_next` (pre-release upstream) from
       # imported descriptors, but if a human ever wires them back in, this is
       # the gate they're compared against.
-      DUCKDB_LATEST_STABLE: 'v1.5.3'
-      DUCKDB_VERSION: ${{ inputs.duckdb_version || 'v1.5.3' }}
+      DUCKDB_LATEST_STABLE: 'v1.5.4'
+      DUCKDB_VERSION: ${{ inputs.duckdb_version || 'v1.5.4' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -198,7 +205,7 @@ jobs:
       vcpkg_token: ${{ secrets.HAYBARN_VCPKG_TOKEN }}
     if: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_NAME != '' }}
     with:
-      duckdb_version: ${{ inputs.duckdb_version || 'haybarn-v1.5.3-rc10' }}
+      duckdb_version: ${{ inputs.duckdb_version || 'haybarn-v1.5.4-rc1' }}
       duckdb_tag: ${{ inputs.duckdb_tag || '' }}
       ci_tools_version: ${{ inputs.ci_tools_version || 'haybarn' }}
       # Phase C: pull the pre-built Linux build image from GHCR instead of
@@ -209,9 +216,9 @@ jobs:
       # macOS / Windows / wasm jobs are unaffected; they don't use Docker.
       use_prebuilt_images: true
       image_variant: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_IMAGE_VARIANT }}
-      prebuilt_image_tag: 'v1.5.3'
+      prebuilt_image_tag: 'v1.5.4'
       # Phase D: pull the pre-built wasm image
-      # (ghcr.io/.../haybarn-wasm-<variant>:v1.5.3) instead of installing
+      # (ghcr.io/.../haybarn-wasm-<variant>:v1.5.4) instead of installing
       # emsdk + bootstrapping vcpkg per wasm leg. Removes the per-run
       # emsdk download (~300 MB) and the variable-UUID emcc path that
       # was defeating ccache hashing.
@@ -304,7 +311,7 @@ jobs:
     secrets: inherit
     with:
       deploy_latest: true
-      duckdb_version: ${{ inputs.duckdb_version || 'haybarn-v1.5.3-rc10' }}
+      duckdb_version: ${{ inputs.duckdb_version || 'haybarn-v1.5.4-rc1' }}
       duckdb_tag: ${{ inputs.duckdb_tag || '' }}
       ci_tools_version: ${{ inputs.ci_tools_version || 'haybarn' }}
       exclude_archs: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_EXCLUDE_PLATFORMS }}
