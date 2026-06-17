@@ -7,7 +7,11 @@ extension:
   license: MIT
   maintainers:
   - chrispahm
-  excluded_platforms: linux_arm64;linux_amd64_musl;windows_amd64_mingw
+  # Haybarn: disabled — never builds against DuckDB 1.5.3 (reliability
+  # 0/5; ~2.2h CPU/run wasted before failing or timing out). Dispatching
+  # produces no binaries, so we exclude every platform. Re-enable when it
+  # builds cleanly (sync_from_upstream will pick up a compatible bump).
+  excluded_platforms: linux_amd64;linux_arm64;linux_amd64_musl;linux_arm64_musl;osx_amd64;osx_arm64;windows_amd64;windows_arm64;windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
 repo:
   github: chrispahm/duckdb-gdx
   ref: 23ae8f1e130ab0cad03d8d0edabd52aba9265979

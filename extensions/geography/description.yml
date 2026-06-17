@@ -5,7 +5,11 @@ extension:
   language: C++
   build: cmake
   license: MIT
-  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads
+  # Haybarn: disabled — never builds against DuckDB 1.5.3 (reliability
+  # 0/6; ~3.1h CPU/run wasted before failing or timing out). Dispatching
+  # produces no binaries, so we exclude every platform. Re-enable when it
+  # builds cleanly (sync_from_upstream will pick up a compatible bump).
+  excluded_platforms: linux_amd64;linux_arm64;linux_amd64_musl;linux_arm64_musl;osx_amd64;osx_arm64;windows_amd64;windows_arm64;windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
   maintainers:
   - paleolimbot
 repo:
