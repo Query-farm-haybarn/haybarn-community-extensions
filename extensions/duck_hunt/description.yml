@@ -9,6 +9,7 @@ extension:
   license: MIT
   maintainers:
   - teaguesterling
+  excluded_platforms: windows_amd64
 repo:
   github: teaguesterling/duck_hunt
   ref: da4f3d787f5bea20fba247b703b46abc9833ebeb
