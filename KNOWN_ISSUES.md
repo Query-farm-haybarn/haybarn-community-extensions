@@ -45,6 +45,38 @@ last_checked: YYYY-MM-DD    # last time we verified the failure mode hasn't chan
     Could be quarantined to windows-only or upstream test refreshed.
   upstream_ref: null
   last_checked: 2026-05-16
+
+- extension: faiss
+  status: failing
+  platforms: [windows_amd64, windows_arm64, windows_amd64_mingw]
+  since: 2026-06-17
+  upstream_cause: |
+    Windows link failure, not a Haybarn regression. faiss requires the
+    fortran + omp toolchains and statically links LAPACK; on the MSVC
+    toolchain the link dies with LNK1120 (14 unresolved externals) for
+    libf2c/Fortran-runtime symbols (d_sign, pow_dd, s_cat, do_fio, ...)
+    and "Could NOT find MKL". This is the well-known faiss-on-Windows
+    LAPACK/f2c problem — upstream community-extensions has never shipped a
+    faiss Windows binary either. Linux/macOS build fine. windows_amd64 is
+    the confirmed MSVC failure; the whole Windows family is excluded as
+    unsupported for this extension.
+  upstream_ref: null
+  last_checked: 2026-06-17
+
+- extension: duck_hunt
+  status: failing
+  platforms: [windows_amd64]
+  since: 2026-06-17
+  upstream_cause: |
+    Compiles cleanly; SQL logic tests fail on Windows only
+    (test/sql/config_parser.test:817, test/sql/sample_files.test:148, and
+    ignore_errors.test). Test-behavior differences on Windows (path /
+    CRLF / file-glob semantics), not an MSVC-toolchain or Haybarn-pipeline
+    issue — an upstream Windows build would hit the same test failures.
+    Linux/macOS/wasm all pass. Disabled on windows_amd64 (the mingw leg
+    was cancelled, not run).
+  upstream_ref: null
+  last_checked: 2026-06-17
 ```
 
 ## Adding a new entry
