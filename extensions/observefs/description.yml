@@ -1,7 +1,7 @@
 extension:
   name: observefs
   description: Provides IO observability to filesystem
-  version: 0.5.1
+  version: 0.5.2
   language: C++
   build: cmake
   license: MIT
@@ -11,7 +11,7 @@ extension:
   - peterxcli
 repo:
   github: dentiny/duckdb-filesystem-observability
-  ref: 7a7b90e0eb33545173ddb948963f3f29709f0a4b
+  ref: e68138a3e9ec893453f69223efc069eaaacb3bd4
 docs:
   hello_world: 'COPY (SELECT observefs_get_profile()) TO ''/tmp/output.txt'';
 
