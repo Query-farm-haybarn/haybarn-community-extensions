@@ -1,0 +1,53 @@
+extension:
+  name: duck_diff
+  description: Diff two relations (tables, queries) off a primary key, reporting per-key
+    status (identical/different/left_only/right_only), a JSON summary of changed columns,
+    and per-column left/right values.
+  version: 0.3.0
+  language: C++
+  build: cmake
+  license: MIT
+  maintainers:
+  - avaitla
+repo:
+  github: avaitla/duck_diff
+  ref: 3f278772095f7abb1c67a7cd17e039cd48dee20c
+docs:
+  hello_world: "LOAD duck_diff;\n\n-- Create two sample snapshots\nCREATE TABLE users_v1\
+    \ AS SELECT * FROM (VALUES\n    (1, 'Ada',   'ada@x.com',   100),\n    (2, 'Linus',\
+    \ 'linus@x.com',  50),\n    (3, 'Grace', 'grace@x.com',  75)\n) t(id, name, email,\
+    \ credits);\n\nCREATE TABLE users_v2 AS SELECT * FROM (VALUES\n    (1, 'Ada',\
+    \   'ada@x.com',   120),   -- credits changed\n    (2, 'Linus', 'linus@x.com',\
+    \  50),   -- unchanged\n    (4, 'Mike',  'mike@x.com',   10)    -- new (id 3 removed)\n\
+    ) t(id, name, email, credits);\n\n-- Diff them off the primary key\nSELECT id,\
+    \ diff_status, diff_data, credits_left, credits_right\nFROM table_diff('FROM users_v1',\
+    \ 'FROM users_v2', pk := 'id')\nORDER BY id;\n\n-- Or get counts and percentages\
+    \ per status\nSELECT * FROM table_diff_summary('FROM users_v1', 'FROM users_v2',\
+    \ pk := 'id');\n"
+  extended_description: "`duck_diff` diffs two relations off a primary key. Given\
+    \ a \"left\" and a \"right\" relation\n(written as query strings, e.g. `'FROM\
+    \ orders'` or a full `SELECT ...`), it reports \u2014 per\nkey \u2014 whether\
+    \ the row is **identical**, **different**, or exists only on one side, and\nexactly\
+    \ what changed. Each result row carries both a JSON `diff_data` summary of the\n\
+    changed columns *and* per-column expanded columns (`<c>_left` / `<c>_right` /\n\
+    `<c>_diff_status`). Composite primary keys and selecting a subset of columns to\
+    \ diff or\nignore are supported.\n\n**Functions:**\n\n| Function | Returns | Purpose\
+    \ |\n|----------|---------|---------|\n| `table_diff(left, right, pk := ...)`\
+    \ | table | one row per key: key column(s), `diff_status`, `diff_data`, expanded\
+    \ columns |\n| `table_diff_summary(left, right, pk := ...)` | one row | counts\
+    \ (and percentages) per status |\n| `schema_diff(left, right)` | table | per-column\
+    \ name/type comparison |\n\n`table_diff` options include `numeric_tolerance` (treat\
+    \ numbers within a band as equal),\n`timestamp_precision` (truncate timestamps\
+    \ before comparing), `null_equals_empty`,\n`columns` / `ignore` (restrict or exclude\
+    \ compared columns), `context` (surface\nnon-compared columns alongside the diff),\
+    \ and `require_matching_columns` /\n`upcast_types` for relations whose schemas\
+    \ don't match exactly.\n\nBecause each relation argument is a query string, any\
+    \ table function from another\nextension works \u2014 diff CSV/Parquet files,\
+    \ or relations from attached databases\n(Postgres, MySQL, BigQuery, ...) against\
+    \ each other.\n\n**Use cases:**\n- Refactoring SQL (possibly onto a new database)\
+    \ and verifying the results are identical\n- Capturing the differences between\
+    \ snapshots or points in time\n- Replication integrity \u2014 spot-check that\
+    \ a replica matches its source\n- Regression tests in CI \u2014 assert a model's\
+    \ output still matches its golden snapshot\n- Giving coding agents a ground-truth\
+    \ check that a refactor produced identical results\n\nSee the [function reference](https://github.com/avaitla/duck_diff/blob/main/docs/functions.md)\n\
+    for full documentation.\n"
