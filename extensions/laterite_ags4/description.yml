@@ -1,0 +1,47 @@
+extension:
+  name: laterite_ags4
+  description: "Read AGS4 geotechnical data files as typed, UUID-keyed tables directly\
+    \ from SQL \u2014 born-typed columns, deterministic content-addressed keys that\
+    \ join across groups by construction, embedded AGS dictionary, and opt-in validation.\
+    \ Local, http(s):// and s3:// (with httpfs)."
+  version: 0.4.1
+  language: Rust
+  build: cargo
+  license: MIT
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;linux_amd64_musl
+  requires_toolchains: rust
+  maintainers:
+  - niko86
+repo:
+  github: niko86/laterite-duckdb
+  ref: 2f72aa6e3b4049b76a46ba2224d813e6164d1579
+docs:
+  hello_world: "-- Read a group as a typed table (columns typed from the file's own\
+    \ TYPE row):\nSELECT loca_id, loca_gl\nFROM read_ags('site.ags', 'LOCA')\nWHERE\
+    \ loca_gl > 50.0;\n\n-- Join across groups on the deterministic keys \u2014 no\
+    \ shared state, joins by\n-- construction (every SAMP row's _parent_id equals\
+    \ its LOCA's _id):\nSELECT l.loca_id, s.samp_ref, s.samp_top\nFROM read_ags('site.ags',\
+    \ 'SAMP') s\nJOIN read_ags('site.ags', 'LOCA') l ON s._parent_id = l._id;\n\n\
+    -- Inspect structure + the embedded AGS dictionary:\nSELECT \"group\", n_rows,\
+    \ parent FROM ags_groups('site.ags') ORDER BY n_rows DESC;\nSELECT child, parent,\
+    \ shared_keys FROM ags_relationships() WHERE parent = 'LOCA';\n\n-- Opt-in validation\
+    \ (auto-detects the edition from TRAN_AGS):\nSELECT rule, line, \"group\", severity,\
+    \ \"desc\" FROM validate_ags('site.ags');\n\n-- Remote, lazily (with httpfs):\n\
+    -- LOAD httpfs;\n-- SELECT loca_id FROM read_ags('s3://bucket/site.ags', 'LOCA');\n"
+  extended_description: "`laterite_ags4` reads [AGS4](https://www.ags.org.uk/) geotechnical\
+    \ & geoenvironmental\ndata files as first-class DuckDB tables \u2014 no conversion\
+    \ step, no bundled engine.\n\nWritten in \U0001F980 Rust on DuckDB's C Extension\
+    \ API (zero C++).\n\n### What it gives you\n\n- **Born-typed columns** \u2014\
+    \ each heading is typed from the file's own `TYPE` row\n  (`2DP` \u2192 `DOUBLE`,\
+    \ `ID` \u2192 `VARCHAR`, `0DP` \u2192 `BIGINT`, `YN` \u2192 `BOOLEAN`, \u2026\
+    ).\n- **Deterministic content-addressed keys** \u2014 every row carries `_id`\
+    \ and\n  `_parent_id` (UUIDv8 of the row's spec key-chain). `child._parent_id\
+    \ == parent._id`\n  **by construction**, so groups join across independent `read_ags(...)`\
+    \ calls with\n  no shared state.\n- **Self-describing metadata** \u2014 `ags_groups`,\
+    \ `ags_headings`, `ags_dictionary`,\n  `ags_relationships` expose the file's structure\
+    \ and the embedded AGS dictionary.\n- **Opt-in validation** \u2014 `validate_ags(path[,\
+    \ edition := '4.2'])` runs a clean-room\n  AGS4 rule check; never a gate on reads.\n\
+    - **Persistence** \u2014 `load_ags_script(path)` emits CREATE-TABLE DDL for an\
+    \ indexed,\n  repeat-/remote-query store.\n- **Local or remote** \u2014 reads\
+    \ go through DuckDB's virtual filesystem, so local paths,\n  `http(s)://` and\
+    \ `s3://` (with `LOAD httpfs`) all work on one code path.\n"

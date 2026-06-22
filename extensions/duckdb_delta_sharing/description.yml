@@ -2,7 +2,7 @@ extension:
   name: duckdb_delta_sharing
   description: The most efficient way to query Delta Lake tables directly from DuckDB
     via the Delta Sharing protocol.
-  version: 0.3.0
+  version: 0.3.2
   language: C++
   build: cmake
   license: Apache-2.0
@@ -11,10 +11,10 @@ extension:
   - prequel-co
 repo:
   github: prequel-co/DuckDB-Delta-Sharing
-  ref: 83ee935bdfef57118f6f0562f007fc8d5d64ce5a
+  ref: 5440afadc620643cfbffcfce0c325d32202e6cfe
 docs:
-  hello_world: "INSTALL duckdb_delta_sharing;\nLOAD duckdb_delta_sharing;\n-- Required\
-    \ for network access\nINSTALL httpfs;\nLOAD httpfs;\n\n-- Basic Configuration\n\
+  hello_world: "INSTALL duckdb_delta_sharing FROM community;\nLOAD duckdb_delta_sharing;\n\
+    -- Required for network access\nINSTALL httpfs;\nLOAD httpfs;\n\n-- Basic Configuration\n\
     -- Set your sharing endpoint and bearer token using DuckDB Secrets:\nCREATE SECRET\
     \ (\n    TYPE delta_sharing,\n    PROVIDER config,\n    ENDPOINT 'https://your-delta-sharing-server.com/api/2.0/delta-sharing',\n\
     \    BEARER_TOKEN 'your_private_token'\n);\n\n-- Alternatively, if you have DELTA_SHARING_ENDPOINT\

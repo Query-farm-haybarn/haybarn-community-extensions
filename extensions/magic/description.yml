@@ -1,9 +1,4 @@
 extension:
-  # Haybarn: skip the per-extension test suite. The build itself
-  # succeeds — the test step fails on Haybarn (test/sql/read_any_remote.test:45 — remote URL fetch)
-  # while building cleanly. The .duckdb_extension binary is signed
-  # and shipped to R2 + npm + PyPI as normal.
-  haybarn_skip_tests: true
   name: magic
   description: libmagic/file utilities ported to DuckDB
   version: 0.0.1
@@ -13,25 +8,28 @@ extension:
   license: MIT
   maintainers:
   - carlopi
+  haybarn_skip_tests: true
 repo:
   github: carlopi/duckdb-magic
-  ref: b7f3a90e97ee7a38ac0a6f7e0558d2e366c90b05
+  ref: 00bf2b30a6e3ea1cac2cd86d8be8636bba93cf89
 docs:
-  hello_world: "--- Discover autodetected types for files in a local folder\nSELECT\
-    \ magic_mime(file), magic_type(file), file\n    FROM glob('path/to/folder/**');\n\
-    \n--- Discover autodetected types for a remote file\nLOAD httpfs;  --- this needs\
-    \ to currently be explcit once per session\nSELECT magic_mime(file), magic_type(file),\
-    \ file\n    FROM glob('https://raw.githubusercontent.com/duckdb/duckdb/main/data/parquet-testing/adam_genotypes.parquet');\n\
-    \n--- Read file without providing detail on type\nFROM read_any('https://raw.githubusercontent.com/duckdb/duckdb/main/data/parquet-testing/adam_genotypes.parquet');\n"
-  extended_description: 'Very experimental port of libmagic (that powers file UNIX
-    utility), allow to classify files based on the content of the header, accoring
-    to the libmagic library.
+  hello_world: "--- Discover autodetected types for files in a folder\nSELECT magic_mime(file),\
+    \ magic_type(file), file\n    FROM glob('path/to/folder/**');\n\n--- Inspect auto-detection\
+    \ capabilities of the `magic` extension\nFROM magic_capabilities();\n\n--- A remote\
+    \ GeoPackage \u2014 spatial, sniffed by content (runnable as-is):\nFROM read_any('https://www.geopackage.org/data/gdal_sample_v1.2_no_extensions.gpkg');\n\
+    \n--- A table inside a Postgres database (bring your own connection string):\n\
+    FROM read_any('postgres://user:pass@host:5432/mydb@public.orders');\n\n--- An\
+    \ Iceberg table on AWS S3 Tables (bring your own ARN + CREATE SECRET):\nFROM read_any('arn:aws:s3tables:us-east-1:123456789012:bucket/lake@analytics.events');\n"
+  extended_description: 'Port of libmagic (that powers file UNIX utility), allow to
+    classify files based on the content of the header, accoring to the libmagic library.
 
     Packaged with version 5.45 of the magic library. The magic.mgc database is at
     the moment statically compiled in the library, so it''s the same across platforms
     but immutable.
 
-    Currently not available in Windows and Wasm, due to different but likely solvable
-    vc-packaging issue, to be sorted out independently.
+    Implements read-from-any file capabilties, via magic auto-detection or name pattern.
+
+    Implements also sub-resource dispatcher via `@schema.tbl`, allow also catalogs
+    to be queried as a table.
 
     '

@@ -12,7 +12,7 @@ extension:
   - ahuarte47
 repo:
   github: ahuarte47/duckdb-pdal
-  ref: 175f8a0b8a0fde48d52d6d1ce503c7cbf4534e20
+  ref: e4b61ba9175cd50226d6aa583afc7701ff8f45cb
 docs:
   hello_world: "SELECT * FROM PDAL_Read('path/to/your/pointcloud.las');\n---\n\u250C\
     \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\

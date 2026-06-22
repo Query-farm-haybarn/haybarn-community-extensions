@@ -2,7 +2,8 @@ extension:
   name: yaml
   description: Read YAML files into DuckDB with native YAML type support, comprehensive
     extraction functions, and seamless JSON interoperability
-  version: 1.6.5
+  version: 1.6.6
+  excluded_platforms: windows_amd64;windows_amd64_mingw
   language: C++
   build: cmake
   license: MIT
@@ -11,7 +12,7 @@ extension:
   vcpkg_commit: 656be05781442d5c4cb14978f6c7bf47b6e12b32
 repo:
   github: teaguesterling/duckdb_yaml
-  ref: 9d57e9557742ede442be4095951dfa56227282b2
+  ref: 8a1d8444af06682a3cb2933068a6a35af0fec3b2
 docs:
   hello_world: "-- Load the extension\nLOAD yaml;\n\n-- Query YAML files directly\n\
     SELECT * FROM 'config.yaml';\nSELECT * FROM 'data/*.yml' WHERE active = true;\n\
