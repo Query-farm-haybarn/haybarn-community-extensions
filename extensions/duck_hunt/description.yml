@@ -3,16 +3,16 @@ extension:
   description: Parse and analyze test results, build outputs, and CI/CD pipeline logs
     from 110+ formats with severity filtering, format auto-detection, and context
     extraction
-  version: 1.9.0
+  version: 1.10.0
   language: C++
   build: cmake
   license: MIT
+  excluded_platforms: windows_amd64
   maintainers:
   - teaguesterling
-  excluded_platforms: windows_amd64
 repo:
   github: teaguesterling/duck_hunt
-  ref: da4f3d787f5bea20fba247b703b46abc9833ebeb
+  ref: 22c142f3dee138566589783afb56a5e7f2858886
 docs:
   readme: https://duck-hunt.readthedocs.io/
   hello_world: "-- Parse build errors (warnings and above)\nSELECT ref_file, ref_line,\
