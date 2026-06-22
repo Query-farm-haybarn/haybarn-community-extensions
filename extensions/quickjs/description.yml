@@ -41,4 +41,4 @@ extension:
   version: '2025120401'
 repo:
   github: quackscience/duckdb-quickjs
-  ref: fa8ebe9a7be2ba40642208dc74d664dc7bb66659
+  ref: 7a902e0b5e0243326d74e7749ba8eb05703a6805
