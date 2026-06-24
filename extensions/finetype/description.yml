@@ -1,8 +1,8 @@
 extension:
   name: finetype
-  description: "Semantic type classification \u2014 detects 240 data types (emails,\
+  description: "Semantic type classification \u2014 detects 244 data types (emails,\
     \ URLs, dates, UUIDs, currencies, etc.) from raw strings"
-  version: 0.6.23
+  version: 0.6.36
   language: Rust
   build: cargo
   license: MIT
@@ -12,7 +12,7 @@ extension:
   - hughcameron
 repo:
   github: meridian-online/finetype
-  ref: v0.6.23
+  ref: b060785d29dab029aae4a23b514c5d1bc125f4c2
 docs:
   hello_world: "-- Profile every column of a table: one row per column, with the detected\n\
     -- semantic type, model confidence, and recommended DuckDB storage type.\nD CREATE\
@@ -23,44 +23,99 @@ docs:
     \u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
     \u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
     \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
-    \u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
-    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\
     \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
-    \u2500\u2510\n\u2502 column_name \u2502       detected_type        \u2502    \
-    \ confidence     \u2502 duckdb_type  \u2502\n\u2502   varchar   \u2502       \
-    \   varchar           \u2502       double       \u2502   varchar    \u2502\n\u251C\
     \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
-    \u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
     \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
-    \u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2510\n\u2502 column_name \u2502                                \
+    \       type                                       \u2502     confidence     \u2502\
+    \ duckdb_type \u2502\n\u2502   varchar   \u2502                              \
+    \       varchar                                      \u2502       double     \
+    \  \u2502   varchar   \u2502\n\u251C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
     \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\
     \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
-    \u2524\n\u2502 email       \u2502 identity.person.email      \u2502 0.5812865495681763\
-    \ \u2502 VARCHAR      \u2502\n\u2502 phone       \u2502 identity.person.phone_num\u2026\
-    \ \u2502                0.5 \u2502 VARCHAR      \u2502\n\u2502 addr        \u2502\
-    \                            \u2502                    \u2502              \u2502\
-    \n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
-    \u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 addr        \u2502 nested\
+    \ STRUCT(city VARCHAR) column \u2014 unnest / to_json / extract before profiling\
+    \ \u2502               NULL \u2502 NULL        \u2502\n\u2502 email       \u2502\
+    \ identity.person.email                                                      \
+    \      \u2502 0.5812865495681763 \u2502 VARCHAR     \u2502\n\u2502 phone     \
+    \  \u2502 identity.person.phone_number                                       \
+    \              \u2502                0.5 \u2502 VARCHAR     \u2502\n\u2514\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
     \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
     \u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
     \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\
     \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
-    \u2500\u2518\n-- (addr is a nested STRUCT column \u2014 profiled as NULL rather\
-    \ than\n--  silently rejected; see the nested-column note below.)\n\n-- Validate\
-    \ a table against a JSON Schema: one row per column, counting\n-- how many values\
-    \ the schema rejects.\nD SELECT * FROM ft_validate('people',\n    '{\"email\"\
-    : {\"type\":\"string\",\"format\":\"email\"}}');\n\n-- Classify a single value\
-    \ (per-value, no column context)\nD SELECT ft_infer('https://example.com') AS\
-    \ detected_type;\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2518\n-- (addr is a nested STRUCT column: instead of silently mis-classifying\
+    \ it,\n--  ft_profile emits a flatten hint in the type column and leaves\n-- \
+    \ confidence / duckdb_type NULL. See the nested-column note below.)\n\n-- Validate\
+    \ a table against a JSON Schema (note the top-level \"properties\"\n-- key): one\
+    \ row per column, counting how many values the schema rejects.\nD SELECT * FROM\
+    \ ft_validate('people',\n    '{\"properties\":{\"email\":{\"type\":\"string\"\
+    ,\"pattern\":\"^[^@]+@[^@]+\\.[^@]+$\"},\n                    \"phone\":{\"type\"\
+    :\"string\",\"pattern\":\"^\\+?[0-9().+ -]{7,}$\"}}}');\n\u250C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
     \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
-    \u2500\u2500\u2500\u2500\u2510\n\u2502      detected_type       \u2502\n\u2502\
-    \         varchar          \u2502\n\u251C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
     \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
-    \u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 technology.internet.url  \u2502\
-    \n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
     \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
-    \u2500\u2518\n"
-  extended_description: "FineType is a semantic type classifier that detects 240 data\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502 column_name \u2502\
+    \ total \u2502 rejects \u2502                                  sample_message\
+    \                                   \u2502\n\u2502   varchar   \u2502 int64 \u2502\
+    \  int64  \u2502                                      varchar                \
+    \                      \u2502\n\u251C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2524\n\u2502 addr        \u2502  NULL \u2502    NULL\
+    \ \u2502 nested STRUCT(city VARCHAR) column \u2014 unnest / to_json / extract\
+    \ before validating \u2502\n\u2502 email       \u2502     3 \u2502       1 \u2502\
+    \ \"not-an-email\" does not match \"^[^@]+@[^@]+\\.[^@]+$\"                  \
+    \            \u2502\n\u2502 phone       \u2502     3 \u2502       1 \u2502 \"\
+    not-a-phone\" does not match \"^\\+?[0-9().+ -]{7,}$\"                       \
+    \        \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2518\n\n-- Classify a single value (per-value, no column context)\nD SELECT\
+    \ ft_infer('https://example.com') AS detected_type;\n\u250C\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502      detected_type\
+    \       \u2502\n\u2502         varchar          \u2502\n\u251C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 technology.internet.url\
+    \  \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2518\n"
+  extended_description: "FineType is a semantic type classifier that detects 244 data\
     \ types from raw string values. A\nmulti-branch neural network labels each value,\
     \ mapping it into a three-level taxonomy:\n`domain.category.type`.\n\nFineType\
     \ is **column-oriented**: its accuracy comes from seeing a whole column at once,\
@@ -71,54 +126,61 @@ docs:
     \ value seen in column context.\n\n## Table verbs\n\nThese take a table (or a\
     \ `LIST` of column values) and return **one row per column** \u2014 the natural\n\
     grain for profiling and validation.\n\n### `ft_profile(table_name VARCHAR)`\n\
-    Profile every column of a table. Returns `(column_name, detected_type, confidence,\
-    \ duckdb_type)`,\none row per column. The table is named as a string literal;\
-    \ FineType reaches into the catalog to\nread its columns.\n\n```sql\nSELECT *\
-    \ FROM ft_profile('my_table');\n```\n\nNested `STRUCT` / `LIST` columns are **guarded,\
-    \ not silently rejected**: they profile as `NULL`\nrather than being forced through\
-    \ per-value classification that would misreport them. Flatten the\ncolumn first\
-    \ if you need it typed.\n\n### `ft_validate(table_name VARCHAR, schema_json VARCHAR)`\n\
-    Validate a table's columns against a JSON Schema. Returns one row per validated\
-    \ column with the\ntotal values checked, the reject count, and a sample rejection\
-    \ message. The schema can be supplied\ninline, via `getvariable`, or read from\
-    \ a file with DuckDB's `read_text`:\n\n```sql\n-- inline\nSELECT * FROM ft_validate('my_table',\
-    \ '{\"email\": {\"type\":\"string\",\"format\":\"email\"}}');\n\n-- from a file\n\
-    SELECT * FROM ft_validate('my_table', (SELECT content FROM read_text('schema.json')));\n\
-    ```\n\n### `ft_profile(values LIST)`\nProfile a single column passed as a list\
-    \ \u2014 useful when the values are already in hand rather than\nin a named table.\n\
-    \n```sql\nSELECT * FROM ft_profile((SELECT list(email) FROM people));\n```\n\n\
-    ## Scalar functions\n\nPer-value classification, one value at a time. Strongest\
-    \ on values unambiguous in isolation (URLs,\nISO dates, well-formed emails, IP\
-    \ addresses).\n\n### `ft_infer(value VARCHAR) \u2192 VARCHAR`\nClassify a single\
-    \ value. Returns the full semantic type label.\n\n```sql\nSELECT ft_infer('https://example.com');\
-    \  -- technology.internet.url\nSELECT ft_infer('2024-01-15');           -- datetime.date.iso\n\
-    SELECT ft_infer('true');                 -- representation.boolean.terms\n```\n\
-    \n### `ft_detail(value VARCHAR) \u2192 VARCHAR`\nClassify with full detail. Returns\
-    \ JSON with the type, confidence (0.0\u20131.0), the recommended\nDuckDB type,\
-    \ the number of samples seen, the disambiguation path, and the per-label vote\
-    \ map.\n\n```sql\nSELECT ft_detail('192.168.1.1');\n-- {\"type\": \"technology.internet.ip_v4\"\
-    , \"confidence\": 0.901, \"duckdb_type\": \"INET\", ...}\n```\n\n### `ft_cast(value\
-    \ VARCHAR) \u2192 VARCHAR`\nNormalize a value for safe `TRY_CAST()` to its detected\
-    \ DuckDB type. Handles date format\nconversion (US/EU \u2192 ISO), boolean normalization,\
-    \ UUID lowercasing, numeric cleanup.\n\n```sql\nSELECT ft_cast('01/15/2024');\
-    \  -- 2024-01-15 (US date \u2192 ISO)\n```\n\n### `ft_validate_text(value VARCHAR,\
-    \ schema_json VARCHAR) \u2192 VARCHAR`\nValidate a single value against a JSON\
-    \ Schema fragment. Returns `valid` when the value conforms,\nor the first validation\
-    \ error otherwise.\n\n```sql\nSELECT ft_validate_text('user@example.com', '{\"\
-    type\":\"string\",\"format\":\"email\"}');  -- valid\n```\n\n### `ft_unpack(json\
-    \ VARCHAR) \u2192 VARCHAR`\nRecursively classify every scalar value in a JSON\
-    \ document. Returns annotated JSON carrying the\ntype, confidence, recommended\
-    \ DuckDB type, and original value for each field.\n\n### `ft_version() \u2192\
-    \ VARCHAR`\nReturns the extension version string.\n\n> **Aliases.** The earlier\
-    \ un-prefixed scalar names (`finetype`, `finetype_detail`,\n> `finetype_cast`,\
-    \ `finetype_unpack`, `finetype_validate`, `finetype_version`) remain registered\
-    \ as\n> aliases of the `ft_` scalars for one release, so a v0.6.22 install keeps\
-    \ working. New code should\n> use the `ft_` names.\n\n## Type Taxonomy\n\n240\
-    \ types organized into 7 domains:\n- **container**: JSON, XML, CSV, arrays, key-value\
-    \ (11 types)\n- **datetime**: dates, times, timestamps, epochs, durations, offsets\
-    \ (84 types)\n- **finance**: currencies, accounting, market identifiers, transactions\
-    \ (28 types)\n- **geography**: coordinates, locations, addresses, transportation\
-    \ (25 types)\n- **identity**: names, emails, phones, payments, medical (33 types)\n\
-    - **representation**: booleans, numbers, text, files, scientific (33 types)\n\
-    - **technology**: URLs, IPs, UUIDs, versions, codes (26 types)\n\nFor more information,\
-    \ see the [FineType documentation](https://github.com/meridian-online/finetype).\n"
+    Profile every column of a table. Returns `(column_name, type, confidence, duckdb_type)`,\n\
+    one row per column. The table is named as a string literal; FineType reaches into\
+    \ the catalog to\nread its columns.\n\n```sql\nSELECT * FROM ft_profile('my_table');\n\
+    ```\n\nNested `STRUCT` / `LIST` columns are **guarded, not silently rejected**:\
+    \ rather than forcing them\nthrough per-value classification that would misreport\
+    \ them, `ft_profile` returns a flatten hint in\nthe `type` column (with `confidence`\
+    \ and `duckdb_type` left `NULL`). Flatten the column first if you\nneed it typed.\n\
+    \n### `ft_validate(table_name VARCHAR, schema_json VARCHAR)`\nValidate a table's\
+    \ columns against a JSON Schema. Returns one row per validated column with the\n\
+    total values checked, the reject count, and a sample rejection message. The schema\
+    \ can be supplied\ninline, via `getvariable`, or read from a file with DuckDB's\
+    \ `read_text`:\n\nThe JSON Schema is keyed by column under a top-level `properties`\
+    \ object.\n\n```sql\n-- inline\nSELECT * FROM ft_validate('my_table', '{\"properties\"\
+    :{\"email\":{\"type\":\"string\",\"format\":\"email\"}}}');\n\n-- from a file\
+    \ (a bare path is read for you; an inline string starting with \"{\" is used as-is)\n\
+    SELECT * FROM ft_validate('my_table', 'schema.json');\n```\n\n### `ft_profile(values\
+    \ LIST)`\nProfile a single column passed as a list \u2014 useful when the values\
+    \ are already in hand rather than\nin a named table.\n\n```sql\nSELECT * FROM\
+    \ ft_profile((SELECT list(email) FROM people));\n```\n\n## Scalar functions\n\n\
+    Per-value classification, one value at a time. Strongest on values unambiguous\
+    \ in isolation (URLs,\nISO dates, well-formed emails, IP addresses).\n\n### `ft_infer(value\
+    \ VARCHAR) \u2192 VARCHAR`\nClassify a single value. Returns the full semantic\
+    \ type label.\n\n```sql\nSELECT ft_infer('https://example.com');  -- technology.internet.url\n\
+    SELECT ft_infer('2024-01-15');           -- datetime.date.iso\nSELECT ft_infer('true');\
+    \                 -- representation.boolean.terms\n```\n\n### `ft_detail(value\
+    \ VARCHAR) \u2192 VARCHAR`\nClassify with full detail. Returns JSON with the type,\
+    \ confidence (0.0\u20131.0), the recommended\nDuckDB type, the number of samples\
+    \ seen, the disambiguation path, and the per-label vote map.\n\n```sql\nSELECT\
+    \ ft_detail('192.168.1.1');\n-- {\"type\": \"technology.internet.ip_v4\", \"confidence\"\
+    : 0.901, \"duckdb_type\": \"INET\", ...}\n```\n\n### `ft_cast(value VARCHAR) \u2192\
+    \ VARCHAR`\nNormalize a value for safe `TRY_CAST()` to its detected DuckDB type.\
+    \ Handles date format\nconversion (US/EU \u2192 ISO), boolean normalization, UUID\
+    \ lowercasing, numeric cleanup.\n\n```sql\nSELECT ft_cast('01/15/2024');  -- 2024-01-15\
+    \ (US date \u2192 ISO)\n```\n\n### `ft_validate_text(value VARCHAR, schema_json\
+    \ VARCHAR) \u2192 STRUCT(valid BOOLEAN, \"constraint\" VARCHAR, message VARCHAR)`\n\
+    Validate a single value against a JSON Schema fragment. Returns a struct: `valid`\
+    \ is `true` when\nthe value conforms (with `constraint` and `message` `NULL`);\
+    \ on failure `valid` is `false` and\n`constraint` / `message` name the failing\
+    \ keyword and the reason. This is the per-cell engine the\n`ft_validate` table\
+    \ verb runs over every column.\n\n```sql\nSELECT ft_validate_text('not-an-email',\
+    \ '{\"type\":\"string\",\"pattern\":\"^[^@]+@[^@]+\\.[^@]+$\"}');\n-- {'valid':\
+    \ false, 'constraint': pattern, 'message': '\"not-an-email\" does not match \"\
+    ^[^@]+@[^@]+\\.[^@]+$\"'}\n```\n\n### `ft_unpack(json VARCHAR) \u2192 VARCHAR`\n\
+    Recursively classify every scalar value in a JSON document. Returns annotated\
+    \ JSON carrying the\ntype, confidence, recommended DuckDB type, and original value\
+    \ for each field.\n\n### `ft_version() \u2192 VARCHAR`\nReturns the extension\
+    \ version string.\n\n> **Aliases.** The earlier un-prefixed scalar names (`finetype`,\
+    \ `finetype_detail`,\n> `finetype_cast`, `finetype_unpack`, `finetype_validate`,\
+    \ `finetype_version`) remain registered as\n> aliases of the `ft_` scalars, so\
+    \ existing code keeps working. New code should use the `ft_` names.\n\n## Type\
+    \ Taxonomy\n\n244 types organized into 7 domains:\n- **container**: JSON, XML,\
+    \ CSV, arrays, key-value (11 types)\n- **datetime**: dates, times, timestamps,\
+    \ epochs, durations, offsets (86 types)\n- **finance**: currencies, accounting,\
+    \ market identifiers, transactions (28 types)\n- **geography**: coordinates, locations,\
+    \ addresses, transportation (25 types)\n- **identity**: names, emails, phones,\
+    \ payments, medical (33 types)\n- **representation**: booleans, numbers, text,\
+    \ files, scientific (32 types)\n- **technology**: URLs, IPs, UUIDs, versions,\
+    \ codes (29 types)\n\nFor more information, see the [FineType documentation](https://github.com/meridian-online/finetype).\n"
