@@ -9,8 +9,11 @@
 #   scripts/bump_extension_ref.sh <extension> <branch> # bump from a specific branch
 #   scripts/bump_extension_ref.sh vgi
 #
+# On success it commits AND pushes the current branch to origin.
+#
 # Options (env):
-#   NO_COMMIT=1   Update description.yml but skip the git commit.
+#   NO_COMMIT=1   Update description.yml but skip the git commit (implies no push).
+#   NO_PUSH=1     Commit locally but skip the git push.
 #
 # Requires: git, gh (authenticated), python3 (all already used elsewhere in this repo).
 
@@ -66,3 +69,12 @@ fi
 git -C "$repo_root" add "extensions/$ext/description.yml"
 git -C "$repo_root" commit -m "$(printf '%s: bump to %s %s (%s)\n\nCo-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>' \
     "$ext" "$branch" "${new_ref:0:7}" "$subjects")"
+
+if [ -n "$NO_PUSH" ]; then
+    echo "NO_PUSH set — committed locally, not pushed."
+    exit 0
+fi
+
+# Push the branch we're actually on in this repo (usually main).
+this_branch=$(git -C "$repo_root" rev-parse --abbrev-ref HEAD)
+git -C "$repo_root" push origin "$this_branch"
