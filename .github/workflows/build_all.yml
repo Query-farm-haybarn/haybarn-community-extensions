@@ -22,13 +22,13 @@ name: Build all extensions
 # so the run title is the only place it surfaces. The haybarn-status page
 # parses `haybarn-v<X.Y.Z>` out of this title to scope the community build
 # matrix per engine version (a 1.5.3 rc page must not show a 1.5.2 sweep).
-# The `|| 'haybarn-v1.5.4-rc1'` default MUST stay in lockstep with build.yml's
-# `inputs.duckdb_version || 'haybarn-v1.5.4-rc1'` fallback (the version this
+# The `|| 'haybarn-v1.5.5-rc1'` default MUST stay in lockstep with build.yml's
+# `inputs.duckdb_version || 'haybarn-v1.5.5-rc1'` fallback (the version this
 # sweep actually builds against when dispatched with no duckdb_version).
 run-name: >-
   ${{ inputs.build_extensions
-      && format('🐝 sweep {0} batch ({1})', inputs.duckdb_version || 'haybarn-v1.5.4-rc1', inputs.build_extensions)
-      || format('🐝 sweep {0} (all extensions)', inputs.duckdb_version || 'haybarn-v1.5.4-rc1') }}
+      && format('🐝 sweep {0} batch ({1})', inputs.duckdb_version || 'haybarn-v1.5.5-rc1', inputs.build_extensions)
+      || format('🐝 sweep {0} (all extensions)', inputs.duckdb_version || 'haybarn-v1.5.5-rc1') }}
 
 on:
   workflow_dispatch:
