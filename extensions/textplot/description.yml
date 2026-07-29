@@ -13,4 +13,4 @@ extension:
   version: '2025120401'
 repo:
   github: query-farm/textplot
-  ref: bd8991ca356f25f91e7c026e4df70957a0e741ae
+  ref: 5171541c03cd294b44859209175821157dedc7e7

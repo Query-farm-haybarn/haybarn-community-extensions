@@ -2,14 +2,10 @@ extension:
   name: miint
   description: Bioinformatics extension for microbiome research - read/write FASTQ,
     SAM/BAM, BIOM, GFF, Newick trees, query NCBI, and more.
-  version: 1.0.0-rc.4
+  version: 1.0.0-rc.3
   language: C++
   build: cmake
   license: BSD-3-Clause
-  # Haybarn: disabled — never builds against DuckDB 1.5.3 (reliability
-  # 0/6; ~3.4h CPU/run wasted before failing or timing out). Dispatching
-  # produces no binaries, so we exclude every platform. Re-enable when it
-  # builds cleanly (sync_from_upstream will pick up a compatible bump).
   excluded_platforms: linux_amd64;linux_arm64;linux_amd64_musl;linux_arm64_musl;osx_amd64;osx_arm64;windows_amd64;windows_arm64;windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
   maintainers:
   - wasade
@@ -18,7 +14,7 @@ extension:
   requires_toolchains: rust;omp
 repo:
   github: the-miint/duckdb-miint
-  ref: 1f5b77301c6d4130bb2660c5f9684d1d6afd2a4f
+  ref: c2e8d972724afd82fbbe542f6abf5c7a984f375d
 docs:
   hello_world: "-- Extract 16S rRNA gene sequences from E. coli K-12 MG1655\n-- Fetches\
     \ genome and annotations directly from NCBI \nWITH ecoli_16s_positions AS (\n\

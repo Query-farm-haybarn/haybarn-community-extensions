@@ -1,7 +1,7 @@
 extension:
   name: scalarfs
   description: A collection of virtual filesystems for working with scalars
-  version: 1.4.1
+  version: 1.5.0
   language: C++
   build: cmake
   license: MIT
@@ -10,69 +10,47 @@ extension:
   - teaguesterling
 repo:
   github: teaguesterling/duckdb_scalarfs
-  ref: 62ca2530e273ab9daa7d563519e1f22569e71741
-  ref_next: 62ca2530e273ab9daa7d563519e1f22569e71741
+  ref: 68faa6c72054123a6c6521dd41c12f929431da50
+  ref_next: 68faa6c72054123a6c6521dd41c12f929431da50
 docs:
-  hello_world: 'LOAD scalarfs;
-
-
-    -- Read JSON from a variable
-
-    SET VARIABLE config = ''{"debug": true, "port": 8080}'';
-
-    SELECT * FROM read_json(''variable:config'');
-
-
-    -- Read CSV from inline content
-
-    SELECT * FROM read_csv(''data+varchar:name,score
-
-    Alice,95
-
-    Bob,87'');
-
-
-    -- Use a file path stored in a variable
-
-    SET VARIABLE data_path = ''/data/reports/monthly.csv'';
-
-    SELECT * FROM read_csv(''pathvariable:data_path'');
-
-
-    SET VARIABLE data_paths = [''/data/reports/monthly.csv'', ''/archive/reports/*.csv''];
-
-    SELECT * FROM read_csv(''pathvariable:data_paths'');
-
-
-    -- Write query results to a variable
-
-    COPY (SELECT * FROM my_table WHERE active) TO ''variable:exported'' (FORMAT json);
-
-    SELECT getvariable(''exported'');
-
-
-    -- Store query results as native values (not serialized text)
-
-    COPY (SELECT path FROM files WHERE active) TO ''variable:paths'' (FORMAT variable);
-
-    SELECT * FROM read_csv(''pathvariable:paths'');  -- Read all files from the list
-
-    '
+  hello_world: "LOAD scalarfs;\n\n-- Read JSON from a variable\nSET VARIABLE config\
+    \ = '{\"debug\": true, \"port\": 8080}';\nSELECT * FROM read_json('variable:config');\n\
+    \n-- Read CSV from inline content\nSELECT * FROM read_csv('data+varchar:name,score\n\
+    Alice,95\nBob,87');\n\n-- Use a file path stored in a variable\nSET VARIABLE data_path\
+    \ = '/data/reports/monthly.csv';\nSELECT * FROM read_csv('pathvariable:data_path');\n\
+    \nSET VARIABLE data_paths = ['/data/reports/monthly.csv', '/archive/reports/*.csv'];\n\
+    SELECT * FROM read_csv('pathvariable:data_paths');\n\n-- Write query results to\
+    \ a variable\nCOPY (SELECT * FROM my_table WHERE active) TO 'variable:exported'\
+    \ (FORMAT json);\nSELECT getvariable('exported');\n\n-- Store query results as\
+    \ native values (not serialized text)\nCOPY (SELECT path FROM files WHERE active)\
+    \ TO 'variable:paths' (FORMAT variable);\nSELECT * FROM read_csv('pathvariable:paths');\
+    \  -- Read all files from the list\n\n-- Select which files to read via a catalog\
+    \ macro (pathmacro:)\nCREATE TABLE reports AS\n  SELECT * FROM (VALUES ('west',\
+    \ '/data/west.csv'), ('east', '/data/east.csv')) t(region, path);\nCREATE MACRO\
+    \ region_files(p) AS (SELECT list(path) FROM reports WHERE region = p['region']);\n\
+    SET allowed_pathmacro_macros = 'region_files';\nSELECT * FROM read_csv('pathmacro:region_files?region=east');\
+    \  -- reads only the east file\n\n-- Build pathmacro: URLs safely (keys/values\
+    \ URL-encoded)\nSELECT to_pathmacro_url('region_files', {region: 'west'});  --\
+    \ pathmacro:region_files?region=west\n"
   extended_description: "DuckDB's file functions (read_csv, read_json, COPY TO, etc.)\
     \ expect file paths. scalarfs bridges the gap\nwhen your content is already in\
     \ memory, allowing the same functions to work with:\n\nVariables \u2014 Store\
     \ data in DuckDB variables and read/write them as files\nPath Variables \u2014\
     \ Use file paths stored in variables for dynamic file resolution\nInline literals\
-    \ \u2014 Embed content directly in your queries without temporary files\n\n| Protocol\
-    \         | Purpose                                |   Mode      |\n|------------------|----------------------------------------|-------------|\n\
-    | variable:        | DuckDB variable as file                | Read/Write  |\n\
-    | pathvariable:    | File path(s) stored in variable        | Read/Write* |\n\
-    | data:            | RFC 2397 data URI (base64/url-encoded) | Read        |\n\
-    | data+varchar:    | Raw VARCHAR content as file            | Read        |\n\
-    | data+blob:       | Escaped BLOB content as file           | Read        |\n\
-    | decompress+gz:   | Gzip decompression wrapper             | Read        |\n\
-    | decompress+zstd: | Zstd decompression wrapper             | Read        |\n\n\
-    * Can only write to a `pathvariable:` that's a scalar path (not lists).\n\nFor\
-    \ full documentation, see: https://scalarfs.readthedocs.io/\n\n**Note**: This\
-    \ extension was written primarily using Claude and Claude Code as an exercise\
-    \ in AI-driven development.\n"
+    \ \u2014 Embed content directly in your queries without temporary files\nCatalog\
+    \ macros \u2014 Select which files to read from an index/catalog via a macro (pathmacro:)\n\
+    \n| Protocol         | Purpose                                 |   Mode      |\n\
+    |------------------|-----------------------------------------|-------------|\n\
+    | variable:        | DuckDB variable as file                 | Read/Write  |\n\
+    | pathvariable:    | File path(s) stored in variable         | Read/Write* |\n\
+    | data:            | RFC 2397 data URI (base64/url-encoded)  | Read        |\n\
+    | data+varchar:    | Raw VARCHAR content as file             | Read        |\n\
+    | data+blob:       | Escaped BLOB content as file            | Read        |\n\
+    | decompress+gz:   | Gzip decompression wrapper              | Read        |\n\
+    | decompress+zstd: | Zstd decompression wrapper              | Read        |\n\
+    | pathmacro:        | Paths resolved by an allow-listed macro | Read/Write |\n\
+    \n* Can only write to a `pathvariable:` that's a scalar path (not lists).\n\n\
+    Helper functions `to_pathmacro_url()` / `from_pathmacro_url()` build and parse\
+    \ `pathmacro:` URLs.\n\nFor full documentation, see: https://scalarfs.readthedocs.io/\n\
+    \n**Note**: This extension was written primarily using Claude and Claude Code\
+    \ as an exercise in AI-driven development.\n"

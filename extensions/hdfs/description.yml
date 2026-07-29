@@ -1,0 +1,62 @@
+extension:
+  name: hdfs
+  description: "Read and write hdfs:// URLs via a native HDFS filesystem \u2014 no\
+    \ JVM or libhdfs required"
+  version: 0.1.0
+  language: C++
+  build: cmake
+  license: MIT
+  requires_toolchains: rust
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64;windows_amd64_mingw
+  maintainers:
+  - casperhart
+repo:
+  github: casperhart/duckdb-hdfs
+  ref: 3fb20ef426a65b78c620ba79a8c23da6d8d45bc2
+docs:
+  hello_world: '-- Read any format DuckDB supports directly from HDFS
+
+    SELECT * FROM ''hdfs://namenode:8020/data/events/*.parquet'';
+
+    SELECT * FROM read_csv(''hdfs://namenode:8020/data/users.csv'');
+
+
+    -- Write with COPY ... TO, including PARTITION_BY
+
+    COPY (SELECT * FROM big_table)
+
+    TO ''hdfs://namenode:8020/out/table.parquet'' (FORMAT parquet);
+
+
+    -- List directories with full FileStatus metadata
+
+    SELECT name, type, size, owner, permissions
+
+    FROM hdfs_ls(''hdfs://namenode:8020/data'');
+
+
+    -- Metadata for a single path, and existence checks
+
+    SELECT * FROM hdfs_stat(''hdfs://namenode:8020/data'');
+
+    SELECT hdfs_exists(''hdfs://namenode:8020/data/events'');
+
+    '
+  extended_description: "The `hdfs` extension adds a native HDFS filesystem to DuckDB:\
+    \ read and write\n`hdfs://` URLs directly \u2014 no JVM, no `libhdfs`. It is backed\
+    \ by the pure-Rust\n[`hdfs-native`](https://github.com/Kimahriman/hdfs-native)\
+    \ client through a thin\nC FFI bridge.\n\n**Features**:\n- Reading any file format\
+    \ DuckDB supports (Parquet, CSV, JSON, ...) over `hdfs://`,\n  with concurrent\
+    \ positional reads for DuckDB's parallel Parquet reader.\n- Writing via `COPY\
+    \ ... TO`, including `PARTITION_BY` (HDFS is append-only).\n- Globbing (`*`, `?`,\
+    \ `[abc]`, `**`, plus Hadoop-style `{a,b}` alternation),\n  directory listing,\
+    \ file metadata, and directory/file management.\n- Metadata SQL functions: `hdfs_ls`,\
+    \ `hdfs_stat`, `hdfs_exists`.\n- HDFS encryption zones (Transparent Data Encryption):\
+    \ data is decrypted/encrypted\n  client-side, unwrapping keys via the KMS over\
+    \ TLS.\n- Kerberos-secured clusters are supported via the standard ticket/keytab\
+    \ mechanism.\n\n**Configuration**: connection config is resolved from the standard\
+    \ Hadoop\nenvironment, exactly as the Hadoop CLI tools do \u2014 `HADOOP_CONF_DIR`\
+    \ (or\n`HADOOP_HOME/etc/hadoop`) for `core-site.xml`/`hdfs-site.xml`, and\n`HADOOP_USER_NAME`\
+    \ for the effective user on non-secure clusters. The scheme-only\nform `hdfs:///path`\
+    \ uses `fs.defaultFS` from your Hadoop config.\n\nFor details, see the [extension\
+    \ repository](https://github.com/casperhart/duckdb-hdfs).\n"

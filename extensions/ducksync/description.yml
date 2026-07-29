@@ -2,7 +2,7 @@ extension:
   name: ducksync
   description: Intelligent query result caching between DuckDB and Snowflake with
     TTL and smart refresh
-  version: 0.2.0
+  version: 0.3.0
   language: C++
   build: cmake
   license: MIT
@@ -10,7 +10,7 @@ extension:
   - danjsiegel
 repo:
   github: danjsiegel/ducksync
-  ref: fcc03a3d3bcc2b2987dd19537ea1616787295828
+  ref: ad95ccc932019e358aaadb1ae08ee88e33b32de9
 docs:
   hello_world: "-- Install and load the extension\nINSTALL ducksync FROM community;\n\
     LOAD ducksync;\n\n-- Option A: Use an existing DuckLake catalog\nATTACH 'ducklake:postgres:host=localhost\

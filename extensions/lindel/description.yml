@@ -12,4 +12,4 @@ extension:
   version: '2025120401'
 repo:
   github: query-farm/lindel
-  ref: 00929877557da619e795b4a0b014e2c48fffed76
+  ref: 7cca5986cac2dab981b41c4fa279d162823fd22f

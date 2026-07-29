@@ -3,7 +3,7 @@ extension:
   description: Behavioral analytics functions inspired by ClickHouse (sessionize,
     retention, window_funnel, window_funnel_events, sequence_match, sequence_count,
     sequence_match_events, sequence_next_node)
-  version: 0.8.0
+  version: 0.9.1
   language: Rust
   build: cargo
   license: MIT
@@ -13,7 +13,7 @@ extension:
   - tomtom215
 repo:
   github: tomtom215/duckdb-behavioral
-  ref: 40df84a3ccc96238fcb817b9c70c8420c0e65d18
+  ref: 649dbac043925ff478d52d1be342734793dcca36
 docs:
   hello_world: "-- Session assignment with 30-minute timeout\nSELECT ts, sessionize(ts,\
     \ INTERVAL '30 minutes') OVER (ORDER BY ts) AS session_id\nFROM events;\n\n--\

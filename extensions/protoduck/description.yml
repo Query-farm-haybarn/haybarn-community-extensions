@@ -1,7 +1,7 @@
 extension:
   name: protoduck
   description: Deserialize Protocol Buffer messages stored in DuckDB columns
-  version: 0.1.0
+  version: 0.1.1
   language: Rust
   build: cmake
   license: MIT
@@ -11,7 +11,7 @@ extension:
   - fcsnk
 repo:
   github: fcsnk/protoduck
-  ref: c5bbd3a20fea31ebf21bb9ca3ca8c0771f83a0ea
+  ref: 022babbb3baed4409a8e5e8d035a9b623d3ebfe5
 docs:
   hello_world: "INSTALL protoduck FROM community;\nLOAD protoduck;\n\n-- Register\
     \ a protobuf schema at runtime\nSELECT proto_schema_add('\n    syntax = \"proto3\"\

@@ -1,8 +1,9 @@
 extension:
   name: pdf
-  description: Read text, metadata, words, lines, and tables from PDF files, with
-    optional Tesseract OCR for scanned pages.
-  version: 0.1.0
+  description: "Read, inspect, transform, and write PDFs in SQL \u2014 text at every\
+    \ grain (page/line/word/element/chunk), OCR for scanned files, metadata, tables,\
+    \ images, and document surgery (merge/split/sign/redact/watermark/encrypt/...)."
+  version: 0.8.0
   language: C++
   build: cmake
   license: GPL-2.0-or-later
@@ -14,89 +15,58 @@ extension:
   vcpkg_commit: 84bab45d415d22042bd0b9081aea57f362da3f35
 repo:
   github: asubbarao/duckdb-pdf
-  ref: 03380d1f5ece904b96fc0963d08cd7331ebe0c3f
+  ref: 1bacb91927adbdd43046b3234bbd5f9e5afb3059
 docs:
-  hello_world: '-- Load the extension
-
-    LOAD pdf;
-
-
-    -- One row per page (filename, page, page_count, text, width, height).
-
-    -- Accepts a single file, a list, or a glob.
-
-    SELECT page, text
-
-    FROM read_pdf(''report.pdf'');
-
-
-    -- Search across many PDFs at once
-
-    SELECT filename, page
-
-    FROM read_pdf(''reports/*.pdf'')
-
-    WHERE text ILIKE ''%revenue%'';
-
-
-    -- Document metadata, one row per file
-
-    SELECT title, author, pages FROM read_pdf_meta(''report.pdf'');
-
-
-    -- Extract tabular regions from digital PDFs
-
-    SELECT * FROM read_pdf_tables(''financial_report.pdf'');
-
-
-    -- Whole document as plain text (scalar)
-
-    SELECT pdf_to_text(''report.pdf'') AS full_text;
-
-    '
-  extended_description: "The `pdf` extension brings native PDF reading to DuckDB using\
-    \ the Poppler\nlibrary for rendering and Tesseract for OCR of scanned pages.\n\
-    \nAll table functions accept a single path, a list of paths, or a glob\n(`'docs/*.pdf'`).\
-    \ Shared named parameters: `first_page`, `last_page`,\n`password`, `layout` ('reading'\
-    \ | 'physical' | 'raw'), and the OCR knobs\n`ocr`, `auto_ocr`, `ocr_language`,\
-    \ `ocr_dpi`, `ocr_psm`, `ocr_oem`,\n`tessdata_dir`.\n\n**Table functions**\n\n\
-    - `read_pdf(path, ...)` \u2014 one row per page; columns: filename, page,\n  page_count,\
-    \ text, width, height (page size in PDF points).\n- `read_pdf_lines(path, ...)`\
-    \ \u2014 one row per layout-preserving line of text;\n  columns: filename, page,\
-    \ line, text. A PDF-aware analog to `read_lines`.\n- `read_pdf_meta(path)` \u2014\
-    \ one row per file; columns: filename, title, author,\n  subject, keywords, creator,\
-    \ producer, pages, pdf_version, encrypted.\n- `read_pdf_words(path, ...)` \u2014\
-    \ one row per word; columns: filename, page,\n  word, x0, y0, x1, y1 (bounding\
-    \ box in PDF user-space points, origin\n  bottom-left), font_name, font_size.\n\
-    - `read_pdf_tables(path, ...)` \u2014 extracts tabular regions from digital PDFs;\n\
-    \  columns: filename, page, table_index, row_index, cells (VARCHAR[]).\n\n**Scalar\
-    \ functions**\n\n- `pdf_to_text(path[, layout])` \u2014 entire document as a plain-text\
-    \ VARCHAR.\n- `pdf_to_html(path)` \u2014 document rendered to HTML.\n- `pdf_to_xml(path)`\
-    \ \u2014 document rendered to XML (Poppler pdftoxml format).\n- `pdf_to_svg(path,\
-    \ page)` \u2014 a single page rendered to SVG.\n\n**OCR (scanned / image-only\
-    \ PDFs)**\n\nPages with no extractable text layer are OCR'd automatically (`auto_ocr`,\n\
-    on by default); pass `ocr := true` to force OCR on every page. OCR requires a\n\
-    Tesseract language model at runtime \u2014 package managers do not ship one \u2014\
-    \ but\nonce you install one the usual way it works with **no configuration**:\
-    \ the\nextension auto-detects the standard model directories used by Homebrew\n\
-    (`brew install tesseract tesseract-lang`), apt\n(`apt-get install tesseract-ocr\
-    \ tesseract-ocr-eng`), and the Windows\ninstaller. To use a non-standard location,\
-    \ pass\n`tessdata_dir := '/path/to/tessdata'` per query, or set the `TESSDATA_PREFIX`\n\
-    environment variable (resolution order: `tessdata_dir` \u2192 `TESSDATA_PREFIX`\
-    \ \u2192\nauto-detected paths). Select the language with `ocr_language`\n(e.g.\
-    \ `ocr_language := 'deu'`). If no model is found anywhere, OCR raises a\nclear,\
-    \ actionable error rather than returning empty text.\n\n**Table extraction: scope**\n\
-    \n`read_pdf_tables` uses a precision-first geometric heuristic (word\nbounding-box\
-    \ column clustering with a regularity gate) on digital PDFs. It\nreliably handles\
-    \ clean, aligned tables and avoids emitting spurious tables\nfrom prose, but it\
-    \ does not do ML-based table-structure recognition \u2014 merged\ncells, borderless/sparse\
-    \ tables, and scanned tables are out of scope. For\nstate-of-the-art document\
-    \ understanding, reach for tools like docling,\nmarker, or a cloud Document AI\
-    \ service; this extension targets the ~80% of\neveryday text/word/line/metadata/simple-table\
-    \ extraction directly in SQL.\n\n**Platform support**\n\nLinux (x86_64, arm64),\
-    \ macOS (x86_64, arm64), and Windows (x64, MSVC) are\nsupported \u2014 all dependencies\
-    \ are resolved through vcpkg and statically linked.\nThe mingw/rtools Windows\
-    \ variants and windows_arm64 are excluded (different\ntoolchain / untested), and\
-    \ WebAssembly is excluded because Poppler and\nTesseract cannot be linked into\
-    \ the wasm target.\n\n**License**\n\nGPL-2.0-or-later. Poppler is GPL-2.0; statically\
-    \ linking it requires the\ncombined work to be distributed under the GPL.\n"
+  hello_world: "LOAD pdf;\n\n-- One row per page; takes a file, a list, or a glob\
+    \ (parallel across files)\nSELECT filename, page, text\nFROM read_pdf('reports/*.pdf')\n\
+    WHERE contains(lower(text), 'revenue');\n\n-- One row per file: metadata, page\
+    \ count, size, encryption\nSELECT file, title, author, page_count FROM pdf_info('reports/*.pdf');\n\
+    \n-- Structured table extraction (digital and scanned PDFs)\nSELECT * FROM read_pdf_tables('financial_report.pdf');\n\
+    \n-- Retrieval-ready, section-aware chunks for RAG \u2014 one statement\nCREATE\
+    \ TABLE chunks AS FROM pdf_chunks('reports/*.pdf');\n\n-- Render a page to PNG\
+    \ bytes (vision-model input, thumbnails)\nSELECT pdf_to_png('report.pdf', 1, 150)\
+    \ AS page_image;\n\n-- Write page preview PNGs to disk (no pdftoppm): pages/<stem>/p1.png,\
+    \ \u2026\nSELECT * FROM pdf_write_page_images('reports/*.pdf', 'pages', dpi :=\
+    \ 100);\n\n-- Query result to a typeset PDF, no external tools\nCOPY (SELECT *\
+    \ FROM findings)\nTO 'findings.pdf' (FORMAT pdf, TITLE 'Findings', FOOTER 'page\
+    \ {page}');\n"
+  extended_description: "**Everything PDF, in SQL** \u2014 built on Poppler (parsing/rendering),\n\
+    Tesseract (OCR), qpdf (document surgery), and libharu (native writing),\nall statically\
+    \ linked into the DuckDB process. Every function accepts a\nsingle path or a glob,\
+    \ so the natural unit of work is a folder of PDFs.\n\n**Read** \u2014 `read_pdf`\
+    \ (pages), `read_pdf_lines`, `read_pdf_words`\n(bounding boxes + OCR confidence),\
+    \ `read_pdf_elements` (layout elements in\nreading order), `read_pdf_tables` (ruled\
+    \ *and* unruled tables, digital or\nscanned), `pdf_chunks` (retrieval-ready chunks\
+    \ with section headings).\nShared named parameters cover `password`, page ranges,\
+    \ text layout, and\nOCR knobs; `ignore_errors := true` skips unopenable files\
+    \ in a folder scan.\n\n**Inspect** \u2014 `pdf_info` (full per-file census), `pdf_outline`\n\
+    (bookmarks), `pdf_attachments` (embedded files as BLOBs),\n`pdf_form_fields`,\
+    \ `pdf_annotations` (incl. hyperlink extraction),\n`pdf_revisions` (incremental-update\
+    \ forensics: what changed after the\ndocument was first written), `pdf_signatures`\
+    \ (digital signatures,\ncryptographically verified with OpenSSL CMS over the signed\
+    \ byte ranges),\n`pdf_images` (the stored raster XObjects \u2014 the JPEG a scanner\
+    \ wrote \u2014 as\nBLOBs), and PDF/A identification columns on `pdf_info`.\n\n\
+    **Convert** \u2014 `pdf_to_text` / `pdf_to_markdown` (layout-aware GitHub\nmarkdown)\
+    \ / `pdf_to_html` / `pdf_to_xml` / `pdf_to_svg` / `pdf_to_png` /\n`pdf_write_page_images`\
+    \ (write page preview PNGs to `out_dir/<stem>/p{N}.png`\nwithout pdftoppm).\n\
+    The render scalars also accept PDF bytes as a BLOB, so they compose with\n`read_blob`\
+    \ and httpfs.\n\n**Transform & write** \u2014 `pdf_merge`, `pdf_split`, `pdf_split_blank`\n\
+    (split scanned batches at blank separator pages), `pdf_rotate`,\n`pdf_pages`,\
+    \ `pdf_compress`, `pdf_encrypt` / `pdf_decrypt`;\n`pdf_watermark` / `pdf_bates`\
+    \ (searchable text stamps), `pdf_sign`\n(CMS digital signatures \u2014 verifies\
+    \ back through `pdf_signatures`),\n`pdf_redact` (true raster redaction: boxed\
+    \ text destroyed, not covered);\n`write_pdf` and `COPY ... TO 'out.pdf' (FORMAT\
+    \ pdf)` typeset text or query\nresults natively (libharu \u2014 no external tools);\
+    \ `to_pdf` converts office\ndocuments (docx, odt, pptx, ...) via a LibreOffice\
+    \ runtime shell-out.\n\n**OCR** \u2014 pages with no text layer are OCR'd automatically.\
+    \ **English\n(eng) is bundled** (tessdata_fast, extracted on first use) so scanned\
+    \ PDFs\nwork with zero host tessdata install. Other languages: install models\
+    \ the\nnormal way (`brew install tesseract-lang`, `apt-get install tesseract-ocr-deu`,\n\
+    \u2026) or pass `tessdata_dir` / `TESSDATA_PREFIX`. Pick languages with\n`ocr_language\
+    \ := 'deu'`. Leptonica preprocess + confidence DPI retry by\ndefault. Page text\
+    \ from `read_pdf` / `pdf_to_text` is **trimmed once** at\nemit (no trailing form-feeds).\n\
+    \n**Scope** \u2014 deterministic extraction, not ML document understanding:\n\
+    merged cells and borderless/sparse tables are out of scope (use docling /\nmarker\
+    \ / a Document AI service for those). Full per-function docs,\ncolumn lists, and\
+    \ recipes: https://github.com/asubbarao/duckdb-pdf\n\n**License** \u2014 GPL-2.0-or-later\
+    \ (Poppler is GPL-2.0 and statically linked).\n"

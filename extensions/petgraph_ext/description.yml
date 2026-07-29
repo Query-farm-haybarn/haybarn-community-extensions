@@ -1,0 +1,45 @@
+extension:
+  name: petgraph_ext
+  description: "Graph algorithms for DuckDB \u2014 PageRank, shortest path, SCC, MST,\
+    \ and more via petgraph"
+  version: 0.5.0
+  language: Rust
+  build: cargo
+  license: MIT
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;linux_amd64_musl;windows_amd64_rtools;windows_amd64_mingw
+  requires_toolchains: rust
+  maintainers:
+  - alitrack
+repo:
+  github: alitrack/duckdb_petgraph
+  ref: refs/tags/v0.5.1
+docs:
+  hello_world: "INSTALL petgraph_ext FROM community;\nLOAD petgraph_ext;\nSELECT *\
+    \ FROM petgraph_shortest_path('[(0,1,2.5),(1,2,1.0),(0,2,5.0)]', 0, 2);\n-- \u2192\
+    \ [0,1,2]  3.5\n"
+  extended_description: "## duckdb_petgraph\n\nA DuckDB extension that brings graph\
+    \ algorithms into SQL, powered by the\n[petgraph](https://github.com/petgraph/petgraph)\
+    \ Rust crate. Run PageRank,\nbetweenness centrality, closeness centrality, eigenvector\
+    \ centrality, SCC,\nLouvain community detection, topological sort, cycle detection,\
+    \ shortest path,\nconnected components, and MST \u2014 no external graph database\
+    \ required.\n\n### Features\n\n- **17 table functions**: build_graph, list_graphs,\
+    \ drop_graph, edges, neighbors,\n  shortest_path, connected_components, pagerank,\
+    \ betweenness_centrality,\n  closeness_centrality, eigenvector_centrality, scc,\
+    \ mst, louvain, toposort, is_cyclic\n- **Named graph cache**: build once with\
+    \ `petgraph_build_graph('name', ...)` and\n  reference with `@name` for zero-reparse\
+    \ repeated queries\n- **Multi-batch streaming**: all multi-row functions stream\
+    \ results across scan\n  calls \u2014 no artificial 2048-row ceiling\n- **Edge\
+    \ format**: `[(src,dst,weight),...]` string syntax, usable inline or\n  built\
+    \ from DuckDB tables via `string_agg`\n\n### Algorithms\n\n| Function | Description\
+    \ |\n|---|---|\n| `petgraph_shortest_path` | A\\* shortest path with path reconstruction\
+    \ |\n| `petgraph_connected_components` | DFS component labeling (undirected) |\n\
+    | `petgraph_pagerank` | PageRank with configurable alpha/iterations |\n| `petgraph_betweenness_centrality`\
+    \ | Brandes' algorithm (undirected) |\n| `petgraph_closeness_centrality` | BFS-based\
+    \ closeness (directed) |\n| `petgraph_eigenvector_centrality` | Power-iteration\
+    \ eigenvector |\n| `petgraph_scc` | Tarjan's strongly connected components |\n\
+    | `petgraph_louvain` | Louvain community detection |\n| `petgraph_toposort` |\
+    \ Kahn's topological sort |\n| `petgraph_is_cyclic` | Directed cycle detection\
+    \ |\n| `petgraph_mst` | Kruskal's minimum spanning tree |\n\n### Limitations\n\
+    \n- Graphs must fit in memory (no disk-backed storage)\n- Louvain is a simplified\
+    \ greedy pass with 20 iterations \u2014 useful for quick\n  community detection\
+    \ but not a full implementation\n- Edge weights are f64 only\n- Node IDs are i32\n"

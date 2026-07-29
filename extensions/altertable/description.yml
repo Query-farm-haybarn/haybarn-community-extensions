@@ -1,14 +1,9 @@
 extension:
   name: altertable
   description: Query Altertable's lakehouse directly from your local DuckDB.
-  version: 0.2.0
+  version: 0.4.0
   language: C++
   build: cmake
-  # Haybarn: disabled (FLAKY, not broken) — builds against DuckDB 1.5.3
-  # only intermittently (reliability 2/6 ~33%) while costing ~5.0h CPU/run.
-  # Unlike the never-build exclusions, this DOES ship binaries on some
-  # runs; disabled to stop wasted/retried CI churn. Re-enable once the
-  # flaky build leg is fixed (it builds clean reliably).
   excluded_platforms: linux_amd64;linux_arm64;linux_amd64_musl;linux_arm64_musl;osx_amd64;osx_arm64;windows_amd64;windows_arm64;windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
   license: MIT
   maintainers:
@@ -17,7 +12,7 @@ extension:
   requires_toolchains: vcpkg;parser_tools
 repo:
   github: altertable-ai/duckdb-altertable
-  ref: ed5737f8066098b9c8250c666eaf660da1c99d11
+  ref: c3fa5a0d8dfcda92b768629168949d81a0a275ed
 docs:
   hello_world: 'INSTALL altertable FROM community;
 

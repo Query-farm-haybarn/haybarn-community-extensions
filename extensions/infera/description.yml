@@ -11,7 +11,7 @@ extension:
   requires_toolchains: rust
 repo:
   github: CogitatorTech/infera
-  ref: 2fcc8b994a89569e3447025fd36708170c9320a9
+  ref: b15134d00ace5051c6ba89a53836c25249a47a64
 docs:
   hello_world: '-- 0. Assuming the extension is already installed and loaded
 

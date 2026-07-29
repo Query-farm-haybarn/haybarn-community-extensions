@@ -1,22 +1,17 @@
 extension:
-  # Haybarn: disabled because the extension does not yet build
-  # against DuckDB 1.5.2 — upstream community-extensions also has
-  # no v1.5.2 binary. Re-enable when upstream lands a v1.5.2-
-  # compatible release (sync_from_upstream will pick up the bump).
-  # Tracker: https://github.com/cityjson/duckdb-cityjson/issues/7
-  excluded_platforms: linux_amd64;linux_arm64;linux_amd64_musl;linux_arm64_musl;osx_amd64;osx_arm64;windows_amd64;windows_arm64;windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
   name: cityjson
   description: Read, write, and query CityJSON, CityJSONSeq, and FlatCityBuf 3D city
     model files.
-  version: 0.1.0
+  version: 0.2.0
   language: C++
   build: cmake
   license: MIT
   maintainers:
   - HideBa
+  excluded_platforms: linux_amd64;linux_arm64;linux_amd64_musl;linux_arm64_musl;osx_amd64;osx_arm64;windows_amd64;windows_arm64;windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
 repo:
   github: cityjson/duckdb-cityjson
-  ref: 0df88f9fb023e272b0fd3208e0f55445714b278c
+  ref: d511bdba26392bab7d4b789f294065a3fbed58d6
 docs:
   hello_world: "-- Read a CityJSON file\nSELECT * FROM read_cityjson('buildings.city.json');\n\
     \n-- Read a CityJSONSeq (line-delimited) file\nSELECT * FROM read_cityjsonseq('buildings.city.jsonl');\n\
@@ -34,6 +29,9 @@ docs:
     \ `flatcitybuf_metadata` \u2014 inspect file headers\n- `COPY ... TO` with formats\
     \ `cityjson`, `cityjsonseq`, and `flatcitybuf` \u2014 write query results\n\n\
     Additional features:\n- Automatic schema inference from CityJSON attributes\n\
-    - LOD-based geometry extraction as WKB blobs via the `lod` parameter\n- Support\
-    \ for CityJSON v2.0 and CityJSONSeq formats\n\nFor more information on the CityJSON\
+    - Wide columnar layout: one WKB geometry column per Level of Detail, plus a per-object\
+    \ `bbox` extent\n- LOD-based geometry extraction as WKB blobs via the `lod` parameter\n\
+    - Filter pushdown on `id`, `feature_id`, and `object_type`\n- Streaming reads\
+    \ of large CityJSONSeq files and remote files over HTTP/S3/GCS\n- Support for\
+    \ CityJSON v2.0 and CityJSONSeq formats\n\nFor more information on the CityJSON\
     \ format, see https://www.cityjson.org/.\n"

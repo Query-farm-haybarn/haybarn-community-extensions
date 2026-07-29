@@ -11,7 +11,7 @@ extension:
   - avaitla
 repo:
   github: avaitla/duck_diff
-  ref: 3f278772095f7abb1c67a7cd17e039cd48dee20c
+  ref: 8697ac758c56b718e7be501cc1d554301a0a1419
 docs:
   hello_world: "LOAD duck_diff;\n\n-- Create two sample snapshots\nCREATE TABLE users_v1\
     \ AS SELECT * FROM (VALUES\n    (1, 'Ada',   'ada@x.com',   100),\n    (2, 'Linus',\

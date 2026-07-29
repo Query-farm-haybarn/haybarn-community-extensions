@@ -13,4 +13,4 @@ extension:
   version: '2025120401'
 repo:
   github: query-farm/tera
-  ref: b6e5a399887534c0e6309c6f996b12913da9d996
+  ref: f8d0b353c1791286fd0c5282fb400750c30e3369

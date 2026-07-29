@@ -1,0 +1,36 @@
+extension:
+  name: ldbc_data_gen
+  description: Generate LDBC SNB BI datasets directly from DuckDB
+  version: 0.1.1
+  language: C++
+  build: cmake
+  license: MIT
+  maintainers:
+  - Dtenwolde
+repo:
+  github: Dtenwolde/ldbc-data-gen
+  ref: a232c3829d81ec718d69d74f55147510ed876764
+docs:
+  hello_world: "INSTALL ldbc_data_gen FROM community;\nLOAD ldbc_data_gen;\n\n-- Generate\
+    \ the LDBC SNB BI dataset as DuckDB tables.\nCALL ldbcgen(sf := 0.003, schema\
+    \ := 'ldbc');\n\n-- Inspect generated relation counts.\nFROM ldbcgen(sf := 0.003,\
+    \ schema := 'ldbc_counts');\n\n-- Generate Spark-compatible BI Parquet files.\n\
+    CALL ldbcgen(\n  sf := 0.003,\n  target := 'files',\n  output_dir := 'out/sf0.003',\n\
+    \  format := 'parquet',\n  overwrite := true\n);\n\n-- Inspect the generated schema\
+    \ metadata.\nFROM ldbcgen_schema(format := 'parquet')\nLIMIT 10;\n\n-- Run one\
+    \ bundled LDBC BI query against generated tables.\nPRAGMA ldbc_bi(1, schema =\
+    \ 'ldbc');\n"
+  extended_description: 'The ldbc_data_gen extension generates deterministic LDBC
+    Social Network Benchmark Business Intelligence (SNB BI) datasets directly inside
+    DuckDB. It can materialize the generated graph as DuckDB tables or write Spark-compatible
+    BI files in the composite-merged-fk layout, including the initial snapshot, inserts,
+    and deletes. Parquet and CSV file output are supported.
+
+    The extension also includes helpers for inspecting the generated schema, configuration
+    values, deterministic Java-compatible random sequences, and bundled LDBC BI query
+    execution through `PRAGMA ldbc_bi`.
+
+    The generator is designed for reproducible benchmark data generation and local
+    validation workflows without requiring Spark.
+
+    '

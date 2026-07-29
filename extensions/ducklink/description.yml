@@ -1,7 +1,7 @@
 extension:
   name: ducklink
-  description: Run WebAssembly component extensions inside DuckDB
-  version: 0.2.0
+  description: Load portable WebAssembly extension modules into DuckDB from SQL
+  version: 5.0.0
   language: Rust
   build: cargo
   license: MIT
@@ -11,37 +11,69 @@ extension:
   excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_rtools;windows_amd64_mingw;linux_amd64_musl
 repo:
   github: tegmentum/ducklink-extension
-  ref: v0.2.0
+  ref: v5.0.0
 docs:
-  hello_world: '-- The extension ships one built-in, so loading works with no component:
-
-    LOAD ducklink;
-
-    SELECT ducklink_version();   -- e.g. ''ducklink 0.2.0''
-
-
-    -- To expose a component''s functions, point ducklink at one or more
-
-    -- `duckdb:extension` WebAssembly components via the DUCKLINK_COMPONENTS
-
-    -- environment variable BEFORE starting DuckDB, e.g.
-
-    --   DUCKLINK_COMPONENTS=isin=/path/to/isin.wasm
-
-    -- then every function the component registers becomes callable:
-
-    --   LOAD ducklink;
-
-    --   SELECT isin_is_valid(''US0378331005'');
-
-    '
-  extended_description: "ducklink lets a single, portable WebAssembly component \u2014\
-    \ built once against\nthe `duckdb:extension` WIT world \u2014 load into DuckDB\
-    \ on any supported platform\nwithout per-platform native builds. The extension\
-    \ embeds wasmtime, loads each\ncomponent named in the `DUCKLINK_COMPONENTS` environment\
-    \ variable (a\n`:`-separated list of `name=path` entries, read when `LOAD ducklink`\
-    \ runs),\nruns its `load()` to capture the scalar/table/aggregate functions it\n\
-    registers, and bridges them into DuckDB's function catalog. A built-in\n`ducklink_version()`\
-    \ scalar is always available so the extension is usable\nand testable before any\
-    \ component is configured. The same components run\nunchanged under the standalone\
-    \ `ducklink` host (DuckDB-compiled-to-wasm), so\none artifact targets both directions.\n"
+  hello_world: "LOAD ducklink;\nSELECT ducklink_version();\n\n-- ducklink hosts portable\
+    \ WebAssembly extension modules. Browse the\n-- catalog of modules it can load\
+    \ (offline-safe via a bundled snapshot):\nSELECT name, description FROM ducklink.modules\
+    \ LIMIT 5;\n\n-- Load one by name \u2014 ducklink fetches, sha256-verifies, and\
+    \ caches the\n-- component, then registers its functions for use in later statements:\n\
+    --   FROM ducklink_load('aba');\n--   SELECT aba_validate('021000021');   -- true\n"
+  extended_description: "ducklink is a uniform extension interface for DuckDB: users\
+    \ ask for a\ncapability by name, and ducklink picks the best backing \u2014 a\
+    \ portable\nWebAssembly component, a ducklink-hosted native `.duckdb_extension`,\
+    \ or\na matching entry in `duckdb/community-extensions` \u2014 without changing\n\
+    the SQL you write. A module is built once against the\n`duckdb:extension` WIT\
+    \ world and runs on any supported platform in\nits WASM form; native equivalents\
+    \ are opted-in for hot paths.\n\nThe interface is SQL-native and catalog-backed.\
+    \ `ducklink_load('<name>')`\nresolves a name against a curated online catalog,\
+    \ downloads the component\n(sha256-verified) into a local cache, and registers\
+    \ the scalar / table /\naggregate functions it declares for use in subsequent\
+    \ statements:\n\n    FROM ducklink_load('aba');\n    SELECT aba_validate('021000021');\
+    \   -- true\n\nA set of system views makes everything introspectable:\n\n  * ducklink.modules\
+    \               \u2014 the full catalog, with a `loaded` flag\n  * ducklink.functions\
+    \             \u2014 every function with its full SQL signature\n  * ducklink.docs\
+    \                  \u2014 searchable per-function documentation\n  * ducklink.host_capabilities\
+    \     \u2014 capability kinds this host build satisfies\n  * ducklink.host   \
+    \               \u2014 this host's WIT contract version + DuckDB build info\n\
+    \  * ducklink.cache                 \u2014 the local component cache\n  * ducklink.module_compatibility\
+    \  \u2014 per module \xD7 generation: runnable, selected, lifecycle\n\nTwo companion\
+    \ helpers make the doc surface interactive:\n`ducklink_search('query')` returns\
+    \ ranked function matches across name,\ntags, summary, and description; `ducklink_help('name')`\
+    \ renders the\nmarkdown block for a single function or every function in a module\
+    \ \u2014\nso the catalog is discoverable from SQL without leaving the session.\n\
+    \nComponents can also ship their own docs bundled in the `.wasm` binary\nvia a\
+    \ `duckdb.docs` custom section (JSON per function). Ducklink reads\nthe section\
+    \ at load and merges it with the catalog docs \u2014 component\nsummary/description/example\
+    \ override the catalog, tags union \u2014 so\nthird-party modules can keep their\
+    \ own docs authoritative.\n\nLoading a module by catalog name uses the table function\n\
+    `ducklink_load('aba', kind => 'wasm')` (WASM sandbox, the default) or\n`ducklink_load('aba',\
+    \ kind => 'native')` (prefer the native backing).\n`native` is the routing layer.\
+    \ When the catalog advertises a\ncommunity-extensions entry for the same capability,\
+    \ ducklink dispatches\n`INSTALL <name> FROM community; LOAD <name>;` on your behalf\
+    \ \u2014 signed by\nthe community-extensions key, no `-unsigned` needed. Otherwise\
+    \ it falls\nback to a ducklink-hosted per-platform `.duckdb_extension` file (curated\n\
+    set, `-unsigned` required at DuckDB startup), which skips the\nWebAssembly sandbox\
+    \ for ~20x the throughput on tight-loop workloads.\n`ducklink.modules.native_available`\
+    \ is `true` whenever ANY native backing\nresolves for the running host.\n\nWhen\
+    \ a native backing is a community extension, ducklink can re-expose its functions\n\
+    under its own chosen names via community-native aliases, keeping downstream SQL\
+    \ stable\nacross backing swaps. Scalar and table aliases are registered as CREATE\
+    \ OR REPLACE\nMACRO shapes (zero overhead). Aggregate aliases are registered as\
+    \ real C-API\nAggregateFunctions that delegate to the community target on a sibling\
+    \ connection, so\nDISTINCT, FILTER, GROUP BY, OVER (...) window aggregates, and\
+    \ ORDER BY inside the\naggregate call all propagate transparently through the\
+    \ alias.\n\nCatalog entries can further declare an optional `namespace` so their\
+    \ functions bind\nunder both DuckDB's `main` schema (bare) and a schema-qualified\
+    \ form (`crypto.hash(x)`\nfor `namespace: \"crypto\"`). Users layer session-scoped\
+    \ short aliases on top via\n`ducklink_prefix('c', 'crypto')` \u2014 callable as\
+    \ a table function, a scalar, or through\nthe shorter `PREFIX('c','crypto')` macro\
+    \ (persisted in `ducklink.prefixes` and\nreplayed on the next LOAD). All four\
+    \ qualifier forms \u2014 bare, ducklink-alias bare,\nnamespace-qualified, and\
+    \ alias-qualified \u2014 bind the same underlying function set,\nso aggregate\
+    \ modifiers propagate through every one of them.\n\nA built-in `ducklink_version()`\
+    \ scalar is always available, so the\nextension is usable and testable before\
+    \ any module is loaded. For\ndeployments, the `DUCKLINK_COMPONENTS` environment\
+    \ variable can preload a\nfixed set of modules at load time. The same components\
+    \ run unchanged under\nthe standalone `ducklink` host (DuckDB-compiled-to-wasm),\
+    \ so one artifact\ntargets both directions.\n"

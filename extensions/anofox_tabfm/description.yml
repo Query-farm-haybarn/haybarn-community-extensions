@@ -1,0 +1,69 @@
+extension:
+  name: anofox_tabfm
+  description: "Zero-shot tabular machine learning inside DuckDB \u2014 classification\
+    \ and regression with real tabular foundation models (Mitra, TabPFN v2, TabPFN\
+    \ 2.5, TabICL, Orion-BiX, TabFM) on ONNX Runtime, no training loop"
+  version: 0.3.0
+  language: C++
+  build: cmake
+  license: MIT
+  maintainers:
+  - sipemu
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_mingw;linux_amd64_musl
+repo:
+  github: DataZooDE/anofox-tabfm
+  ref: 0c7f83ee8d94c0b4d9c520bd3b49edebb8c859bb
+docs:
+  hello_world: "-- Fetch a real tabular foundation model once (Mitra, Apache-2.0,\
+    \ ~300 MB,\n-- no license gate). Cached under ~/.cache/anofox-tabfm and reused\
+    \ after.\nINSTALL httpfs; LOAD httpfs;                       -- weights are fetched\
+    \ over HTTPS\nCALL tabfm_download('classification', model := 'mitra');\n\n-- Label\
+    \ a few rows; leave the ones you want scored as NULL. The model reads\n-- the\
+    \ labelled rows as in-context examples and predicts the rest \u2014 no training.\n\
+    CREATE TABLE iris AS SELECT * FROM VALUES\n  (5.1, 3.5, 1.4, 0.2, 'setosa'),\n\
+    \  (4.9, 3.0, 1.4, 0.2, 'setosa'),\n  (7.0, 3.2, 4.7, 1.4, 'versicolor'),\n  (6.4,\
+    \ 3.2, 4.5, 1.5, 'versicolor'),\n  (6.3, 3.3, 6.0, 2.5, 'virginica'),\n  (5.8,\
+    \ 2.7, 5.1, 1.9, 'virginica'),\n  (5.0, 3.6, 1.4, 0.2, NULL),                \
+    \      -- predict me\n  (6.5, 3.0, 5.8, 2.2, NULL)                       -- and\
+    \ me\n  AS t(sepal_len, sepal_wid, petal_len, petal_wid, species);\n\nSELECT petal_len,\
+    \ petal_wid, yhat AS predicted_species, yhat_score\nFROM tabfm_classify('iris',\
+    \ 'species', model := 'mitra')\nWHERE species IS NULL;\n"
+  extended_description: "**anofox_tabfm** embeds real tabular foundation models \u2014\
+    \ TabPFN-style\nin-context learners \u2014 into DuckDB, so tabular classification\
+    \ and regression\nbecome a single SQL statement. There is no training loop, no\
+    \ Python, and no\nMLOps: the model reads your labelled rows as context and predicts\
+    \ the rest.\n\n### Built-in models\nSix models ship in the extension and are selected\
+    \ with `model :=` (or a\n`SET anofox_tabfm_default_model` once per session):\n\
+    \n- **mitra** \u2014 AWS AutoGluon (Apache-2.0), no license gate, ~300 MB. A great\
+    \ default.\n- **tabpfn-v2** \u2014 Prior Labs (Apache-2.0, attribution).\n- **tabicl-v2**\
+    \ \u2014 Inria (BSD-3-Clause).\n- **orion-bix** \u2014 Lexsi Labs (MIT), no license\
+    \ gate. Classification only.\n- **tabpfn-v2-5** \u2014 Prior Labs TabPFN 2.5.\
+    \ **Non-commercial**: the weights\n  and their outputs may not be used for commercial\
+    \ or production purposes.\n- **tabfm-v1** \u2014 Google TabFM (non-commercial,\
+    \ gated; ~6.6 GB).\n\n`SELECT model, license, commercial FROM tabfm_list_models()`\
+    \ reports each\nmodel's license and whether it is commercially usable \u2014 worth\
+    \ checking\nbefore shipping anything built on one.\n\nOnly weight-free computation\
+    \ graphs are bundled \u2014 **no model weights are\ndistributed with the extension**.\
+    \ You download the weights yourself from\nHugging Face into a local cache (`~/.cache/anofox-tabfm`),\
+    \ and for a gated\nmodel you first accept its license\n(`SET anofox_tabfm_accept_hf_license\
+    \ = true`). Repositories that Hugging Face\nitself gates additionally need a token,\
+    \ supplied with a standard DuckDB\nsecret:\n\n```sql\nCREATE SECRET hf (TYPE http,\
+    \ BEARER_TOKEN 'hf_xxx', SCOPE 'https://huggingface.co');\n```\n\n### Bring your\
+    \ own model\nRegister any compatible model entirely from SQL \u2014 no external\
+    \ JSON manifest.\nWeights can be `.safetensors` or a native PyTorch `.ckpt` (read\
+    \ without Python):\n\n```sql\nCALL tabfm_register_model(\n  id := 'my-model',\n\
+    \  classification_graph   := 'model.onnx',\n  classification_weights := 'model.safetensors',\n\
+    \  license := 'apache-2.0');\n```\n\n### Inference\nRuns on [ONNX Runtime](https://onnxruntime.ai/),\
+    \ statically linked into the\nextension (CPU execution provider). CUDA and ROCm/MIGraphX\
+    \ flavors exist in\nthe source tree for self-builds; this community build ships\
+    \ the portable CPU\nflavor.\n\n### Surface\n- `tabfm_classify` / `tabfm_regress`\
+    \ \u2014 zero-shot predict (a single table with\n  NULL targets, or a separate\
+    \ `test :=` set)\n- `tabfm_predict`, `tabfm_predict_by`, `tabfm_predict_agg`,\
+    \ `tabfm_predict_win`\n- `tabfm_register_model` / `tabfm_unregister_model` \u2014\
+    \ pure-SQL model registration\n- `tabfm_download` / `tabfm_models` / `tabfm_list_models`\
+    \ / `tabfm_load` /\n  `tabfm_unload` / `tabfm_remove` \u2014 all accept `model\
+    \ :=`\n- `tabfm_devices` \u2014 discover CPU/GPU execution providers\n- `SET anofox_tabfm_*`\
+    \ settings (default model, license gate, cache dir,\n  threads, device, tracing)\n\
+    \nFull function names are `anofox_tabfm_*` with short `tabfm_*` aliases. See the\n\
+    [project repository](https://github.com/DataZooDE/anofox-tabfm) for the full\n\
+    SQL API and examples.\n"

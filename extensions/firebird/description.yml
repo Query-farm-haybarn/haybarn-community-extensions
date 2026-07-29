@@ -5,7 +5,7 @@ extension:
     support, native ATTACH, and CHARACTER SET NONE handling (default win1252; strict
     / iso8859_1 / blob also available) with filter-pushdown correctness on transcoded
     columns.
-  version: 0.6.1
+  version: 1.0.1
   language: C++
   build: cmake
   license: MIT
@@ -14,7 +14,7 @@ extension:
   excluded_platforms: wasm_mvp;wasm_threads;wasm_eh
 repo:
   github: flozer/duckdb-firebird
-  ref: v0.6.1
+  ref: v1.0.1
 docs:
   hello_world: "LOAD firebird;\n\n-- 1. Live scan against a Firebird server.\nSELECT\
     \ * FROM firebird_scan(\n    'firebird://APP_READONLY:secret@db.host:3050/srv:/data/prod.fdb?charset=UTF8',\n\
@@ -91,4 +91,4 @@ docs:
     \ applies\nthe post-transcode text filter above the scan.\n\n## Verified against\n\
     \n- Firebird 3.0 (apt `firebird3.0-server`, CI fixture)\n- Firebird 4.0.x (`firebirdsql/firebird:4-noble`)\n\
     - Firebird 5.0.4 (Windows local + `firebirdsql/firebird:5-noble`)\n- DuckDB v1.5.3\
-    \ (`StorageExtension::Register` API)\n"
+    \ - v1.5.5 (`StorageExtension::Register` API)\n"

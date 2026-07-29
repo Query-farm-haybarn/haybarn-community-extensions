@@ -1,0 +1,65 @@
+extension:
+  name: stats_duck
+  description: "A statistical computing toolkit for DuckDB \u2014 descriptive statistics,\
+    \ hypothesis tests, R-style distribution functions (d/p/q/r), OLS regression with\
+    \ HC and cluster-robust standard errors, grammar-of-graphics charts (VISUALIZE\
+    \ \u2192 Vega-Lite), and first-class readers/writers for SAS, SPSS, and Stata\
+    \ files, all directly in SQL."
+  version: 0.7.0
+  language: C++
+  build: cmake
+  license: Apache-2.0
+  maintainers:
+  - caerbannogwhite
+repo:
+  github: KoliStat/the-stats-duck
+  ref: 6572642cfb6ee9331998ee375a841601414efe28
+docs:
+  hello_world: "-- R-style distribution functions (d/p/q/r for 15+ families):\nD SELECT\
+    \ pnorm(1.96) AS p, qt(0.975, 30) AS t_crit, dpois(3, 2.5) AS pmf;\n\u250C\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502   \
+    \      p          \u2502       t_crit       \u2502         pmf         \u2502\n\
+    \u2502       double       \u2502       double       \u2502       double      \
+    \  \u2502\n\u251C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2524\n\u2502 0.9750021048517796 \u2502 2.0422724563012373 \u2502 0.21376301724973648\
+    \ \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2518\n\n-- OLS regression as an aggregate (one model per GROUP BY), with robust\
+    \ SEs.\n-- vcov: 'const' | 'HC0'..'HC3' | 'CR0'/'CR1' (cluster-robust, + a cluster\
+    \ key).\nD SELECT (c).term, (c).estimate, (c).std_error\n  FROM (\n    SELECT\
+    \ unnest((lm_fit(y, [x1, x2], 'HC1')).coefficients) AS c\n    FROM my_data\n \
+    \ );\n\n-- A clinical \"Table 1\" over mixed variable types, with between-group\
+    \ tests:\nD SELECT * FROM table_one('patients', variables := ['age', 'sex', 'bmi'],\
+    \ by := ['arm']);\n\n-- Grammar-of-graphics: turn a query into a Vega-Lite spec\
+    \ (+ the SQL to feed it):\nD VISUALIZE wt AS x, mpg AS y FROM cars DRAW point;\n"
+  extended_description: "## The Stats Duck\n\nA statistical computing toolkit that\
+    \ brings common statistical workflows\ninto DuckDB SQL. Everything runs as streaming\
+    \ aggregates and scalar\nfunctions, so it scales to large datasets \u2014 and\
+    \ also runs in DuckDB-WASM in\nthe browser.\n\n**What's included**\n\n- **Descriptive\
+    \ statistics** \u2014 `summary_stats`, `table_one` (the clinical\n  \"Table 1\"\
+    ), `corr_matrix`, `meta`.\n- **Hypothesis tests** \u2014 one/two-sample and paired\
+    \ t-tests, one-way ANOVA,\n  chi-square, Mann\u2013Whitney, Wilcoxon signed-rank,\
+    \ Kolmogorov\u2013Smirnov,\n  Shapiro\u2013Wilk, Anderson\u2013Darling, Jarque\u2013\
+    Bera, and correlation tests\n  (Pearson / Spearman / Kendall).\n- **Distribution\
+    \ functions** \u2014 R-style `d`/`p`/`q`/`r` quartets for 15+\n  families (normal,\
+    \ t, chi-square, F, gamma, beta, exponential, Weibull,\n  log-normal, Poisson,\
+    \ negative binomial, hypergeometric, \u2026).\n- **Regression** \u2014 `lm` /\
+    \ `lm_summary` table functions and the `lm_fit`\n  aggregate (one model per `GROUP\
+    \ BY`) with classical, HC0\u2013HC3\n  heteroskedasticity-consistent, and CR0/CR1\
+    \ cluster-robust standard errors.\n- **Grammar of graphics** \u2014 `VISUALIZE\
+    \ \u2026 DRAW <mark>` returns a Vega-Lite v5\n  spec plus the SQL needed to feed\
+    \ it.\n- **Statistical file formats** \u2014 first-class readers and writers for\
+    \ SAS\n  (`.sas7bdat`, `.xpt`), SPSS (`.sav`, `.por`), and Stata files, via ReadStat.\n\
+    - **Resampling & correction** \u2014 `bootstrap`, `adjust_p` (multiple-testing).\n\
+    \nFull function reference: <https://github.com/KoliStat/the-stats-duck>.\n"

@@ -2,7 +2,7 @@ extension:
   name: plinking_duck
   description: Read PLINK 2 genomics file formats and run common genetic analyses
     directly in SQL
-  version: 0.5.0
+  version: 0.8.0
   language: C++
   build: cmake
   license: MIT
@@ -11,7 +11,7 @@ extension:
   - teaguesterling
 repo:
   github: teaguesterling/plinking_duck
-  ref: ce446b086c88df40f5447ab7ce04cc867e2fe3db
+  ref: 8c864c03a8292288e30e07dcc456b095e39a05cd
 docs:
   hello_world: '-- Read variant metadata from a .pvar file
 
@@ -48,26 +48,30 @@ docs:
   extended_description: "PlinkingDuck brings [PLINK 2](https://www.cog-genomics.org/plink/2.0/)\
     \ genotype,\nvariant, and sample data into DuckDB, letting you query genomics\
     \ datasets with\nstandard SQL instead of format-specific command-line tools.\n\
-    \n**File readers:**\n- `read_pvar(path)` \u2014 variant metadata (.pvar/.bim)\n\
-    - `read_psam(path)` \u2014 sample metadata (.psam/.fam)\n- `read_pgen(path)` \u2014\
-    \ binary genotypes (.pgen)\n- `read_pfile(prefix)` \u2014 unified fileset reader\
-    \ with orient modes (variant/genotype/sample), sample subsetting, region and variant\
-    \ filtering\n- `read_plink_vcf(path)` \u2014 fast biallelic genotype extraction\
-    \ from VCF/VCF.gz (~3x faster than htslib)\n\n**Analysis functions:**\n- `plink_freq`\
-    \ \u2014 per-variant allele frequencies via fast genotype counting\n- `plink_hardy`\
-    \ \u2014 Hardy-Weinberg equilibrium exact test\n- `plink_missing` \u2014 per-variant\
-    \ or per-sample missingness rates\n- `plink_ld` \u2014 pairwise linkage disequilibrium\
-    \ (r\xB2, D, D')\n- `plink_score` \u2014 polygenic risk scoring with mean imputation\n\
-    - `plink_glm` \u2014 per-variant GWAS regression (linear, logistic, Firth)\n-\
-    \ `plink_pca` \u2014 principal component analysis via randomized SVD\n\n**Genotype\
-    \ output modes:**\n- `genotypes='struct'` \u2014 STRUCT with named fields per\
-    \ sample\n- `genotypes='counts'` \u2014 fast genotype counting (no decompression)\n\
-    - `genotypes='stats'` \u2014 counts + AF, MAF, missingness, heterozygosity\n\n\
-    **Flexible inputs:**\n- Unified `variants` parameter: indices, rsids, CPRA strings/structs,\
-    \ ranges\n- Parquet/CSV/table companions for variant and sample metadata\n- `af_range`\
-    \ / `ac_range` / `genotype_range` filter pushdown\n\nAll functions support projection\
-    \ pushdown (skip genotype decompression for\nmetadata-only queries), parallel\
-    \ scanning, sample subsetting, and region\nfiltering. Legacy PLINK 1 formats (.bim/.fam)\
-    \ are auto-detected.\n\nBuilt on [pgenlib](https://github.com/chrchang/plink-ng)\
-    \ for efficient access\nto the compressed .pgen binary format without full decompression.\n\
-    \nFor full documentation, see [plinking-duck.readthedocs.io](https://plinking-duck.readthedocs.io).\n"
+    \n**File readers:**\n- `read_pvar(path | [paths])` \u2014 variant metadata (.pvar/.bim);\
+    \ a list row-concatenates multiple files\n- `read_psam(path)` \u2014 sample metadata\
+    \ (.psam/.fam)\n- `read_pgen(path)` \u2014 binary genotypes (.pgen)\n- `read_pfile(prefix\
+    \ | [prefixes])` \u2014 unified fileset reader with orient modes (variant/genotype/sample),\
+    \ sample subsetting, region and variant filtering; accepts a list of prefixes\
+    \ to read a variant-sharded fileset (identical samples) as one table\n- `read_plink_vcf(path)`\
+    \ \u2014 fast biallelic genotype extraction from VCF/VCF.gz (~3x faster than htslib)\n\
+    \n**Analysis functions:**\n- `plink_freq` \u2014 per-variant allele frequencies\
+    \ via fast genotype counting\n- `plink_hardy` \u2014 Hardy-Weinberg equilibrium\
+    \ exact test\n- `plink_missing` \u2014 per-variant or per-sample missingness rates\n\
+    - `plink_ld` \u2014 pairwise linkage disequilibrium (r\xB2, D, D')\n- `plink_score`\
+    \ \u2014 polygenic risk scoring with mean imputation\n- `plink_glm` \u2014 per-variant\
+    \ GWAS regression (linear, logistic, Firth)\n- `plink_pca` \u2014 principal component\
+    \ analysis via randomized SVD\n\n**Genotype output modes:**\n- `genotypes='struct'`\
+    \ \u2014 STRUCT with named fields per sample\n- `genotypes='counts'` \u2014 fast\
+    \ genotype counting (no decompression)\n- `genotypes='stats'` \u2014 counts +\
+    \ AF, MAF, missingness, heterozygosity\n\n**Flexible inputs:**\n- Unified `variants`\
+    \ parameter: indices, rsids, CPRA strings/structs, ranges\n- Parquet/CSV/table\
+    \ companions for variant and sample metadata\n- `af_range` / `ac_range` filter\
+    \ pushdown, and `include_genotypes` (hardcall\n  category) / `genotype_range`\
+    \ for fast carrier lookups \u2014 in `orient := 'sample'`\n  only the matching\
+    \ subjects are materialized\n\nAll functions support projection pushdown (skip\
+    \ genotype decompression for\nmetadata-only queries), parallel scanning, sample\
+    \ subsetting, and region\nfiltering. Legacy PLINK 1 formats (.bim/.fam) are auto-detected.\n\
+    \nBuilt on [pgenlib](https://github.com/chrchang/plink-ng) for efficient access\n\
+    to the compressed .pgen binary format without full decompression.\n\nFor full\
+    \ documentation, see [plinking-duck.readthedocs.io](https://plinking-duck.readthedocs.io).\n"

@@ -1,10 +1,4 @@
 extension:
-  # Haybarn: disabled because the extension does not yet build
-  # against DuckDB 1.5.2 — upstream community-extensions also has
-  # no v1.5.2 binary. Re-enable when upstream lands a v1.5.2-
-  # compatible release (sync_from_upstream will pick up the bump).
-  # Tracker: https://github.com/cwida/duckpgq-extension/issues/308
-  excluded_platforms: linux_amd64;linux_arm64;linux_amd64_musl;linux_arm64_musl;osx_amd64;osx_arm64;windows_amd64;windows_arm64;windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
   name: duckpgq
   description: Extension that adds support for SQL/PGQ and graph algorithms
   version: 0.3.1
@@ -13,9 +7,10 @@ extension:
   license: MIT
   maintainers:
   - Dtenwolde
+  excluded_platforms: linux_amd64;linux_arm64;linux_amd64_musl;linux_arm64_musl;osx_amd64;osx_arm64;windows_amd64;windows_arm64;windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
 repo:
   github: cwida/duckpgq-extension
-  ref: cbe4d9e58ebc3984d725a83c4dd46e6acd723cec
+  ref: f386a6cfb90aadb0077e734377bb86740bdda71b
 docs:
   hello_world: "CREATE TABLE Person AS SELECT * FROM 'https://gist.githubusercontent.com/Dtenwolde/2b02aebbed3c9638a06fda8ee0088a36/raw/8c4dc551f7344b12eaff2d1438c9da08649d00ec/person-sf0.003.csv';\n\
     CREATE TABLE Person_knows_person AS SELECT * FROM 'https://gist.githubusercontent.com/Dtenwolde/81c32c9002d4059c2c3073dbca155275/raw/8b440e810a48dcaa08c07086e493ec0e2ec6b3cb/person_knows_person-sf0.003.csv';\n\

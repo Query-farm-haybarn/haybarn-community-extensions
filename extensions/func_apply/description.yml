@@ -2,7 +2,7 @@ extension:
   name: func_apply
   description: Dynamic function invocation - call any scalar function or macro by
     name at runtime
-  version: 0.1.0
+  version: 0.2.0
   language: C++
   build: cmake
   license: MIT
@@ -10,7 +10,7 @@ extension:
   - teaguesterling
 repo:
   github: teaguesterling/duckdb_func_apply
-  ref: 2013ac345d6f19e61ee78cacae161eb272cf1837
+  ref: refs/tags/v0.2.0
 docs:
   hello_world: '-- Load the extension
 
@@ -67,4 +67,18 @@ docs:
     \        WHEN 'INTEGER' THEN 'abs'\n    END,\n    value\n) FROM my_table;\n```\n\
     \n## Supported Function Types\n\n- Scalar functions (e.g., `upper`, `abs`, `substr`)\n\
     - Macros (e.g., `list_sum`, `list_reverse`)\n\nAggregate and table functions are\
-    \ not supported.\n"
+    \ not supported.\n\n## Security Model\n\n`apply` and `apply_table` run on the\
+    \ **caller's own context** \u2014 they add no\nprivilege beyond the SQL the caller\
+    \ could already execute directly. They are\na dynamic-dispatch convenience, **not\
+    \ a sandbox**.\n\nFor scenarios that embed func_apply and want to restrict which\
+    \ functions can\nbe invoked (e.g. accepting a function name from less-trusted\
+    \ input), an\noptional, opt-in policy is available. It is **per session** and\
+    \ defaults to\n`none` (no restriction):\n\n| Function | Description |\n|----------|-------------|\n\
+    | `func_apply_set_security_mode(mode)` | `'none'`, `'blacklist'`, `'whitelist'`,\
+    \ or `'validator'` |\n| `func_apply_set_whitelist([...])` / `func_apply_set_blacklist([...])`\
+    \ | Set the allowed/denied function names |\n| `func_apply_lock_security()` |\
+    \ Irreversibly lock the current session's policy |\n\nThe policy lives on the\
+    \ session's `ClientContext` and does not leak across\nconnections. Versions before\
+    \ 0.2.0 stored it process-globally and could\nquote-escape injected identifiers\
+    \ \u2014 see security advisory\nGHSA-55g5-vp25-phpg; upgrade to 0.2.0 (DuckDB\
+    \ v1.5.4 track).\n"

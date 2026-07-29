@@ -1,7 +1,7 @@
 extension:
   name: curl_httpfs
   description: httpfs with connection pool, HTTP/2 and async IO.
-  version: 0.4.3
+  version: 0.4.4
   language: C++
   build: cmake
   license: MIT
@@ -10,7 +10,7 @@ extension:
   - dentiny
 repo:
   github: dentiny/duckdb-curl-filesystem
-  ref: 2066d056656c7b7b13dec0640c7c1254afd0fafe
+  ref: 2a52801f1f99791ddc3e27c683733d681c1e5cfe
 docs:
   hello_world: 'SELECT length(content) AS char_count FROM read_text(''https://raw.githubusercontent.com/dentiny/duck-read-cache-fs/main/test/data/stock-exchanges.csv'');
 

@@ -2,7 +2,7 @@ extension:
   name: duckdb_delta_sharing
   description: The most efficient way to query Delta Lake tables directly from DuckDB
     via the Delta Sharing protocol.
-  version: 0.3.2
+  version: 0.6.1
   language: C++
   build: cmake
   license: Apache-2.0
@@ -11,7 +11,7 @@ extension:
   - prequel-co
 repo:
   github: prequel-co/DuckDB-Delta-Sharing
-  ref: 5440afadc620643cfbffcfce0c325d32202e6cfe
+  ref: 9bcc9cc2abafcf0d5445709910dd77f6773c3555
 docs:
   hello_world: "INSTALL duckdb_delta_sharing FROM community;\nLOAD duckdb_delta_sharing;\n\
     -- Required for network access\nINSTALL httpfs;\nLOAD httpfs;\n\n-- Basic Configuration\n\
@@ -19,10 +19,14 @@ docs:
     \ (\n    TYPE delta_sharing,\n    PROVIDER config,\n    ENDPOINT 'https://your-delta-sharing-server.com/api/2.0/delta-sharing',\n\
     \    BEARER_TOKEN 'your_private_token'\n);\n\n-- Alternatively, if you have DELTA_SHARING_ENDPOINT\
     \ and DELTA_SHARING_BEARER_TOKEN set in your environment:\nCREATE SECRET (TYPE\
-    \ delta_sharing, PROVIDER env);\n\n-- Discovering Content\nSELECT * FROM delta_share_list();\n\
-    SELECT * FROM delta_share_list('my_share');\n\n-- Reading Tables\nSELECT * FROM\
-    \ delta_share_read('my_share', 'my_schema', 'my_table') \nWHERE year = 2024 \n\
-    LIMIT 100;\n\n-- Time Travel\nSELECT count(*) \nFROM delta_share_read('my_share',\
+    \ delta_sharing, PROVIDER env);\n\n-- Discovering Content\nSELECT * FROM delta_share_list();\
+    \                                   -- shares\nSELECT * FROM delta_share_list('my_share');\
+    \                         -- schemas in a share\nSELECT * FROM delta_share_list('my_share',\
+    \ 'my_schema');            -- tables in a schema\nSELECT * FROM delta_share_list_all_tables('my_share');\
+    \              -- every table across all schemas\nSELECT * FROM delta_share_list('my_share',\
+    \ 'my_schema', 'my_table');-- a table's columns\n\n-- Reading Tables\nSELECT *\
+    \ FROM delta_share_read('my_share', 'my_schema', 'my_table') \nWHERE year = 2024\
+    \ \nLIMIT 100;\n\n-- Time Travel\nSELECT count(*) \nFROM delta_share_read('my_share',\
     \ 'my_schema', 'my_table', '2024-04-09 12:00:00');\n\n-- Change Data Feed (CDF)\n\
     SELECT * \nFROM delta_share_change_data_feed('my_share', 'my_schema', 'my_table',\
     \ 10);\n"

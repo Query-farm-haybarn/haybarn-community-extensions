@@ -1,7 +1,7 @@
 extension:
   name: flock
   description: LLM & RAG extension to combine analytics and semantic analysis
-  version: 0.7.1
+  version: 0.8.1
   language: SQL & C++
   build: cmake
   license: MIT
@@ -9,9 +9,10 @@ extension:
   maintainers:
   - anasdorbani
   - queryproc
+  - iZarrios
 repo:
   github: dais-polymtl/flock
-  ref: c9a74a08342896ee34d367dff42e6b8a0a89ad33
+  ref: adf457edbf74d95cc70fa35d778479d186a7360c
 docs:
   hello_world: "-- After loading, any function call will throw an error if the provider's\
     \ secret doesn't exist\n\n-- Create your provider secret by following the [documentation](https://dais-polymtl.github.io/flock/docs/what-is-flock/).\
@@ -35,7 +36,7 @@ docs:
     \n-- Create a new prompt for summarizing text\nD CREATE PROMPT('summarize', 'summarize\
     \ the text into 1 word: {{text}}');\n\n-- Create a variable name for the model\
     \ to do the summarizing\nD CREATE MODEL('summarizer-model', 'gpt-4o', 'openai');\n\
-    \n-- Summarize text and pass it as parameter \nD SELECT llm_complete({'model_name':\
+    \n-- Summarize text and pass it as parameter\nD SELECT llm_complete({'model_name':\
     \ 'summarizer-model'}, {'prompt_name': 'summarize','context_columns': [{'data':\
     \ 'We support more functions and approaches to combine relational analytics and\
     \ semantic analysis. Check our repo for documentation and examples.'}}]);\n"
@@ -45,10 +46,8 @@ docs:
     \ objects as first-class SQL entities, making it easy to define, manage, and reuse\
     \ LLM interactions. Core functions like `llm_complete`, `llm_filter`, and `llm_rerank`\
     \ allow you to perform generation, semantic filtering, and ranking\u2014all from\
-    \ SQL.\n\nFlock is designed for rapid prototyping of LLM-based analytics and is\
-    \ optimized with batching and caching features for better performance.\n\n\U0001F4C4\
-    \ For more details and examples, see the [Flock documentation](https://dais-polymtl.github.io/flock/docs/what-is-flock).\n\
+    \ SQL.\n\n\U0001F4C4 For more details and examples, see the [Flock documentation](https://dais-polymtl.github.io/flock/docs/what-is-flock).\n\
     \n> *Note:* Flock is part of ongoing research by the [Data & AI Systems (DAIS)\
-    \ Laboratory @ Polytechnique Montr\xE9al](https://dais-polymtl.github.io/). It\
+    \ Laboratory @ Polytechnique Montr\xE9al](https://github.com/dais-polymtl). It\
     \ is under active development, and some features may evolve. Feedback and contributions\
     \ are welcome!\n"

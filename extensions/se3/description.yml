@@ -2,7 +2,7 @@ extension:
   name: se3
   description: Provides SE(3) rigid transformations (combinations of rotations and
     translations in 3D) as DuckDB scalar functions.
-  version: 0.2.0
+  version: 0.3.2
   language: C++
   build: cmake
   license: MIT
@@ -12,7 +12,7 @@ extension:
   - jokasimr
 repo:
   github: jokasimr/se3
-  ref: v0.2.0
+  ref: v0.3.2
 docs:
   hello_world: "SELECT se3_apply(\n    quat_from_axis_angle(\n        struct_pack(x:=0.0,\
     \ y:=0.0, z:=1.0), -- rotation axis (Z)\n        pi()/2.0                    \

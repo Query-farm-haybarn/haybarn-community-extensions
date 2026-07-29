@@ -2,20 +2,16 @@ extension:
   name: sitting_duck
   description: Parse and analyze source code ASTs from 27 programming languages with
     tree-sitter grammars, pattern matching, and structural search
-  version: 1.7.4
+  version: 1.9.0
   language: C++
   build: cmake
-  license: MIT
+  license: Apache-2.0
   maintainers:
   - teaguesterling
-  # Haybarn: disabled — never builds against DuckDB 1.5.3 (reliability
-  # 0/6; ~22h CPU/run wasted before failing or timing out). Dispatching
-  # produces no binaries, so we exclude every platform. Re-enable when it
-  # builds cleanly (sync_from_upstream will pick up a compatible bump).
   excluded_platforms: linux_amd64;linux_arm64;linux_amd64_musl;linux_arm64_musl;osx_amd64;osx_arm64;windows_amd64;windows_arm64;windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
 repo:
   github: teaguesterling/sitting_duck
-  ref: f7b9c600116b3ee869d8b5a9dca9f1357d31569c
+  ref: 1da43741d781e630f42ed09e362b2040b30432b6
 docs:
   hello_world: "-- Parse Python code and find function definitions\nSELECT name, start_line,\
     \ peek\nFROM parse_ast('\ndef hello():\n    return \"hello world\"\ndef greet(name):\n\
@@ -52,13 +48,25 @@ docs:
     \ '.func:has(return_statement)');\n```\nSupports type selectors, `#name`, `.semantic`\
     \ (~80 aliases), combinators, `:has()`, `:not()`,\n`:match()` / `:contains()`\
     \ structural patterns, scope/call-graph pseudo-classes, and pseudo-element navigation.\n\
-    Bare type matching: `if` matches `if` + `if_statement` + `if_clause`.\n\n**Table\
-    \ Functions:**\n- `read_ast(file_pattern, language := NULL)` - Parse source files\
-    \ into AST rows (parallel)\n- `parse_ast(content, language)` - Parse source code\
-    \ strings (table function)\n- `parse_ast_list(content, language)` - Parse source\
-    \ code strings (scalar, returns LIST<STRUCT>; v1.7.0)\n- `ast_match(source, pattern,\
-    \ lang)` - Pattern matching for code search\n- `ast_select(source, css_selector)`\
-    \ - CSS selector queries\n- `ast_select_from(table_name, selector)` - CSS selectors\
+    Bare type matching: `if` matches `if` + `if_statement` + `if_clause`.\n\nv1.9.0\
+    \ hardens the selector engine: no more silent-empty results (selectors the engine\n\
+    can't honor now raise a clear error instead of returning 0 rows), `#name` on call\
+    \ nodes\nbinds uniformly across all 27 grammars, and NULL columns no longer over-\
+    \ or under-match.\n\n**Parse-time filtering (v1.8.0):**\n`max_depth :=` and `prune\
+    \ :=` shrink the AST at parse time, with automatic tree healing:\n```sql\nSELECT\
+    \ * FROM read_ast('file.py', max_depth := 2);\nSELECT * FROM read_ast('src/**/*.py',\
+    \ prune := ['syntax', 'comments', 'punctuation']);\n```\nPrune policies: `syntax`,\
+    \ `comments`, `literals`, `imports`, `types`, `punctuation`,\n`unnamed`, `leaves`,\
+    \ `internal`.\n\n**Call-graph macros (v1.8.0):**\n- `ast_get_calls(source)` -\
+    \ calls with caller attribution and type classification\n- `ast_call_graph(source)`\
+    \ - aggregated caller\u2192callee graph with call counts\n- `ast_find_references(source,\
+    \ name)` - scope-chain-aware symbol reference resolution\n\n**Table Functions:**\n\
+    - `read_ast(file_pattern, language := NULL)` - Parse source files into AST rows\
+    \ (parallel)\n- `parse_ast(content, language)` - Parse source code strings (table\
+    \ function)\n- `parse_ast_list(content, language)` - Parse source code strings\
+    \ (scalar, returns LIST<STRUCT>; v1.7.0)\n- `ast_match(source, pattern, lang)`\
+    \ - Pattern matching for code search\n- `ast_select(source, css_selector)` - CSS\
+    \ selector queries\n- `ast_select_from(table_name, selector)` - CSS selectors\
     \ on pre-parsed tables (v1.7.2)\n- `ast_type_map(language)` - Node type discovery\
     \ across languages\n\n**v1.7.0 extraction suffix:**\nAny extraction parameter\
     \ (`context`, `source`, `structure`, `peek`) can take a `+schema`\nsuffix that\
@@ -95,10 +103,12 @@ docs:
     \ and nesting\n- `descendant_count` - For O(1) subtree queries\n- `peek` - Configurable\
     \ source preview\n- `qualified_name` - Scope-based path unique within a file (`C[User]\
     \ F[__init__]` format; v1.7.0)\n- `signature_type`, `parameters`, `modifiers`,\
-    \ `annotations` - Native extraction\n- `scope` - STRUCT<current, function, class,\
-    \ module, stack> (v1.7.4); replaces\n  the v1.7.2 `scope_id` / `scope_stack` columns.\
-    \ `scope.function` lets you\n  answer \"what function is this in?\" as a single\
-    \ column read.\n\nFull schema: https://sitting-duck.readthedocs.io/en/latest/api/output-schema/\n\
+    \ `annotations` - Native extraction\n  (v1.8.0: `modifiers[]` populated across\
+    \ Python, JS, TS, Rust, Kotlin, Swift, Dart, C#;\n  `IS_EXPORTED` flag for file-level\
+    \ visibility)\n- `scope` - STRUCT<current, function, class, module, stack> (v1.7.4);\
+    \ replaces\n  the v1.7.2 `scope_id` / `scope_stack` columns. `scope.function`\
+    \ lets you\n  answer \"what function is this in?\" as a single column read.\n\n\
+    Full schema: https://sitting-duck.readthedocs.io/en/latest/api/output-schema/\n\
     \n## Use Cases\n\n- **Security auditing** - Find dangerous patterns (eval, exec,\
     \ SQL injection)\n- **Code quality** - Complexity metrics, dead code detection,\
     \ nesting analysis\n- **Refactoring** - Pattern-based code search across large\

@@ -4,7 +4,7 @@ extension:
     and Communication in Medicine).
 
     '
-  version: 0.4.0
+  version: 0.5.0
   language: C++
   build: cmake
   excluded_platforms: wasm_mvp;wasm_eh;wasm_threads
@@ -13,7 +13,7 @@ extension:
   - nmontesg
 repo:
   github: nmontesg/duck-dicom
-  ref: v0.4.0
+  ref: v0.6.0
 docs:
   hello_world: 'INSTALL dicom FROM community;
 
@@ -31,9 +31,7 @@ docs:
     convert them into JSON format.
 
 
-    For full documentation and examples, see the project
-
-    [`README`](https://github.com/nmontesg/duck-dicom/blob/main/README.md).
+    For full documentation and examples, see the project [`documentation`](https://nmontesg.github.io/duck-dicom/).
 
 
     **Key functionality:**
@@ -53,9 +51,9 @@ docs:
     * `dicom` secret type - Store credentials to establish connection with remote
     DICOM modalities, such as PACS systems.
 
-    * `query_dicom()` - Table function to retrieve DICOM datasets from a remote modality
-    directly into DuckDB using
+    * `query_dicom()` and `retrieve_dicom()` - Table functions to query and retrieve
+    DICOM datasets from a remote
 
-    C-FIND commands.
+    modalities directly into DuckDB using C-FIND and C-MOVE commands.
 
     '

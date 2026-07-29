@@ -1,7 +1,7 @@
 extension:
   name: rdf
   description: A DuckDB extension to read and write RDF
-  version: 2.7.1
+  version: 2.8.1
   language: C++
   build: cmake
   license: MIT
@@ -9,7 +9,7 @@ extension:
   - nonodename
 repo:
   github: nonodename/duck_rdf
-  ref: df32898a1b826bfa73eb8bd6aaa2e499370b77ac
+  ref: 8d20bad15a216d08d932de1660a690d6e10a3d52
 docs:
   hello_world: "-- 0. Assuming the extension is already installed and loaded\n\n--\
     \ 1. Get number of ntriples in a directory\nSELECT COUNT(*) FROM read_rdf('data/shards/*.nt');\n\

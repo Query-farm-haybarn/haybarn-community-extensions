@@ -1,0 +1,40 @@
+extension:
+  name: gorz
+  description: Read GORpipe .gorz and .gord files and write .gorz as native DuckDB
+    tables
+  version: 0.1.1
+  language: C++
+  build: cmake
+  license: MIT
+  maintainers:
+  - gorfather
+repo:
+  github: gorfather/duckdb-gorz
+  ref: 582880d0f5ab23423f6680fcd82babb4fce1c4e1
+docs:
+  hello_world: "-- Write a query result out as a GORZ file (rows must be in GOR order),\n\
+    -- then read it back \u2014 with an optional GOR -p style range filter.\nCOPY\
+    \ (SELECT * FROM (VALUES ('chr1', 1000, 'A', 'G'), ('chr1', 2000, 'C', 'T'))\n\
+    \        t(chrom, pos, ref, alt) ORDER BY chrom, pos)\n  TO 'variants.gorz' (FORMAT\
+    \ gorz);\n\nSELECT * FROM read_gor('variants.gorz', range := 'chr1:1500-2500');\n"
+  extended_description: "The `gorz` extension reads and writes [GORpipe](https://github.com/gorpipe/gor)\n\
+    genomic files \u2014 block-compressed `.gorz` and `.gord` dictionaries \u2014\
+    \ as native\nDuckDB tables. Files it writes are read and seeked natively by `gorpipe`,\
+    \ and\nvice-versa.\n\n### Reading\n\n- `read_gor(path)` \u2014 auto-detects `.gorz`\
+    \ vs `.gord` by extension.\n- `read_gorz(path)` / `read_gord(path)` \u2014 force\
+    \ the kind.\n- A **replacement scan**, so a bare literal works: `SELECT count(*)\
+    \ FROM 'variants.gord';`\n- **Projection & parallel scan** \u2014 only selected\
+    \ columns are read; large files scan across threads.\n- **`WHERE chrom/pos` \u2192\
+    \ block seek** \u2014 range predicates seek into the right block instead of scanning\
+    \ the whole file.\n- **`range := 'chrN:start-end'`** \u2014 GOR's `-p` semantics\
+    \ as a hard positional filter (also `'chrN'`, `'chrN:start-'`, `'chrN:pos'`).\n\
+    - **Partition filters** \u2014 GOR's `-f` / `-ff` semantics prune a `.gord`'s\
+    \ file list and expose a `Source` column: `f := ['A','B']` is an inline tag list,\
+    \ `ff := 'tags.txt'` is a *tag file* (one tag per line / first tab-delimited column,\
+    \ `#` lines skipped). `source := 'PN'` renames the exposed column.\n- **Object\
+    \ stores** \u2014 paths resolve through DuckDB's FileSystem, so `s3://\u2026`\
+    \ works when `httpfs` is loaded.\n\n### Writing\n\n```sql\nCOPY (SELECT chrom,\
+    \ pos, ref, alt FROM my_variants ORDER BY chrom, pos)\n  TO 'out.gorz' (FORMAT\
+    \ gorz);   -- or (FORMAT gor) for plain sorted TSV\n```\n\nSingle-threaded, standard\
+    \ block-zip; validates GOR order (chromosomes ascend\nlexicographically, positions\
+    \ non-decreasing) and errors out otherwise.\n"

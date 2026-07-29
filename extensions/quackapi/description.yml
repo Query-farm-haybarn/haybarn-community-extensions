@@ -1,0 +1,82 @@
+extension:
+  name: quackapi
+  description: "FastAPI-class HTTP framework inside DuckDB \u2014 CREATE ROUTE turns\
+    \ SQL into typed, validated endpoints; one process is DB + HTTP (+ PDF/renderer\
+    \ via companion extensions)."
+  version: 0.1.1
+  language: C++
+  build: cmake
+  license: MIT
+  maintainers:
+  - asubbarao
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_mingw;windows_amd64_rtools;windows_arm64
+repo:
+  github: asubbarao/quackapi
+  ref: 32600ee3598dd69aecba6c308c476e44e5bcfce6
+docs:
+  hello_world: "LOAD quackapi;\n\n-- JSON endpoint: the SELECT is the handler\nCREATE\
+    \ ROUTE hello GET '/hello' AS SELECT 'world' AS msg;\n\n-- Path params bind as\
+    \ $id; cast failure \u2192 FastAPI-shaped 422\nCREATE ROUTE item GET '/items/:id'\
+    \ AS SELECT $id::INTEGER AS id;\n\n-- HTML when the single output column is named\
+    \ html\nCREATE ROUTE home GET '/' AS SELECT '<h1>quackapi</h1>' AS html;\n\n--\
+    \ Typed optional query param with constraint\nCREATE ROUTE search GET '/search'\n\
+    \  PARAM limit INTEGER DEFAULT 10 LE 100\n  AS\nSELECT $q::VARCHAR AS q, $limit::INTEGER\
+    \ AS limit;\n\n-- POST mutation (JSON body fields bind as $name / $age)\nCREATE\
+    \ ROUTE create_user POST '/users' STATUS 201 AS\nSELECT $name::VARCHAR AS name,\
+    \ $age::INTEGER AS age;\n\n-- Serve (background threads; shell stays usable)\n\
+    -- Optional: static_dir for unrouted GETs; cors_origins for browser CORS\nSELECT\
+    \ * FROM quackapi_serve(8000, static_dir := './static');\n\n-- curl http://127.0.0.1:8000/hello\
+    \          \u2192 [{\"msg\":\"world\"}]\n-- curl http://127.0.0.1:8000/items/42\
+    \       \u2192 [{\"id\":42}]\n-- curl http://127.0.0.1:8000/items/abc      \u2192\
+    \ 422 detail[loc=path,id]\n-- curl -X POST \u2026/users -H 'Content-Type: application/json'\
+    \ -d '{\"name\":\"a\",\"age\":3}'\n\nSELECT * FROM quackapi_routes();\nSELECT\
+    \ * FROM quackapi_stop(8000);\n"
+  extended_description: "# quackapi\n\n**A FastAPI-class HTTP framework that lives\
+    \ inside DuckDB.** Routes are DDL,\nhandlers are SQL, and request validation is\
+    \ the database type system.\n\n## Thesis: the backend IS the database\n\nA conventional\
+    \ stack serializes at every hop (app server \u2192 workers \u2192 DB \u2192\n\
+    PDF microservice). quackapi collapses that into **one DuckDB process**:\n\n  \
+    \  browser \u2192 DuckDB [ quackapi(HTTP) \xB7 pdf \xB7 tera \xB7 fakeit \xB7\
+    \ webbed \xB7 \u2026 ]\n\nCompanion community extensions (`pdf`, `tera`, `fakeit`,\
+    \ `crawler`/`webbed`,\n`cronjob`, `curl_httpfs`, \u2026) load into the same address\
+    \ space. A handler that\nredacts a PDF is literally `SELECT pdf_redact(...)` \u2014\
+    \ no RPC between tiers.\n\n**Showcase:** the Closure redaction-review app (DB\
+    \ + HTML UI + PDF word\nboxes + POST decisions + static assets) runs as a single\
+    \ DuckDB process via\n`CREATE ROUTE` + `quackapi_serve`.\n\n## CREATE ROUTE\n\n\
+    \    CREATE [OR REPLACE] ROUTE <name> <METHOD> '<pattern>'\n      [STATUS <n>]\
+    \ [REQUIRE <auth>] [GROUP <g>]\n      [BODY SCHEMA '<json-schema>']\n      [PARAM\
+    \ <name> [<type>] [HEADER|COOKIE|QUERY \u2026] [DEFAULT \u2026] [GE|LE|\u2026\
+    ] \u2026]\n      AS <select>;\n\n- Methods: GET, POST, PUT, DELETE, PATCH, HEAD.\n\
+    - Path segments `:id` / `{id}` and query/body fields bind to `$id`.\n- Cast/constraint\
+    \ failures return **422** with FastAPI-shaped\n  `{\"detail\":[{\"loc\":[...],\"\
+    msg\":...,\"type\":...}]}`.\n- Default JSON response is an **array of row objects**\
+    \ (SQL result-set\n  semantics). A single column named `html` or `text` returns\
+    \ raw HTML/text;\n  `location` / `set_cookie` set response headers.\n- `quackapi_serve([port],\
+    \ host := \u2026, static_dir := \u2026, cors_origins := \u2026, memory_limit :=\
+    \ \u2026)`\n  uses DuckDB's bundled httplib (background listener + workers).\n\
+    - Built-in OpenAPI: `GET /openapi.json`, `GET /docs`, `GET /redoc`.\n\n## Other\
+    \ DDL / functions\n\n- **Auth:** `CREATE AUTH \u2026 AS API_KEY | JWT (SECRET\
+    \ \u2026 [, ALGORITHM HS256])`,\n  `REQUIRE` on routes, `quackapi_add_api_key`,\
+    \ `quackapi_auths`, claims as\n  `$claims_*`. JWT verify is self-contained (DuckDB-bundled\
+    \ mbedtls +\n  `json_*` claims) \u2014 does not depend on community `crypto` (that\
+    \ extension\n  is hash/HMAC only, not JWT parse/exp/nbf/claims).\n- **Groups:**\
+    \ `CREATE GROUP \u2026 WITH (prefix=\u2026, auth=\u2026, tags=\u2026)` \u2014\
+    \ path prefix\n  + auth inheritance (`quackapi_groups()`).\n- **Table API:** `CREATE\
+    \ API FOR TABLE t [AT '/path'] [KEY 'id']` \u2192 GET list\n  + GET by key only.\n\
+    - **Queue:** `CREATE QUEUE`, `quackapi_enqueue/dequeue/ack/nack`, table\n  `quackapi_jobs`\
+    \ (broker-less; compose `cronjob` for workers).\n- **SSE:** `CREATE STREAM \u2026\
+    \ GET '/path' AS <select>` (`text/event-stream`;\n  WebSocket not supported on\
+    \ httplib).\n- **Policies:** `CREATE ROW ACCESS POLICY` / `CREATE MASKING POLICY`\
+    \ +\n  `ALTER TABLE` bind; `quackapi_policies()`.\n- **Inspect:** `quackapi_routes()`,\
+    \ `quackapi_servers()`,\n  `quackapi_http_util_name()`.\n\n## Platforms & build\n\
+    \nTargets **DuckDB v1.5.4**. C++17; depends only on DuckDB-bundled **httplib**\n\
+    and **mbedtls** (no vcpkg, no libcurl). CI excludes wasm and Windows MinGW/rtools/arm64.\
+    \ Signed community\nbinaries for linux/osx are live; windows_amd64 re-opt-in via\
+    \ this descriptor.\n\n## Limits (honest)\n\n- DuckDB single-writer / file concurrency\
+    \ \u2014 not high-write multi-tenant OLTP.\n- Serve `memory_limit` default is\
+    \ 256MB only when nothing is configured;\n  use `memory_limit := '4GB'` / `SET\
+    \ quackapi_memory_limit` (never clobbers\n  an operator `SET memory_limit`).\n\
+    - Request body max 8 MiB; JWT **HS256 only** (no RS256/OIDC); table API is\n \
+    \ read-only scaffold.\n- Route registry is instance-scoped (re-run DDL after reopen);\
+    \ queue jobs\n  persist in `quackapi_jobs`.\n\nFull reference: https://github.com/asubbarao/quackapi\
+    \  \nCommunity page draft: https://github.com/asubbarao/quackapi/blob/main/docs/community-page.md\n"

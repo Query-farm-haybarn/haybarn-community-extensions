@@ -1,0 +1,43 @@
+extension:
+  name: cog
+  description: "GDAL-free Cloud-Optimized GeoTIFF (COG) reader \u2014 query remote\
+    \ rasters in place over HTTP range reads, with STAC catalog integration"
+  version: 0.1.0
+  language: Rust
+  build: cargo
+  license: MIT
+  excluded_platforms: windows_amd64_rtools;windows_amd64_mingw;linux_amd64_musl
+  requires_toolchains: rust;python3
+  maintainers:
+  - thsghdud13
+repo:
+  github: st-layer/duckdb-cog
+  ref: 1d210fd7719ae44fef0ac908f4b3f6386677da52
+docs:
+  hello_world: "-- Anonymous access to public S3 buckets needs: export AWS_SKIP_SIGNATURE=true\n\
+    LOAD cog;\n\n-- List the tile grid of a remote Sentinel-2 COG (metadata-only range\
+    \ reads \u2014 never the pixels)\nSELECT level, tile_x, tile_y, bbox, crs\nFROM\
+    \ read_cog('https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/52/S/CG/2026/6/S2B_52SCG_20260630_0_L2A/B04.tif')\n\
+    LIMIT 3;\n\n-- Sedona-style raster accessors: metadata, a pixel value, zonal statistics\
+    \ (native CRS coordinates)\nSELECT RS_Width(f) AS width, RS_SRID(f) AS srid,\n\
+    \       RS_Value(f, 325210.0, 4121100.0) AS red,\n       round(RS_ZonalStats(f,\
+    \ [322000.0, 4119000.0, 326400.0, 4123200.0], 1, 'mean'), 1) AS zonal_mean\nFROM\
+    \ (SELECT 'https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/52/S/CG/2026/6/S2B_52SCG_20260630_0_L2A/B04.tif'\
+    \ AS f);\n-- width = 10980, srid = 32652, red = 1748.0, zonal_mean = 1916.4\n\n\
+    -- Search a live STAC API (POST /search, pagination followed automatically)\n\
+    SELECT s.item_id, s.datetime\nFROM read_stac_search('https://earth-search.aws.element84.com/v1/search',\n\
+    \                      collections := ['sentinel-2-l2a'],\n                  \
+    \    bbox := [127.02, 37.21, 127.04, 37.23],\n                      datetime :=\
+    \ '2026-06-28T00:00:00Z/2026-07-02T00:00:00Z') s\nWHERE s.asset_key = 'red';\n"
+  extended_description: "`cog` exposes Cloud-Optimized GeoTIFF rasters as SQL tables\
+    \ \u2014 in place, over\nHTTP/S3 range reads, with no re-encoding, no reprojection,\
+    \ and no\nGDAL/PROJ/GEOS anywhere in the read path (TIFF decoding and fetching\
+    \ are\ndelegated to [async-tiff](https://github.com/developmentseed/async-tiff)).\n\
+    \nSurface: `read_cog()` tile-grid listing, `read_stac()` / `read_stac_search()`\n\
+    STAC catalog integration (static documents and live POST /search APIs with\npagination),\
+    \ and a Sedona-style `RS_*` scalar catalog (metadata accessors,\n`RS_Value`/`RS_Values`\
+    \ pixel access, `RS_NormalizedDifference`,\n`RS_ZonalStats`, `RS_BandAsArray`).\
+    \ Every pixel-facing result is\ncross-checked against a rasterio oracle in CI.\
+    \ Repeated remote access is\nserved by a process-wide metadata cache.\n\nSee the\
+    \ [README](https://github.com/st-layer/duckdb-cog) for benchmarks and\nthe full\
+    \ SQL surface.\n"

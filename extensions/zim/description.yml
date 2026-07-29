@@ -3,7 +3,7 @@ extension:
   description: "Read .zim (Kiwix / openZIM) archives directly in DuckDB via libzim,\
     \ from local files or remote S3/HTTP \u2014 offline Wikipedia, WikiMed, Stack\
     \ Exchange, iFixit, and more, with a zim:// filesystem and full-text search."
-  version: 0.4.1
+  version: 0.6.0
   language: C++
   build: cmake
   license: GPL-2.0-or-later
@@ -14,106 +14,46 @@ extension:
   vcpkg_commit: 84bab45d415d22042bd0b9081aea57f362da3f35
 repo:
   github: teaguesterling/duckdb_zim
-  ref: 3736b4c1ee0055c89a32b03626e2aa9403a4beb5
+  ref: 1faa9a3502bf174edcbac5e3eeac1840afd83561
 docs:
-  hello_world: '-- Load the extension
-
-    LOAD zim;
-
-
-    -- List every content entry in an archive (one row per entry).
-
-    -- A listing scan is lazy: it never decompresses the article bodies.
-
-    SELECT path, title, mimetype FROM read_zim(''wikipedia.zim'') LIMIT 10;
-
-
-    -- A bare FROM on a .zim file is rewritten via a replacement scan.
-
-    SELECT count(*) FROM ''wikipedia.zim'';
-
-
-    -- Read across many archives at once: a glob or a LIST of paths.
-
-    SELECT * FROM read_zim(''archives/*.zim'');
-
-    SELECT * FROM read_zim([''wikimed.zim'', ''wikipedia.zim'']);
-
-
-    -- Read a remote archive over S3/HTTP (LOAD httpfs first): byte-range requests
-
-    -- fetch only the bytes a query touches, not the whole multi-GB file.
-
-    SELECT zim_main_entry(''https://dumps.wikimedia.org/.../wikipedia_en_simple.zim'');
-
-
-    -- Narrow the scan: exact lookup, prefix listing, or a mimetype filter.
-
-    SELECT * FROM read_zim(''wikipedia.zim'', path := ''A/Berlin'');
-
-    SELECT * FROM read_zim(''wikipedia.zim'', title_prefix := ''Aspirin'');
-
-    SELECT * FROM read_zim(''wikipedia.zim'', mimetype := ''text/html'');
-
-
-    -- Bulk content, gated by mimetype: only matching entries are decompressed,
-
-    -- everything else keeps its row with NULL content (pushdown, not a filter).
-
-    SELECT path, content FROM read_zim(''wikipedia.zim'', include_content := ''text/html'');
-
-
-    -- The zim:// filesystem: any path-reading function can address an entry inside
-
-    -- the archive (read_text / read_blob, or webbed''s read_html, etc.).
-
-    SELECT * FROM read_text(''zim://wikipedia.zim/A/Berlin'');
-
-    SELECT * FROM read_blob(''zim://wikipedia.zim/I/logo.png'');
-
-    SELECT * FROM read_text(''zim://wikipedia.zim/A/B*'');   -- glob over content
-    paths
-
-
-    -- Full-text search over the archive''s Xapian index (native builds).
-
-    SELECT path, title, score, snippet
-
-    FROM zim_search(''wikipedia.zim'', ''photosynthesis'', max_results := 20);
-
-
-    -- Title autocomplete (works on every build, incl. WebAssembly).
-
-    SELECT path, title FROM zim_suggest(''wikipedia.zim'', ''Photosyn'');
-
-
-    -- Federated: search across a whole shelf at once (glob or LIST); the `file`
-
-    -- column says which archive each hit came from.
-
-    SELECT file, path, title FROM zim_search(''library/*.zim'', ''insulin'', max_results
-    := 5);
-
-
-    -- Single-entry access, metadata, and utilities.
-
-    SELECT zim_get_text(''wikipedia.zim'', ''A/Berlin'');
-
-    SELECT zim_main_entry(''wikipedia.zim'');
-
-    SELECT * FROM read_zim_metadata(''wikipedia.zim'');
-
-    SELECT zim_counter(''wikipedia.zim'');         -- mimetype -> count histogram
-
-    SELECT zim_info(''wikipedia.zim'');            -- counts, flags, uuid
-
-    SELECT zim_illustration(''wikipedia.zim'');    -- cover image / favicon (BLOB)
-
-    SELECT zim_random(''wikipedia.zim'');          -- a random entry''s path
-
-    SELECT zim_check(''wikipedia.zim'');           -- integrity check
-
-    '
+  hello_world: "-- Load the extension\nLOAD zim;\n\n-- List every content entry in\
+    \ an archive (one row per entry).\n-- A listing scan is lazy: it never decompresses\
+    \ the article bodies.\nSELECT path, title, mimetype FROM read_zim('wikipedia.zim')\
+    \ LIMIT 10;\n\n-- A bare FROM on a .zim file is rewritten via a replacement scan.\n\
+    SELECT count(*) FROM 'wikipedia.zim';\n\n-- Read across many archives at once:\
+    \ a glob or a LIST of paths.\nSELECT * FROM read_zim('archives/*.zim');\nSELECT\
+    \ * FROM read_zim(['wikimed.zim', 'wikipedia.zim']);\n\n-- Read a remote archive\
+    \ over S3/HTTP (LOAD httpfs first): byte-range requests\n-- fetch only the bytes\
+    \ a query touches, not the whole multi-GB file.\nSELECT zim_main_entry('https://dumps.wikimedia.org/.../wikipedia_en_simple.zim');\n\
+    \n-- Narrow the scan: exact lookup, prefix listing, or a mimetype filter.\nSELECT\
+    \ * FROM read_zim('wikipedia.zim', path := 'A/Berlin');\nSELECT * FROM read_zim('wikipedia.zim',\
+    \ title_prefix := 'Aspirin');\nSELECT * FROM read_zim('wikipedia.zim', mimetype\
+    \ := 'text/html');\n\n-- Bulk content, gated by mimetype: only matching entries\
+    \ are decompressed,\n-- everything else keeps its row with NULL content (pushdown,\
+    \ not a filter).\nSELECT path, content FROM read_zim('wikipedia.zim', include_content\
+    \ := 'text/html');\n\n-- The zim:// filesystem: any path-reading function can\
+    \ address an entry inside\n-- the archive (read_text / read_blob, or webbed's\
+    \ read_html, etc.).\nSELECT * FROM read_text('zim://wikipedia.zim/A/Berlin');\n\
+    SELECT * FROM read_blob('zim://wikipedia.zim/I/logo.png');\nSELECT * FROM read_text('zim://wikipedia.zim/A/B*');\
+    \   -- glob over content paths\n\n-- Full-text search over the archive's Xapian\
+    \ index.\nSELECT path, title, score, snippet\nFROM zim_search('wikipedia.zim',\
+    \ 'photosynthesis', max_results := 20);\n\n-- Search a REMOTE archive without\
+    \ downloading it: the Xapian index is read in\n-- place via byte-range requests\
+    \ (a cold query fetches a fraction of a %, not the\n-- whole multi-GB file). with_snippet\
+    \ := false skips fetching result bodies.\nSELECT path, title FROM zim_search(\n\
+    \  'https://download.kiwix.org/zim/.../wikipedia_en_medicine.zim',\n  'insulin',\
+    \ max_results := 10, with_snippet := false);\n\n-- Title autocomplete (works on\
+    \ every build, incl. WebAssembly).\nSELECT path, title FROM zim_suggest('wikipedia.zim',\
+    \ 'Photosyn');\n\n-- Federated: search across a whole shelf at once (glob or LIST);\
+    \ the `file`\n-- column says which archive each hit came from.\nSELECT file, path,\
+    \ title FROM zim_search('library/*.zim', 'insulin', max_results := 5);\n\n-- Single-entry\
+    \ access, metadata, and utilities.\nSELECT zim_get_text('wikipedia.zim', 'A/Berlin');\n\
+    SELECT zim_main_entry('wikipedia.zim');\nSELECT * FROM read_zim_metadata('wikipedia.zim');\n\
+    SELECT zim_counter('wikipedia.zim');         -- mimetype -> count histogram\n\
+    SELECT zim_info('wikipedia.zim');            -- counts, flags, uuid\nSELECT zim_illustration('wikipedia.zim');\
+    \    -- cover image / favicon (BLOB)\nSELECT zim_random('wikipedia.zim');    \
+    \      -- a random entry's path\nSELECT zim_check('wikipedia.zim');          \
+    \ -- integrity check\n"
   extended_description: "The `zim` extension reads `.zim` files \u2014 the archive\
     \ format produced by\n[openZIM](https://openzim.org) and served by [Kiwix](https://kiwix.org)\
     \ \u2014\ndirectly inside DuckDB. ZIM packages an entire website into a single\n\

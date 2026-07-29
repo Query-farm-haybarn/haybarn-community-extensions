@@ -3,7 +3,7 @@ extension:
   description: A DuckDB extension written in Rust for querying, analysing and inspecting
     AI coding agents history. Read conversations, plans, todos, history, and usage
     stats directly from your local agent data directories.
-  version: 0.2.0
+  version: 0.3.0
   language: Rust
   build: cargo
   license: MIT
@@ -13,7 +13,7 @@ extension:
   - axsaucedo
 repo:
   github: axsaucedo/agent_data_duckdb
-  ref: 1b9b232056763204c12046beacd5c99a6672442e
+  ref: 134e48d47d5a901bc923f258ad1cd29b82d3a2ff
 docs:
   hello_world: "-- How many conversations have I had with Claude?\nSELECT COUNT(DISTINCT\
     \ session_id) AS sessions,\n       COUNT(*) AS total_messages\n-- Calling the\

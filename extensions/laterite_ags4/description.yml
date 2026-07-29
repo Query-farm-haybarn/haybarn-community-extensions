@@ -2,9 +2,9 @@ extension:
   name: laterite_ags4
   description: "Read AGS4 geotechnical data files as typed, UUID-keyed tables directly\
     \ from SQL \u2014 born-typed columns, deterministic content-addressed keys that\
-    \ join across groups by construction, embedded AGS dictionary, and opt-in validation.\
-    \ Local, http(s):// and s3:// (with httpfs)."
-  version: 0.5.0
+    \ join across groups by construction, and an embedded AGS dictionary. A read-only\
+    \ SQL surface. Local, http(s):// and s3:// (with httpfs)."
+  version: 0.7.0
   language: Rust
   build: cargo
   license: MIT
@@ -14,7 +14,7 @@ extension:
   - niko86
 repo:
   github: niko86/laterite-duckdb
-  ref: 35275386640d76c0f726c8df60b48d65057a3bef
+  ref: 1629610de77beab11ead79be36fac4324138e7e7
 docs:
   hello_world: "-- Read a group as a typed table (columns typed from the file's own\
     \ TYPE row):\nSELECT loca_id, loca_gl\nFROM read_ags('site.ags', 'LOCA')\nWHERE\
@@ -24,10 +24,9 @@ docs:
     \ 'SAMP') s\nJOIN read_ags('site.ags', 'LOCA') l ON s._parent_id = l._id;\n\n\
     -- Inspect structure + the embedded AGS dictionary:\nSELECT \"group\", n_rows,\
     \ parent FROM ags_groups('site.ags') ORDER BY n_rows DESC;\nSELECT child, parent,\
-    \ shared_keys FROM ags_relationships() WHERE parent = 'LOCA';\n\n-- Opt-in validation\
-    \ (auto-detects the edition from TRAN_AGS):\nSELECT rule, line, \"group\", severity,\
-    \ \"desc\" FROM validate_ags('site.ags');\n\n-- Remote, lazily (with httpfs):\n\
-    -- LOAD httpfs;\n-- SELECT loca_id FROM read_ags('s3://bucket/site.ags', 'LOCA');\n"
+    \ shared_keys FROM ags_relationships() WHERE parent = 'LOCA';\n\n-- Remote, lazily\
+    \ (with httpfs):\n-- LOAD httpfs;\n-- SELECT loca_id FROM read_ags('s3://bucket/site.ags',\
+    \ 'LOCA');\n"
   extended_description: "`laterite_ags4` reads [AGS4](https://www.ags.org.uk/) geotechnical\
     \ & geoenvironmental\ndata files as first-class DuckDB tables \u2014 no conversion\
     \ step, no bundled engine.\n\nWritten in \U0001F980 Rust on DuckDB's C Extension\
@@ -39,13 +38,12 @@ docs:
     \ == parent._id`\n  **by construction**, so groups join across independent `read_ags(...)`\
     \ calls with\n  no shared state.\n- **Self-describing metadata** \u2014 `ags_groups`,\
     \ `ags_headings`, `ags_dictionary`,\n  `ags_relationships` expose the file's structure\
-    \ and the embedded AGS dictionary.\n- **Opt-in validation** \u2014 `validate_ags(path[,\
-    \ dict_version := '4.2'])` runs a clean-room\n  AGS4 rule check (error-only by\
-    \ default; `warnings := true` / `fyi := true` add the lower\n  tiers); never a\
-    \ gate on reads.\n- **Persistence** \u2014 `load_ags_script(path)` emits CREATE-TABLE\
-    \ DDL for an indexed,\n  repeat-/remote-query store.\n- **Local or remote** \u2014\
-    \ reads go through DuckDB's virtual filesystem, so local paths,\n  `http(s)://`\
-    \ and `s3://` (with `LOAD httpfs`) all work on one code path.\n\n### Functions\n\
+    \ and the embedded AGS dictionary.\n- **Persistence** \u2014 `load_ags(path)`\
+    \ emits CREATE-TABLE DDL for an indexed,\n  repeat-/remote-query store.\n- **Local\
+    \ or remote** \u2014 reads go through DuckDB's virtual filesystem, so local paths,\n\
+    \  `http(s)://` and `s3://` (with `LOAD httpfs`) all work on one code path.\n\
+    - **Native + wasm** \u2014 built for every community-extensions platform, DuckDB-WASM\n\
+    \  included: the same reader for native and browser DuckDB.\n\n### Functions\n\
     \n| function | returns |\n|---|---|\n| `read_ags(path, group)` | one group as\
     \ a typed table \u2014 `_id`, `_parent_id`, then one column per heading (typed\
     \ from the file's `TYPE` row). Reads local / `http(s)://` / `s3://`. |\n| `read_ags_text(content,\
@@ -56,17 +54,12 @@ docs:
     \ KEY status. |\n| `ags_dictionary()` | the embedded standard AGS dictionary as\
     \ a table (`group`, `heading`, `status`, `ags_type`, `unit`, `description`, \u2026\
     ). |\n| `ags_relationships()` | `(child, parent, shared_keys)` \u2014 the spec\
-    \ parent\u2192child graph that `_parent_id` follows. |\n| `validate_ags(path[,\
-    \ dict_version := '4.2'][, warnings := true][, fyi := true])` | `(rule, line,\
-    \ group, severity, desc)` \u2014 a clean-room AGS4 rule check; the edition auto-detects\
-    \ from `TRAN_AGS` unless forced, and only `error`-severity findings show unless\
-    \ the `warnings` / `fyi` tiers are opted in. |\n| `certify_ags(path[, dict_version\
-    \ := '4.2'])` | validate, then mint a sibling `.ags.idx` certificate; returns\
-    \ a one-row status (`certified`, `groups`/`errors`/`warnings`/`fyi` counts, `dict_version`,\
-    \ `message`). |\n| `load_ags_script(path)` | `(seq, stmt)` \u2014 CREATE-TABLE\
-    \ DDL to materialise every group into an indexed, repeat-/remote-queryable store.\
-    \ |\n\nReaders stream lazily (\u22482048-row vector chunks); a non-conforming\
+    \ parent\u2192child graph that `_parent_id` follows. |\n| `load_ags(path)` | `(seq,\
+    \ stmt)` \u2014 CREATE-TABLE DDL to materialise every group into an indexed, repeat-/remote-queryable\
+    \ store. |\n\nReaders stream lazily (\u22482048-row vector chunks); a non-conforming\
     \ numeric cell becomes\n`NULL`, never an error (the born-typed behaviour). Optional\
-    \ arguments are **named**\n(`dict_version := '4.2'`, `warnings := true`), the\
-    \ rest positional. There is no repair\nsurface \u2014 mutation stays in the `lat-check`\
-    \ CLI / the `laterite` library.\n"
+    \ arguments are **named**\n(`edition := '4.2'`, `encoding := 'windows-1252'`),\
+    \ the rest positional. The path verbs\ntake an `encoding` named param (e.g. `encoding\
+    \ := 'windows-1252'`) for non-UTF-8\nsources; the `_text` variant is UTF-8 (its\
+    \ input is already a `VARCHAR`). This is a\n**read-only SQL surface** \u2014 validation,\
+    \ certification and repair stay in the `lat`\nCLI / the `laterite` library.\n"

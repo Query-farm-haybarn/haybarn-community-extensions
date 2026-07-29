@@ -1,0 +1,56 @@
+extension:
+  name: trino_parity
+  description: "Native Trino-compatible scalar functions (trino_*) for the cases where\
+    \ DuckDB's built-ins diverge from Trino on Unicode and byte-level inputs \u2014\
+    \ ICU full case folding, code-point reverse, Java-whitespace trim, NFC normalize,\
+    \ and raw-bytes xxhash64/sha512/hmac_sha256"
+  version: 0.2.0
+  language: C++
+  build: cmake
+  license: MIT
+  maintainers:
+  - apatrida
+repo:
+  github: brikk/duckdb-trino-parity-extension
+  ref: 8527a7fc00e2a3baf117cbf641b973d7cd9d931e
+docs:
+  hello_world: "INSTALL trino_parity FROM community;\nLOAD trino_parity;\n\n-- Full\
+    \ Unicode case folding, matching Trino (Java) rather than DuckDB's\n-- built-in\
+    \ lower(). Turkish dotted-I folds to 'i' + U+0307:\nSELECT trino_lower('\u0130\
+    STANBUL');   -- 'i\u0307stanbul'\n\n-- German sharp-S upper-cases to 'SS', not\
+    \ U+1E9E:\nSELECT trino_upper('stra\xDFe');     -- 'STRASSE'\n\n-- Code-point\
+    \ reverse (DuckDB's built-in reverse is grapheme-aware):\nSELECT trino_reverse('a\U0001F600\
+    b');     -- 'b\U0001F600a'\n\n-- The catalog of functions this extension provides:\n\
+    SELECT trino_name, arg_count, category FROM trino_meta();  -- 10 rows\n"
+  extended_description: "`trino_parity` provides native `trino_<name>(...)` scalar\
+    \ functions for the\nspecific cases where DuckDB's built-ins diverge from Trino's\
+    \ documented\nbehaviour on Unicode and byte-level inputs.\n\nIt is designed to\
+    \ be loaded server-side by anything that pushes Trino-shaped\npredicates down\
+    \ to DuckDB. If a Trino connector naively pushes\n`WHERE lower(name) = 'apple'`\
+    \ down to DuckDB, the filter runs with different\nUnicode semantics in each engine,\
+    \ and rows visible to Trino can silently\ndisappear from the result. This extension\
+    \ supplies **only the functions\nwhere that actually happens** \u2014 where DuckDB's\
+    \ built-in genuinely diverges\nand a native C++ reimplementation is required to\
+    \ match Trino. For the large\nmajority of Trino functions DuckDB's built-in is\
+    \ already equivalent (or a\ntrivial rename / operator / one-line rewrite), so\
+    \ a caller emits those\ndirectly against DuckDB \u2014 no extension needed.\n\n\
+    ### Concrete divergences fixed\n\n| Function | DuckDB built-in | Trino spec |\
+    \ `trino_*` result |\n|---|---|---|---|\n| `lower('\u0130')` (U+0130) | `'i'`\
+    \ (simple case folding) | `'i'` + U+0307 (full folding) | matches Trino |\n| `upper('\xDF\
+    ')` (U+00DF) | `'\u1E9E'` (U+1E9E) | `'SS'` | matches Trino |\n| `reverse('cafe'+U+0301)`\
+    \ | grapheme-aware | code-point-only | matches Trino |\n| `trim` (tab/LF/CR/FF/VT)\
+    \ | not stripped | Java `Character.isWhitespace` strips them | matches Trino |\n\
+    | `xxhash64(varbinary)` | no direct built-in | XXH64, big-endian bytes | matches\
+    \ Trino |\n\n### Function inventory\n\n`trino_meta()` catalogs the ten native\
+    \ functions the extension provides:\n\n- **String (ICU):** `trino_lower/1`, `trino_upper/1`,\
+    \ `trino_reverse/1`,\n  `trino_trim/1`, `trino_ltrim/1`, `trino_rtrim/1`, `trino_normalize/1`\
+    \ \u2014\n  root-locale full case folding, code-point reverse, and\n  `Character.isWhitespace`\
+    \ trim, via statically-linked ICU vendored into the\n  binary (so Unicode behaviour\
+    \ is independent of the host DuckDB build).\n- **Hash (vendored):** `trino_xxhash64/1`,\
+    \ `trino_sha512/1`,\n  `trino_hmac_sha256/2` \u2014 over raw `VARBINARY`, self-contained\
+    \ (no\n  dependency on the `crypto` / `hashfuncs` community extensions).\n\nAligned\
+    \ Trino functions (e.g. `length`, `abs`, `year`, `substring`,\n`regexp_extract`)\
+    \ are intentionally NOT shipped \u2014 a caller emits them as\nbare DuckDB SQL.\
+    \ The full per-function Trino\u2194DuckDB mapping and the\nempirical audits that\
+    \ justify each decision are in the repository's `docs/`.\n\nSource and full divergence\
+    \ catalog:\nhttps://github.com/brikk/duckdb-trino-parity-extension\n"
