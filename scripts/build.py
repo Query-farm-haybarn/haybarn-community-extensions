@@ -125,10 +125,21 @@ with open('env.sh', 'w+') as hdl:
     # See publish-build-images.yml in haybarn-extension-ci-tools.
     #
     # Format of requires_toolchains varies: "rust", ";rust;", ";rust;parser_tools;",
-    # etc. Strip semicolons and empty entries, then categorize.
-    toolchain_set = {
-        t for t in (requires_toolchains or '').split(';') if t
-    }
+    # etc. Some upstream descriptors (cloudfs, valhalla_routing) instead use a
+    # YAML *list*: `requires_toolchains: [cmake, curl, ...]`. Upstream's build.py
+    # never splits this field so it tolerates both shapes by accident; ours has
+    # to parse it to pick the GHCR image variant, so normalize first — otherwise
+    # the list form dies with "'list' object has no attribute 'split'" in
+    # prepare, before any build starts.
+    if isinstance(requires_toolchains, (list, tuple)):
+        toolchain_set = {str(t).strip() for t in requires_toolchains if str(t).strip()}
+    else:
+        toolchain_set = {
+            t.strip() for t in (requires_toolchains or '').split(';') if t.strip()
+        }
+    # Re-emit in the canonical ';'-separated form the downstream reusable
+    # workflow expects; writing a Python list repr would hand it garbage.
+    requires_toolchains = ';'.join(sorted(toolchain_set))
     if not toolchain_set:
         image_variant = 'base'
     elif toolchain_set == {'rust'}:
