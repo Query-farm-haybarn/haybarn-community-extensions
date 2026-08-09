@@ -4,7 +4,7 @@ extension:
     \ from SQL \u2014 born-typed columns, deterministic content-addressed keys that\
     \ join across groups by construction, and an embedded AGS dictionary. A read-only\
     \ SQL surface. Local, http(s):// and s3:// (with httpfs)."
-  version: 0.7.0
+  version: 0.10.0
   language: Rust
   build: cargo
   license: MIT
@@ -14,7 +14,7 @@ extension:
   - niko86
 repo:
   github: niko86/laterite-duckdb
-  ref: 1629610de77beab11ead79be36fac4324138e7e7
+  ref: b6ef2debe3ebd6b7c72c81d0dcc9ff7b62e1ee31
 docs:
   hello_world: "-- Read a group as a typed table (columns typed from the file's own\
     \ TYPE row):\nSELECT loca_id, loca_gl\nFROM read_ags('site.ags', 'LOCA')\nWHERE\
@@ -54,12 +54,15 @@ docs:
     \ KEY status. |\n| `ags_dictionary()` | the embedded standard AGS dictionary as\
     \ a table (`group`, `heading`, `status`, `ags_type`, `unit`, `description`, \u2026\
     ). |\n| `ags_relationships()` | `(child, parent, shared_keys)` \u2014 the spec\
-    \ parent\u2192child graph that `_parent_id` follows. |\n| `load_ags(path)` | `(seq,\
-    \ stmt)` \u2014 CREATE-TABLE DDL to materialise every group into an indexed, repeat-/remote-queryable\
-    \ store. |\n\nReaders stream lazily (\u22482048-row vector chunks); a non-conforming\
-    \ numeric cell becomes\n`NULL`, never an error (the born-typed behaviour). Optional\
-    \ arguments are **named**\n(`edition := '4.2'`, `encoding := 'windows-1252'`),\
-    \ the rest positional. The path verbs\ntake an `encoding` named param (e.g. `encoding\
-    \ := 'windows-1252'`) for non-UTF-8\nsources; the `_text` variant is UTF-8 (its\
-    \ input is already a `VARCHAR`). This is a\n**read-only SQL surface** \u2014 validation,\
-    \ certification and repair stay in the `lat`\nCLI / the `laterite` library.\n"
+    \ parent\u2192child graph that `_parent_id` follows. |\n| `ags_rules()` | the\
+    \ AGS4 numbered-rule catalogue (`rule`, `title`, `severity`, `fixable`) \u2014\
+    \ the extension *lists* the rules; the CLI/library *run* them. |\n| `load_ags(path)`\
+    \ | `(seq, stmt)` \u2014 CREATE-TABLE DDL to materialise every group into an indexed,\
+    \ repeat-/remote-queryable store. |\n\nReaders stream lazily (\u22482048-row vector\
+    \ chunks); a non-conforming numeric cell becomes\n`NULL`, never an error (the\
+    \ born-typed behaviour). Optional arguments are **named**\n(`edition := '4.2'`,\
+    \ `encoding := 'windows-1252'`), the rest positional. The path verbs\ntake an\
+    \ `encoding` named param (e.g. `encoding := 'windows-1252'`) for non-UTF-8\nsources;\
+    \ the `_text` variant is UTF-8 (its input is already a `VARCHAR`). This is a\n\
+    **read-only SQL surface** \u2014 validation, certification and repair stay in\
+    \ the `lat`\nCLI / the `laterite` library.\n"
