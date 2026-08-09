@@ -2,7 +2,7 @@ extension:
   name: plinking_duck
   description: Read PLINK 2 genomics file formats and run common genetic analyses
     directly in SQL
-  version: 0.8.0
+  version: 0.8.2
   language: C++
   build: cmake
   license: MIT
@@ -11,7 +11,7 @@ extension:
   - teaguesterling
 repo:
   github: teaguesterling/plinking_duck
-  ref: 8c864c03a8292288e30e07dcc456b095e39a05cd
+  ref: b32b0cde755ee261ad4e25ca6634e9bc1c560786
 docs:
   hello_world: '-- Read variant metadata from a .pvar file
 
@@ -69,9 +69,13 @@ docs:
     \ companions for variant and sample metadata\n- `af_range` / `ac_range` filter\
     \ pushdown, and `include_genotypes` (hardcall\n  category) / `genotype_range`\
     \ for fast carrier lookups \u2014 in `orient := 'sample'`\n  only the matching\
-    \ subjects are materialized\n\nAll functions support projection pushdown (skip\
-    \ genotype decompression for\nmetadata-only queries), parallel scanning, sample\
-    \ subsetting, and region\nfiltering. Legacy PLINK 1 formats (.bim/.fam) are auto-detected.\n\
-    \nBuilt on [pgenlib](https://github.com/chrchang/plink-ng) for efficient access\n\
-    to the compressed .pgen binary format without full decompression.\n\nFor full\
-    \ documentation, see [plinking-duck.readthedocs.io](https://plinking-duck.readthedocs.io).\n"
+    \ subjects are materialized\n\n**Remote / cloud reads:**\n- Read `.pgen` filesets\
+    \ directly from `s3://`, `https://`, and other DuckDB\n  filesystems (companions\
+    \ too) \u2014 targeted/region queries fetch only the bytes\n  they need via HTTP\
+    \ range reads. `plinking_pgen_io := 'localize'` downloads once\n  for remote full\
+    \ scans. Split-index (`.pgen.pgi`) filesets are read transparently.\n\nAll functions\
+    \ support projection pushdown (skip genotype decompression for\nmetadata-only\
+    \ queries), parallel scanning, sample subsetting, and region\nfiltering. Legacy\
+    \ PLINK 1 formats (.bim/.fam) are auto-detected.\n\nBuilt on [pgenlib](https://github.com/chrchang/plink-ng)\
+    \ for efficient access\nto the compressed .pgen binary format without full decompression.\n\
+    \nFor full documentation, see [plinking-duck.readthedocs.io](https://plinking-duck.readthedocs.io).\n"
