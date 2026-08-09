@@ -9,7 +9,7 @@ extension:
   - Dtenwolde
 repo:
   github: Dtenwolde/ldbc-data-gen
-  ref: a232c3829d81ec718d69d74f55147510ed876764
+  ref: e7d26eac0e0feb70ec37a90112607adac807e901
 docs:
   hello_world: "INSTALL ldbc_data_gen FROM community;\nLOAD ldbc_data_gen;\n\n-- Generate\
     \ the LDBC SNB BI dataset as DuckDB tables.\nCALL ldbcgen(sf := 0.003, schema\
