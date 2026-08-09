@@ -2,7 +2,7 @@ extension:
   name: gpudb
   description: GPU-accelerated analytical operators for DuckDB on NVIDIA CUDA and
     Apple Silicon Metal. First SQL execution engine that targets Apple Silicon GPUs.
-  version: 0.1.3
+  version: 0.3.0
   language: C++
   build: cmake
   license: Apache-2.0
@@ -12,44 +12,39 @@ extension:
   - singhpratech
 repo:
   github: singhpratech/duckdbgpumetaldbram
-  ref: 018d8a306ac2903f64c3391d42c59038b4fc2c28
+  ref: 2f416b1037a5d22662bd67b7fda26f0b96b82858
 docs:
-  hello_world: "LOAD gpudb;\n-- GPU-accelerated SUM (CUDA on NVIDIA, Metal on Apple\
-    \ Silicon, CPU fallback otherwise)\nSELECT gpu_sum(value::BIGINT) FROM range(1000000)\
-    \ AS t(value);\n\n-- Verify against native sum\nSELECT\n  gpu_sum(value::BIGINT)\
-    \ AS gpu,\n  sum(value::BIGINT) AS native\nFROM range(1000000) AS t(value);\n"
-  extended_description: "`gpudb` adds GPU-accelerated aggregate operators that DuckDB\
-    \ transparently\ndispatches to:\n\n  * `gpu_sum(BIGINT)` \u2014 GPU SUM\n  * `gpu_min(BIGINT)`\
-    \ \u2014 GPU MIN\n  * `gpu_max(BIGINT)` \u2014 GPU MAX\n\nOn NVIDIA hardware (CUDA\
-    \ backend, sm_70+) these run on the device with\nPCIe-amortized transfer. On Apple\
-    \ Silicon (Metal backend, M1+) they use\nthe unified memory architecture so transfer\
-    \ cost is zero.\n\n**v0.1.3** ships a hybrid Metal GROUP BY that auto-dispatches\
-    \ between two\npaths per query: a 32K-partition slot-lock hash aggregate (sweet\
-    \ spot at\n1024 \u2264 unique \u2264 16M) and an optimized multi-pass radix sort\
-    \ (very low or\nvery high cardinality). This flipped TPC-H SF10 GROUP BY l_orderkey\
-    \ from\nCPU 1.78\xD7 faster (v0.1.2) to Metal 1.30\xD7 faster.\n\nA hybrid CPU/GPU\
-    \ planner picks the backend that wins for each cardinality\nregime \u2014 this\
-    \ addresses the open problem from Rosenfeld/Bre\xDF CSUR 2022\nand Cao SIGMOD\
-    \ 2024.\n\nApple Silicon (M4 Max) vs DuckDB CPU 16-thread (the actual CLI default,\n\
-    not single-thread). All cells trace to BENCHMARK.md rows:\n  * TPC-H SF10 multi-agg\
-    \ fusion l_quantity: Metal 25.5\xD7\n  * TPC-H SF10 multi-agg fusion l_extendedprice:\
-    \ Metal 22.0\xD7\n  * TPC-H SF10 multi-agg fusion l_orderkey: Metal 9.7\xD7\n\
-    \  * 1B int64 SUM HOT (resident column): Metal 2.6\xD7\n  * 500M \xD7 1M GROUP\
-    \ BY synthetic: Metal 3.4\xD7\n  * 1B \xD7 1M GROUP BY synthetic: Metal 3.2\xD7\
-    \n  * TPC-H SF10 GROUP BY l_extendedprice (1.35M unique): Metal 3.9\xD7\n  * TPC-H\
-    \ SF10 GROUP BY l_orderkey (15M unique): Metal 1.30\xD7\n  * TPC-H SF1 GROUP BY\
-    \ l_orderkey (1.5M unique): Metal 1.40\xD7\n  * Honest loss documented: TPC-H\
-    \ SF10 GROUP BY l_quantity (50 unique):\n    CPU 14\xD7 faster (structural \u2014\
-    \ L1-resident hash table on CPU)\n\nNVIDIA RTX 4090 (CUDA, vs single-thread CPU\
-    \ baseline):\n  * Peak SUM ratio: ~22.8\xD7 (size-dependent, resident column)\n\
-    \  * GROUP BY 50M rows \xD7 10M unique groups: 21.8\xD7\n  * TPC-H SF1 GROUP BY\
-    \ (6M \xD7 1.5M unique): 3.56\xD7 (re-bench post-launch)\n\nThe extension auto-selects\
-    \ the best backend at load time. If no GPU is\navailable it falls back cleanly\
-    \ to the CPU implementation \u2014 same SQL\nsurface either way. Community-extension\
-    \ binaries are built without the\nCUDA toolchain for now (CPU fallback on Linux;\
-    \ full Metal on Apple\nSilicon); build from source for the CUDA backend. Honest\
-    \ benchmark\nnotes (where GPU loses to CPU) are documented in the project's\n\
-    BENCHMARK.md (append-only log).\n\nSource: https://github.com/singhpratech/duckdbgpumetaldbram\n"
+  hello_world: "LOAD gpudb;\n-- Drop-in aggregates (BIGINT and DOUBLE overloads)\n\
+    SELECT gpu_sum(value::BIGINT) FROM range(1000000) AS t(value);\n\n-- Verify against\
+    \ native sum\nSELECT\n  gpu_sum(value::BIGINT) AS gpu,\n  sum(value::BIGINT) AS\
+    \ native\nFROM range(1000000) AS t(value);\n"
+  extended_description: "`gpudb` adds drop-in aggregate functions:\n\n  * `gpu_sum(BIGINT\
+    \ | DOUBLE)`\n  * `gpu_min(BIGINT | DOUBLE)`\n  * `gpu_max(BIGINT | DOUBLE)`\n\
+    \nSmaller integer types (`INTEGER`, `SMALLINT`, `TINYINT`) widen implicitly\n\
+    to the `BIGINT` overload. All three work in plain aggregation, `GROUP BY`,\nand\
+    \ window frames (`OVER ()`, `OVER (ORDER BY ...)`,\n`OVER (PARTITION BY ... ORDER\
+    \ BY ...)`), and match native DuckDB\nsemantics: empty input and all-NULL groups\
+    \ return SQL `NULL` (v0.2.0),\nand the `DOUBLE` min/max overloads use the same\
+    \ NaN-aware total order as\nnative DuckDB \u2014 NaN sorts greatest (v0.3.0).\n\
+    \n**v0.3.0** replaces the buffered v0.1.x aggregate path with streaming\naccumulator\
+    \ states. End-to-end queries through the SQL aggregates now run\nat parity with\
+    \ native DuckDB (1.00\u20131.20\xD7 on rewritten TPC-H queries),\nwhere v0.1.x\
+    \ could be substantially slower on the same queries. DuckDB\nfeeds aggregates\
+    \ pre-grouped 2048-row chunks, so the SQL aggregate path\ndeliberately streams\
+    \ running accumulators instead of round-tripping\nchunks through the GPU.\n\n\
+    The GPU backends (CUDA on NVIDIA sm_70+, Metal on Apple Silicon M1+)\npower the\
+    \ operator-level engine and benchmark tooling that ship in the\nsource tree, where\
+    \ whole columns are resident on the device. Headline\noperator-level results,\
+    \ all traceable to rows in the project's\nappend-only BENCHMARK.md with reproduction\
+    \ steps:\n\n  * Apple M4 Max vs DuckDB CPU 16-thread: multi-aggregate fusion over\n\
+    \    TPC-H SF10 columns 9.7\xD7\u201325.5\xD7; SF10 GROUP BY at 1.35M unique keys\n\
+    \    3.9\xD7; honest loss documented at 50 unique keys (CPU 14\xD7 faster,\n \
+    \   structural).\n  * NVIDIA RTX 4090: resident-column SUM ~17.9\xD7; GROUP BY\
+    \ 50M rows \xD7\n    10M unique groups 13.7\xD7 (vs single-thread CPU baseline).\n\
+    \nCommunity-extension binaries are built without the CUDA toolchain for\nnow (full\
+    \ Metal path on Apple Silicon; clean CPU fallback on Linux);\nbuild from source\
+    \ for the CUDA backend. If no GPU is available the\nextension falls back cleanly\
+    \ \u2014 same SQL surface either way.\n\nSource: https://github.com/singhpratech/duckdbgpumetaldbram\n"
   hardware_requirements: 'NVIDIA CUDA: any GPU with sm_70 or later. Driver 525+ recommended.
 
     Apple Metal: any Apple Silicon Mac (M1 or later). macOS 13+ for
@@ -59,13 +54,13 @@ docs:
     Falls back to CPU otherwise.
 
     '
-  known_limitations: "* Float64 SUM on Apple Silicon falls back to host loop (Apple\
-    \ GPUs\n  do not implement IEEE-754 doubles in MSL); same correctness, no\n  GPU\
-    \ speedup for that one type.\n* GROUP BY currently supports BIGINT keys + BIGINT\
-    \ SUM; broader\n  type coverage planned in v0.2.\n* Window functions: SUM OVER\
-    \ (), SUM OVER (ORDER BY), and\n  SUM OVER (PARTITION BY ... ORDER BY ...) all\
-    \ supported and\n  verified against native sum() in the SQL test suite.\n* GROUP\
-    \ BY at very low cardinality (\u2264 1K unique): CPU dominates\n  structurally\
-    \ (L1-resident hash). Auto-dispatch routes these to the\n  radix-opt path; for\
-    \ the bottom of the curve CPU still wins (e.g.,\n  TPC-H SF10 l_quantity at 50\
-    \ unique groups: CPU 14\xD7 faster).\n"
+  known_limitations: "* `gpu_sum(BIGINT)` wraps on int64 overflow where native `sum()`\n\
+    \  promotes to `HUGEINT`.\n* `HUGEINT`, `DECIMAL`, and `FLOAT` arguments implicitly\
+    \ cast to the\n  `DOUBLE` overload \u2014 values beyond 2^53 lose precision where\
+    \ native\n  aggregates are exact, and the result type is `DOUBLE`. `VARCHAR`\n\
+    \  arguments are a binder error (native `min`/`max` compare\n  lexicographically).\
+    \ Use native aggregates where those types matter.\n* Apple GPUs do not implement\
+    \ IEEE-754 doubles in MSL; operator-level\n  f64 work on Metal runs on host. This\
+    \ does not affect the SQL\n  aggregate path.\n* `GPUDB_FORCE_BACKEND` no longer\
+    \ affects the SQL aggregate path as of\n  v0.3.0 (operator-level tools still honor\
+    \ backend selection).\n"
