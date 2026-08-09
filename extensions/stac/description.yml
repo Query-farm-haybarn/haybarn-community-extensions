@@ -1,0 +1,172 @@
+extension:
+  name: stac
+  description: DuckDB extension for reading data from SpatioTemporal Asset Catalogs
+    (STAC) using SQL.
+  version: 0.1.0
+  language: C++
+  build: cmake
+  license: MIT
+  maintainers:
+  - ahuarte47
+repo:
+  github: ahuarte47/duckdb-stac
+  ref: 2759131bfe73569e61b1cdc84d13c63bda753613
+docs:
+  hello_world: "-- Read the content of a static STAC catalog and return the first\
+    \ 2 items:\nSELECT\n    collection, id\nFROM\n    STAC_Read('https://raw.githubusercontent.com/radiantearth/stac-spec/refs/heads/master/examples/catalog.json')\n\
+    LIMIT 2\n;\n\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2510\n\u2502  collection   \u2502                               id         \
+    \                      \u2502             bbox                \u2502\n\u2502 \
+    \   varchar    \u2502                            varchar                     \
+    \        \u2502           stac_bbox             \u2502\n\u251C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 sentinel2_l2a \u2502\
+    \ S2A_OPER_MSI_L2A_TL_EPAE_20190527T094026_A020508_T46VCQ_N02.12 \u2502 {    \
+    \                           \u2502\n\u2502               \u2502              \
+    \                                                  \u2502   'minx': 90.63571493952938,\
+    \    \u2502\n\u2502               \u2502                                     \
+    \                           \u2502   'miny': 91.27015715015226,    \u2502\n\u2502\
+    \               \u2502                                                       \
+    \         \u2502   'maxx': 62.12379856857608,    \u2502\n\u2502              \
+    \ \u2502                                                                \u2502\
+    \   'maxy': 62.96338922674105     \u2502\n\u2502               \u2502        \
+    \                                                        \u2502 }            \
+    \                   \u2502\n\u251C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2524\n\u2502 sentinel2_l2a \u2502 S2A_OPER_MSI_L2A_TL_MTI__20190518T203951_A020386_T24XWM_N02.12\
+    \ \u2502 {                               \u2502\n\u2502               \u2502 \
+    \                                                               \u2502   'minx':\
+    \ -39.0008444956852,    \u2502\n\u2502               \u2502                  \
+    \                                              \u2502   'miny': -34.13214411127818,\
+    \   \u2502\n\u2502               \u2502                                      \
+    \                          \u2502   'maxx': 77.42853163431232,    \u2502\n\u2502\
+    \               \u2502                                                       \
+    \         \u2502   'maxy': 78.37301671070006     \u2502\n\u2502              \
+    \ \u2502                                                                \u2502\
+    \ }                               \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2518\n\n\n-- Search for items in a STAC catalog\
+    \ using the STAC API - Item Search endpoint:\nSELECT\n    collection, id, bbox\n\
+    FROM\n    STAC_Search(\n        'https://earth-search.aws.element84.com/v0/search',\n\
+    \        collections := ['sentinel-s2-l2a-cogs'],\n        datetime := '2021-09-30/2021-10-30',\n\
+    \        bbox := [-1.695007724869786, 42.788757186108654, -1.604482013650674,\
+    \ 42.84244150196227]\n    )\n;\n\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2510\n\u2502      collection      \u2502            id         \
+    \   \u2502                                                       bbox        \
+    \                                                \u2502\n\u2502       varchar\
+    \        \u2502         varchar          \u2502                              \
+    \                       stac_bbox                                            \
+    \         \u2502\n\u251C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2524\n\u2502 sentinel-s2-l2a-cogs \u2502 S2B_30TWN_20211030_0_L2A \u2502 {'minx':\
+    \ -3.0002344509650487, 'miny': 42.356331534440834, 'maxx': -1.6455652046460576,\
+    \ 'maxy': 43.35284638738093} \u2502\n\u2502 sentinel-s2-l2a-cogs \u2502 S2B_30TXN_20211030_0_L2A\
+    \ \u2502 {'minx': -1.7857005522228677, 'miny': 42.335791505536065, 'maxx': -0.4124765189393069,\
+    \ 'maxy': 43.3461908738427}  \u2502\n\u2502 sentinel-s2-l2a-cogs \u2502 S2A_30TWN_20211025_0_L2A\
+    \ \u2502 {'minx': -3.0002344509650487, 'miny': 42.356331534440834, 'maxx': -1.6455652046460576,\
+    \ 'maxy': 43.35284638738093} \u2502\n\u2502 sentinel-s2-l2a-cogs \u2502 S2A_30TXN_20211025_0_L2A\
+    \ \u2502 {'minx': -1.7857005522228677, 'miny': 42.335791505536065, 'maxx': -0.4124765189393069,\
+    \ 'maxy': 43.3461908738427}  \u2502\n\u2502 sentinel-s2-l2a-cogs \u2502 S2B_30TWN_20211020_0_L2A\
+    \ \u2502 {'minx': -3.0002344509650487, 'miny': 42.356331534440834, 'maxx': -1.6455652046460576,\
+    \ 'maxy': 43.35284638738093} \u2502\n\u2502 sentinel-s2-l2a-cogs \u2502 S2A_30TXN_20211015_0_L2A\
+    \ \u2502 {'minx': -1.7857005522228677, 'miny': 42.335791505536065, 'maxx': -0.4124765189393069,\
+    \ 'maxy': 43.3461908738427}  \u2502\n\u2502 sentinel-s2-l2a-cogs \u2502 S2B_30TXN_20210930_0_L2A\
+    \ \u2502 {'minx': -1.7857005522228677, 'miny': 42.335791505536065, 'maxx': -0.4124765189393069,\
+    \ 'maxy': 43.3461908738427}  \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2518\n"
+  extended_description: "A DuckDB extension for reading data from SpatioTemporal Asset\
+    \ Catalogs (STAC) using SQL.\n\nThe extension exposes STAC catalogs as relational\
+    \ tables, following the GeoParquet STAC specification.\n\nEach row represents\
+    \ a single STAC item. Almost all item fields are mapped to columns;\nnested JSON\
+    \ structures are preserved as Parquet structs where possible, but item properties\
+    \ are\npromoted to the top level for easier filtering and querying.\n\nThe extension\
+    \ provides two table functions to read STAC catalogs:\n\n- `STAC_Read`:\n  Reads\
+    \ the content of a SpatioTemporal Asset Catalog (STAC) catalog from the given\
+    \ URL or JSON file and returns it as a table.\n\n  ```sql\n  SELECT * FROM STAC_Read('https://example.com/stac/collection.json');\n\
+    \  ```\n\n- `STAC_Search`:\n\n  Searches the content of a SpatioTemporal Asset\
+    \ Catalog (STAC) catalog based on the given STAC API - Item Search\n  filtering\
+    \ criteria (https://api.stacspec.org/v1.0.0/item-search/) and returns matching\
+    \ items as a table.\n\n  The `url` parameter specifies the base URL of the STAC\
+    \ API - Item Search endpoint to query.\n\n  The optional parameters allow filtering\
+    \ by different criteria:\n\n  - `collections`: A list of collection IDs to filter\
+    \ the search results.\n  - `ids`: A list of item IDs to filter the search results.\n\
+    \  - `bbox`: A bounding box to filter items by spatial intersection, specified\
+    \ as an array of four floats representing the minimum longitude, minimum latitude,\
+    \ maximum longitude, and maximum latitude.\n  - `intersects`: A geometry object\
+    \ (EPSG:4326) to filter items by spatial intersection.\n  - `datetime`: A string\
+    \ representing a temporal range to filter the search results, specified in the\
+    \ format \"start_datetime/end_datetime\" (e.g., \"2021-01-01T00:00:00Z/2021-12-31T23:59:59Z\"\
+    ).\n  - `max_items`: An integer specifying the maximum number of items to return\
+    \ in each result page.\n\n  ```sql\n  SELECT\n      *\n  FROM\n      STAC_Search(\n\
+    \          'https://earth-search.aws.element84.com/v0/search',\n          collections\
+    \ := ['sentinel-s2-l2a-cogs'],\n          datetime := '2021-09-30/2021-10-30',\n\
+    \          intersects := ST_MakeEnvelope(-1.695007724869786, 42.788757186108654,\
+    \ -1.604482013650674, 42.84244150196227)::GEOMETRY('EPSG::4326')\n      )\n  ;\n\
+    \  ```\n\n  ```sql\n  SELECT\n      *\n  FROM\n      STAC_Search(\n          'https://earth-search.aws.element84.com/v0/search',\n\
+    \          collections := ['sentinel-s2-l2a-cogs'],\n          datetime := '2021-09-30/2021-10-30',\n\
+    \          bbox := [-1.695007724869786, 42.788757186108654, -1.604482013650674,\
+    \ 42.84244150196227]\n      )\n  ;\n  ```\n"
