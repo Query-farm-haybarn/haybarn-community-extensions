@@ -1,7 +1,7 @@
 extension:
   name: duckgql
   description: Adds ISO GQL graph querying and graph algorithms to DuckDB
-  version: 0.1.0
+  version: 0.1.1
   language: C++
   build: cmake
   license: MIT
@@ -9,7 +9,7 @@ extension:
   - rahul-iyer
 repo:
   github: rahul-iyer/duckdb-gql
-  ref: 17095d2b2b2b717b3db910327b3c67eff8f28ea7
+  ref: 2e87e4ef084291b180e4fc940f99cdfade3708dd
 docs:
   hello_world: "COPY (\n  SELECT * FROM (VALUES\n    ('p1', 'Ada', 'Person'),\n  \
     \  ('p2', 'Grace', 'Person')\n  ) nodes(\":ID(People)\", \"name:string\", \":LABEL\"\
@@ -22,32 +22,35 @@ docs:
   extended_description: "DuckGQL is an experimental C++17 extension that adds a growing\
     \ subset of\nISO/IEC 39075:2024 GQL to DuckDB. It combines graph pattern queries\
     \ and\nmutations with DuckDB's native relational storage and execution engine,\n\
-    plus an explicit CSR layer for graph algorithms.\n\n**What works in v0.1.0**\n\
+    plus an explicit CSR layer for graph algorithms.\n\n**What works in v0.1.1**\n\
     \n* Managed property graphs backed by typed DuckDB vertex and edge tables.\n*\
-    \ Graph-header CSV, compressed CSV, and Parquet bulk import with optional\n  endpoint\
-    \ and identity validation.\n* Directed `MATCH`, `OPTIONAL MATCH`, filtering, projection,\
-    \ aggregation,\n  ordering, paging, fixed multi-hop patterns, and a bounded\n\
-    \  variable-length path subset.\n* Standalone node and directed-path `INSERT`,\
-    \ fixed directed\n  `MATCH`-and-`INSERT`, property and label mutation, and edge/node\
-    \ deletion.\n* Native DuckDB ART indexes for selective vertex-property equality\
-    \ lookups.\n* Explicit CSR-backed BFS, DFS, unweighted SSSP, PageRank, weak and\
-    \ strong\n  components, degree, closeness, local clustering coefficient, and triangle\n\
-    \  counting.\n\n**Storage and execution model**\n\nVertices and edges remain authoritative\
-    \ ordinary DuckDB tables rather than\nentity-attribute-value rows. Nodes retain\
-    \ their complete label set and each\nedge has exactly one immutable type. DuckGQL\
-    \ lowers graph queries to native\nDuckDB relational plans, allowing DuckDB to\
-    \ execute scans, joins,\naggregation, ordering, and recursive CTEs. The graph\
-    \ optimizer can choose\ntable scans, native property indexes, node-label postings,\
-    \ and selective\nfixed-hop CSR expansion. CSR snapshots are derived explicitly\
-    \ and are not a\nsecond authoritative graph store.\n\n**Project status**\n\nDuckGQL\
-    \ v0.1.0 is not yet a complete or conforming ISO GQL implementation.\nGrammar\
-    \ recognition does not imply semantic or transactional conformance.\nThe machine-readable\
-    \ conformance manifest currently classifies 23 feature\nfamilies as partial and\
-    \ 13 as planned. Important restrictions include\nautocommit-only graph lifecycle\
-    \ and CSR operations, connection-local CSR\nsnapshots, a single vertex and edge\
-    \ input per bulk load, and incomplete\ngeneral path searches, query composition,\
-    \ procedures, and the complete GQL\nvalue/type system.\n\nSee the [documentation](https://duckgql.com/docs/),\
-    \ inspect the\n[conformance manifest](https://github.com/rahul-iyer/duckdb-gql/blob/v0.1.0/test/conformance/iso-gql-2024.tsv),\n\
+    \ Inline typed graph schemas that persist in the catalog and immediately\n  materialize\
+    \ constrained vertex and edge tables without `COPY GRAPH`.\n* Graph-header CSV,\
+    \ compressed CSV, and Parquet bulk import with optional\n  endpoint and identity\
+    \ validation.\n* Directed `MATCH`, `OPTIONAL MATCH`, filtering, projection, aggregation,\n\
+    \  ordering, paging, fixed multi-hop patterns, and a bounded\n  variable-length\
+    \ path subset.\n* Standalone node and directed-path `INSERT`, fixed directed\n\
+    \  `MATCH`-and-`INSERT`, single-node `INSERT RETURN`, property and label\n  mutation,\
+    \ and edge/node deletion.\n* Native DuckDB ART indexes for selective vertex-property\
+    \ equality lookups.\n* Explicit CSR-backed BFS, DFS, unweighted SSSP, PageRank,\
+    \ weak and strong\n  components, Louvain community detection, degree, closeness,\
+    \ local\n  clustering coefficient, and triangle counting.\n\n**Storage and execution\
+    \ model**\n\nVertices and edges remain authoritative ordinary DuckDB tables rather\
+    \ than\nentity-attribute-value rows. Nodes retain their complete label set and\
+    \ each\nedge has exactly one immutable type. DuckGQL lowers graph queries to native\n\
+    DuckDB relational plans, allowing DuckDB to execute scans, joins,\naggregation,\
+    \ ordering, and recursive CTEs. The graph optimizer can choose\ntable scans, native\
+    \ property indexes, node-label postings, and selective\nfixed-hop CSR expansion.\
+    \ CSR snapshots are derived explicitly and are not a\nsecond authoritative graph\
+    \ store.\n\n**Project status**\n\nDuckGQL v0.1.1 is not yet a complete or conforming\
+    \ ISO GQL implementation.\nGrammar recognition does not imply semantic or transactional\
+    \ conformance.\nThe machine-readable conformance manifest currently classifies\
+    \ 24 feature\nfamilies as partial and 12 as planned. Important restrictions include\n\
+    autocommit-only graph lifecycle and CSR operations, connection-local CSR\nsnapshots,\
+    \ a single vertex and edge input per bulk load, and incomplete\ngeneral path searches,\
+    \ query composition, procedures, and the complete GQL\nvalue/type system.\n\n\
+    See the [documentation](https://duckgql.com/docs/), inspect the\n[conformance\
+    \ manifest](https://github.com/rahul-iyer/duckdb-gql/blob/v0.1.1/test/conformance/iso-gql-2024.tsv),\n\
     or try the [browser playground](https://duckgql.com/).\n"
   known_limitations: "* DuckGQL implements a practical subset of ISO/IEC 39075:2024\
     \ GQL; it is\n  experimental and not yet a conforming implementation.\n* `CREATE\
@@ -59,9 +62,12 @@ docs:
     \ checked, and must be rebuilt after graph\n  mutations or direct SQL writes to\
     \ the graph tables.\n* Weighted SSSP is not implemented. The current SSSP implementation\
     \ is\n  unweighted.\n* Multiple-path and undirected insertion, general runtime\
-    \ property maps,\n  and open-graph schema evolution remain incomplete.\n* General\
-    \ path modes and searches, shortest-path groups, complete\n  variable-length path\
-    \ composition, procedure semantics, query composition,\n  graph types, and the\
-    \ complete GQL value/type system remain incomplete.\n* Existing DuckDB and DuckLake\
-    \ tables cannot yet be registered directly as\n  zero-copy graphs; they must first\
-    \ be imported through graph-header CSV or\n  Parquet files.\n"
+    \ property maps,\n  and open-graph schema evolution remain incomplete.\n* `INSERT\
+    \ RETURN` currently supports one directly inserted node variable;\n  edge values,\
+    \ expressions, multiple return items, ordering, and pagination\n  are not yet\
+    \ supported.\n* General path modes and searches, shortest-path groups, complete\n\
+    \  variable-length path composition, procedure semantics, query composition,\n\
+    \  named graph types, typed storage enforcement, and the complete GQL\n  value/type\
+    \ system remain incomplete.\n* Existing DuckDB and DuckLake tables cannot yet\
+    \ be registered directly as\n  zero-copy graphs; they must first be imported through\
+    \ graph-header CSV or\n  Parquet files.\n"
