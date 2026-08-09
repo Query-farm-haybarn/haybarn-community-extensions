@@ -2,7 +2,7 @@ extension:
   name: raster
   description: DuckDB extension for reading and writing geospatial raster data using
     SQL.
-  version: 1.1.0
+  version: 1.2.0
   language: C++
   build: cmake
   excluded_platforms: windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
@@ -11,7 +11,7 @@ extension:
   - ahuarte47
 repo:
   github: ahuarte47/duckdb-raster
-  ref: 0f415fee50f9f2b42a135b2ac79cf9e149f6b1a8
+  ref: 860f88d6a5bab2bf2f15ef8d743708a9d2228aab
 docs:
   hello_world: "-- List available GDAL raster drivers and formats:\nSELECT short_name,\
     \ long_name, help_url FROM RT_Drivers();\n\n\u250C\u2500\u2500\u2500\u2500\u2500\
