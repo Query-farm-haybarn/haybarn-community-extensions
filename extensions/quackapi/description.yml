@@ -3,7 +3,7 @@ extension:
   description: "FastAPI-class HTTP framework inside DuckDB \u2014 CREATE ROUTE turns\
     \ SQL into typed, validated endpoints; one process is DB + HTTP (+ PDF/renderer\
     \ via companion extensions)."
-  version: 0.1.1
+  version: 0.1.2
   language: C++
   build: cmake
   license: MIT
@@ -12,7 +12,7 @@ extension:
   excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_mingw;windows_amd64_rtools;windows_arm64
 repo:
   github: asubbarao/quackapi
-  ref: 32600ee3598dd69aecba6c308c476e44e5bcfce6
+  ref: 398d42cd41d3fb494420063d60b5aa367343d271
 docs:
   hello_world: "LOAD quackapi;\n\n-- JSON endpoint: the SELECT is the handler\nCREATE\
     \ ROUTE hello GET '/hello' AS SELECT 'world' AS msg;\n\n-- Path params bind as\
@@ -69,14 +69,13 @@ docs:
     \ httplib).\n- **Policies:** `CREATE ROW ACCESS POLICY` / `CREATE MASKING POLICY`\
     \ +\n  `ALTER TABLE` bind; `quackapi_policies()`.\n- **Inspect:** `quackapi_routes()`,\
     \ `quackapi_servers()`,\n  `quackapi_http_util_name()`.\n\n## Platforms & build\n\
-    \nTargets **DuckDB v1.5.4**. C++17; depends only on DuckDB-bundled **httplib**\n\
-    and **mbedtls** (no vcpkg, no libcurl). CI excludes wasm and Windows MinGW/rtools/arm64.\
-    \ Signed community\nbinaries for linux/osx are live; windows_amd64 re-opt-in via\
-    \ this descriptor.\n\n## Limits (honest)\n\n- DuckDB single-writer / file concurrency\
-    \ \u2014 not high-write multi-tenant OLTP.\n- Serve `memory_limit` default is\
-    \ 256MB only when nothing is configured;\n  use `memory_limit := '4GB'` / `SET\
-    \ quackapi_memory_limit` (never clobbers\n  an operator `SET memory_limit`).\n\
-    - Request body max 8 MiB; JWT **HS256 only** (no RS256/OIDC); table API is\n \
-    \ read-only scaffold.\n- Route registry is instance-scoped (re-run DDL after reopen);\
-    \ queue jobs\n  persist in `quackapi_jobs`.\n\nFull reference: https://github.com/asubbarao/quackapi\
-    \  \nCommunity page draft: https://github.com/asubbarao/quackapi/blob/main/docs/community-page.md\n"
+    \nTargets **DuckDB v1.5.5** only. C++17; depends only on DuckDB-bundled **httplib**\n\
+    and **mbedtls** (no vcpkg, no libcurl). CI builds linux/macOS/windows_amd64;\n\
+    excludes wasm and Windows MinGW/rtools/arm64.\n\n## Limits (honest)\n\n- DuckDB\
+    \ single-writer / file concurrency \u2014 not high-write multi-tenant OLTP.\n\
+    - Serve `memory_limit` default is 256MB only when nothing is configured;\n  use\
+    \ `memory_limit := '4GB'` / `SET quackapi_memory_limit` (never clobbers\n  an\
+    \ operator `SET memory_limit`).\n- Request body max 8 MiB; JWT **HS256 only**\
+    \ (no RS256/OIDC); table API is\n  read-only scaffold.\n- Route registry is instance-scoped\
+    \ (re-run DDL after reopen); queue jobs\n  persist in `quackapi_jobs`.\n\nFull\
+    \ reference: https://github.com/asubbarao/quackapi  \nCommunity page draft: https://github.com/asubbarao/quackapi/blob/main/docs/community-page.md\n"
