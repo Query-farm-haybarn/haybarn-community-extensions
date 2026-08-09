@@ -1,0 +1,95 @@
+extension:
+  name: quackiso
+  description: Query ISO 20022 (camt, pacs, pain) financial messages as SQL
+  version: 1.3.0
+  language: Rust
+  build: cmake
+  license: MIT
+  maintainers:
+  - tempoloss
+  excluded_platforms: windows_amd64_rtools;windows_amd64_mingw;linux_amd64_musl;wasm_mvp;wasm_eh;wasm_threads
+  requires_toolchains: rust;python3
+repo:
+  github: tempoloss/quackiso
+  ref: 62c365d51c016827f37fe2dfbd8512214c886d16
+docs:
+  hello_world: "-- Bank statements as rows: camt.053, camt.054 and camt.052. A glob\
+    \ is\n-- parsed in parallel, one worker per file.\nSELECT booking_date, amount,\
+    \ currency, credit_debit, counterparty_name\nFROM read_iso20022('statements/*.xml',\
+    \ threads := 8)\nORDER BY booking_date;\n\n-- What is in the folder, before choosing\
+    \ a reader: one row per file with\n-- the message type, the reader that covers\
+    \ it, and the record count.\nSELECT family, reader, count(*) AS files, sum(records)\
+    \ AS records\nFROM sniff_iso20022('inbox/**/*.xml')\nGROUP BY family, reader;\n\
+    \n-- Interbank credit transfers (pacs.008, the ISO 20022 MT103).\nSELECT uetr,\
+    \ amount, currency, debtor_name, creditor_agent_bic\nFROM read_pacs008('pacs008.xml');\n\
+    \n-- Credit transfer initiation (pain.001). The payer lives on the <PmtInf>\n\
+    -- group and is carried down to every transaction in it.\nSELECT payment_info_id,\
+    \ debtor_name, creditor_name, amount,\n       requested_execution_date\nFROM read_pain001('pain001.xml');\n\
+    \n-- Direct debits (pain.008): the creditor pulls, the mandate makes it legal.\n\
+    SELECT mandate_id, sequence_type, debtor_name, amount\nFROM read_pain008('pain008.xml');\n\
+    \n-- Payment returns (pacs.004): what came back, beside what was settled.\n--\
+    \ A return with charges deducted is amount < original_amount.\nSELECT return_id,\
+    \ amount, original_amount, return_reason_code,\n       original_debtor_name, original_creditor_name\n\
+    FROM read_pacs004('pacs004.xml');\n\n-- Payment status reports (pain.002). A status\
+    \ is stated per batch, per\n-- payment group and per transaction, and status_level\
+    \ says which a row is.\nSELECT status_level, status, reason_code, original_end_to_end_id,\
+    \ amount\nFROM read_pain002('pain002.xml')\nWHERE status_level = 'TRANSACTION';\n\
+    \n-- Amounts are DECIMAL(38,5), so totals are exact.\nSELECT currency, SUM(amount)\
+    \ AS total\nFROM read_iso20022('statements/*.xml')\nWHERE credit_debit = 'DBIT'\n\
+    GROUP BY currency;\n"
+  extended_description: "quackiso reads ISO 20022 financial messages directly into\
+    \ DuckDB tables. No\nPython preprocessing step, no per-schema glue code: point\
+    \ a table function at\nbank XML and get transactions as rows.\n\nFourteen functions:\
+    \ thirteen readers covering the payment lifecycle end to\nend, in both directions,\
+    \ and a sniffer that routes files to them.\n\n* `read_iso20022(path)` - camt.053\
+    \ statements, camt.054 notifications and\n  camt.052 reports; one row per booked\
+    \ entry.\n* `read_pacs008(path)` / `read_pacs009(path)` - customer and\n  financial-institution\
+    \ credit transfers (the ISO 20022 MT103 and\n  MT202/MT202COV); in the COV form\
+    \ the `underlying_*` columns carry the\n  customer transfer the cover settles.\n\
+    * `read_pain001(path)` / `read_pain008(path)` - credit transfer and direct\n \
+    \ debit initiation; the paying or collecting side lives on the `<PmtInf>`\n  group\
+    \ and is carried down, and direct debits carry the mandate.\n* `read_pacs003(path)`\
+    \ - the interbank leg of a direct debit collection.\n* `read_pain002(path)` /\
+    \ `read_pacs002(path)` - payment status reports,\n  customer- and interbank-side;\
+    \ one row per status statement, at whichever\n  level the bank stated it, because\
+    \ a batch can be accepted or rejected\n  without a single transaction being detailed.\n\
+    * `read_pacs004(path)` / `read_pacs007(path)` - returns and reversals:\n  settled\
+    \ money coming back, from the receiver or taken back by the sender;\n  the returned\
+    \ amount sits beside the original, so partial returns are\n  visible.\n* `read_camt056(path)`\
+    \ / `read_camt055(path)` / `read_camt029(path)` -\n  cancellation requests (interbank\
+    \ and customer-side) and the resolution\n  that answers them; a whole-batch cancellation\
+    \ with no transactions is\n  still a row.\n* `sniff_iso20022(path)` - inventory\
+    \ before reading: one row per file with\n  the detected message type, the family,\
+    \ the wire-level record count and the\n  reader that covers it. Identity comes\
+    \ from the namespace, the era-spelled\n  container names or the envelope binding,\
+    \ and content problems land in an\n  `error` column instead of aborting the scan,\
+    \ so a folder of mixed\n  downloads is a table rather than a failure.\n\nAll exception\
+    \ and status readers expose the original references (UETR,\nend-to-end id, original\
+    \ message id), so one payment joins across its whole\nlifecycle: initiation, settlement,\
+    \ status, cancellation, resolution, return.\n\nAmounts are `DECIMAL(38,5)`, never\
+    \ `DOUBLE`. Values are converted from the\nwire string straight to a scaled integer\
+    \ and never touch a float, so `SUM` is\nexact; ISO 20022 permits 18 significant\
+    \ digits with up to 5 fraction digits,\nwhich a 64-bit `DECIMAL(18,5)` cannot\
+    \ hold. An amount that cannot be\nrepresented exactly raises an error rather than\
+    \ becoming a NULL that would\nsilently drop out of a total.\n\nDates are typed\
+    \ rather than left as text; offsets are normalised to UTC, and\nboth the `<Dt>`\
+    \ and `<DtTm>` wrappings are read.\n\nParsing is a streaming pass over XML events,\
+    \ so the peak is one output batch\nplus the largest single XML subtree rather\
+    \ than the file: a 1.7 GB statement\nof three million entries parses in 1.23 MiB\
+    \ of live heap and about 2 MB\nresident, measured by `cargo test membound`, and\
+    \ adds 7.8 MiB to a running\nDuckDB. A glob is parsed in parallel, one worker\
+    \ per file - XML has no\nsafe split points, so a single document is never divided\
+    \ - with\n`threads := n` to pin the pool; measured 6.9x on 8 files of 35 MB.\n\
+    \nA file of the wrong message type fails loudly instead of returning an empty\n\
+    table. The transaction element names collide across families (camt.056 and\npacs.004\
+    \ both say `TxInf`, pacs.008 and pain.001 both say `CdtTrfTxInf`),\nso identity\
+    \ is the message's own container and rows are only produced\ninside it.\n\nTested\
+    \ against roughly 260 real messages from more than a dozen sources -\nGoldman\
+    \ Sachs US/UK/EU and wire, SIX interbank, CBPR+, ProgressSoft,\nNivaes, Prowide,\
+    \ OpenBankProject, Mbanq, Handelsbanken, issettled, prog-nov,\nsalesking and Dolibarr\
+    \ among them - spanning thirteen message families and\nevery era of their vocabulary:\
+    \ renamed reason blocks, renamed containers,\nnamespace-prefixed subtrees, group-level\
+    \ fields carried down, and party\nsides that reverse in a return. Every behaviour\
+    \ that looks like a special\ncase came from one of those files.\n\nPaths are local\
+    \ files or globs; every row records its `source_file`. Remote\nURIs and XSD validation\
+    \ are deliberately absent, with the reasoning recorded\nin `docs/adr/`.\n"
