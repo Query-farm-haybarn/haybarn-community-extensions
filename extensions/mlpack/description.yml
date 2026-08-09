@@ -11,7 +11,7 @@ extension:
   - eddelbuettel
 repo:
   github: eddelbuettel/duckdb-mlpack
-  ref: eb1c65298476621b2cf088a24e6633e453df66f9
+  ref: ead4698674d803909b1f9c01b083ecc7ea586c3a
 docs:
   hello_world: '-- Perform adaBoost (using weak learner ''Perceptron'' by default)
 
@@ -32,7 +32,7 @@ docs:
 
     -- Train model for ''Y'' on ''X'' using parameters ''Z'', store in ''M''
 
-    CREATE TEMP TABLE A AS SELECT * FROM mlpack_adaboost("X", "Y", "Z", "M");
+    CREATE TEMP TABLE A AS SELECT * FROM mlpack_adaboost_train("X", "Y", "Z", "M");
 
 
     -- Count by predicted group
