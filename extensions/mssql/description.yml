@@ -1,7 +1,7 @@
 extension:
   name: mssql
   description: Connect DuckDB to Microsoft SQL Server via native TDS (including TLS).
-  version: 0.2.2
+  version: 0.2.4
   language: C++
   build: cmake
   licence: MIT
@@ -12,67 +12,34 @@ extension:
   test_config: '{"test_env_variables": {"SKIP_TESTS": "1"}}'
 repo:
   github: hugr-lab/mssql-extension
-  ref: v0.2.2
+  ref: v0.2.4
 docs:
   hello_world: 'INSTALL mssql FROM community;
 
     LOAD mssql;
 
-    ATTACH ''mssql://sa:YourStrong!Passw0rd@localhost:1433?database=master&use_encrypt=true''
-    AS ms;
+    ATTACH ''Server=localhost,1433;Database=master;User Id=sa;Password=YourStrong!Passw0rd''
+    AS ms (TYPE mssql);
 
-    SELECT * FROM ms.dbo.table LIMIT 5;
-
-    '
-  extended_description: 'The mssql extension provides a DuckDB connector for Microsoft
-    SQL Server using the native TDS protocol.
-
-
-    The extension is experimental and may not cover all edge cases. Please report
-    any issues on the [GitHub repository](https://github.com/hugr-lab/mssql-extension).
-
-
-    Features:
-
-    - Native TDS protocol (no ODBC/JDBC required)
-
-    - Azure Entra ID authentication (Service Principal, CLI, Device Code, Environment
-    Variables)
-
-    - Kerberos integrated authentication on POSIX (kinit / keytab / raw credentials)
-    and Windows SSPI (current logon session via secur32.dll)
-
-    - Azure SQL Database and Microsoft Fabric support
-
-    - Lazy metadata loading for fast connections
-
-    - Schema, table, and view catalog integration
-
-    - Projection, filter, and ORDER BY pushdown
-
-    - TLS/SSL encrypted connections (encrypt parameter)
-
-    - INSERT support with RETURNING clause
-
-    - UPDATE and DELETE support (requires primary key)
-
-    - Per-catalog connection pooling with configurable limits
-
-    - Eager ATTACH-time credential validation (opt-out via lazy_validation true)
-
-    - Custom Application Name propagated to LOGIN7 program_name
-
-    - DuckDB secret management for credentials
-
-    - ANSI-compliant connections for DDL commands
-
-    - COPY TO for bulk data transfer via BCP protocol (SIMD-accelerated UTF-16 transcoding
-    via simdutf)
-
-    - CREATE TABLE AS SELECT (CTAS) support
-
-    - Named SQL Server instance resolution via SQL Server Browser (UDP 1434)
-
-    - XML data type read/write support
+    SELECT * FROM ms.dbo.your_table LIMIT 5;
 
     '
+  extended_description: "DuckDB connector for Microsoft SQL Server, Azure SQL and\
+    \ Microsoft Fabric\nover a native TDS 7.4 implementation \u2014 no ODBC, JDBC\
+    \ or FreeTDS required.\nAttach a server as a DuckDB catalog and query, join, and\
+    \ bulk-load it\nalongside your local data.\n\nDocumentation: https://hugr-lab.github.io/mssql-extension/\n\
+    \n**Reading.** Attached tables come with schema/table catalog integration,\nlazy\
+    \ metadata cache, projection / filter / ORDER BY pushdown, and a\ncolumnar batch-decoded\
+    \ result path. Reading UTF-8-collated columns skips\nUTF-16 transcoding entirely\
+    \ (TDS UTF8SUPPORT).\n\n**Writing.** COPY TO and CTAS ship over the BCP bulk-load\
+    \ protocol with a\ncolumnar encoder and up to 8 parallel bulk sessions \u2014\
+    \ about 6\xD7 faster\nout of the box than 0.2.2 on a wide 38M-row table, and ~9\xD7\
+    \ with sized\nstring targets (`MSSQL_VARCHAR(n)` / `MSSQL_NVARCHAR(n)` annotations\
+    \ or\n`mssql_default_string_length`). Heap and clustered-columnstore targets\n\
+    (rowgroups land compressed directly), TABLOCK decided from the target's\nactual\
+    \ shape. INSERT with RETURNING, UPDATE/DELETE, transactions with\nconnection pinning.\n\
+    \n**Authentication.** SQL logins, Azure Entra ID (Service Principal, CLI,\nDevice\
+    \ Code), Kerberos on POSIX (kinit/keytab), Windows SSPI, TLS,\nDuckDB secrets.\n\
+    \n**Operations.** Per-catalog connection pooling, eager ATTACH-time\ncredential\
+    \ validation, named-instance resolution via SQL Server Browser,\ncustom Application\
+    \ Name, XML type support.\n\nIssues and feature requests: https://github.com/hugr-lab/mssql-extension\n"
