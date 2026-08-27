@@ -12,7 +12,7 @@ extension:
   - jrosskopf
 repo:
   github: DataZooDE/anofox-similarity
-  ref: 17ece448ca4a2d3a7d73c30dd8e53055478249bc
+  ref: a1f329752f2d80ca64a92713c6eac8ee9cfc664c
 docs:
   hello_world: "-- Components (BOM) for each product\nCREATE TABLE bom_items (parent_id\
     \ VARCHAR, child_id VARCHAR);\nINSERT INTO bom_items VALUES\n  ('PUMP-A', 'SEAL-001'),\
