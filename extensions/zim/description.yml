@@ -1,9 +1,10 @@
 extension:
   name: zim
-  description: "Read .zim (Kiwix / openZIM) archives directly in DuckDB via libzim,\
-    \ from local files or remote S3/HTTP \u2014 offline Wikipedia, WikiMed, Stack\
-    \ Exchange, iFixit, and more, with a zim:// filesystem and full-text search."
-  version: 0.6.1
+  description: "Read and write .zim (Kiwix / openZIM) archives directly in DuckDB\
+    \ via libzim, from local files or remote S3/HTTP \u2014 offline Wikipedia, WikiMed,\
+    \ Stack Exchange, iFixit, and more, with a zim:// filesystem, full-text search,\
+    \ and COPY TO for building archives from any query."
+  version: 0.8.1
   language: C++
   build: cmake
   license: GPL-2.0-or-later
@@ -14,7 +15,7 @@ extension:
   vcpkg_commit: 84bab45d415d22042bd0b9081aea57f362da3f35
 repo:
   github: teaguesterling/duckdb_zim
-  ref: 00bf53727b7e769f535bd6e0fc0e2166a041a890
+  ref: df80e1e713b08f75e4fb8f7e0a18250486b127f7
 docs:
   hello_world: "-- Load the extension\nLOAD zim;\n\n-- List every content entry in\
     \ an archive (one row per entry).\n-- A listing scan is lazy: it never decompresses\
@@ -46,14 +47,22 @@ docs:
     \ every build, incl. WebAssembly).\nSELECT path, title FROM zim_suggest('wikipedia.zim',\
     \ 'Photosyn');\n\n-- Federated: search across a whole shelf at once (glob or LIST);\
     \ the `file`\n-- column says which archive each hit came from.\nSELECT file, path,\
-    \ title FROM zim_search('library/*.zim', 'insulin', max_results := 5);\n\n-- Single-entry\
-    \ access, metadata, and utilities.\nSELECT zim_get_text('wikipedia.zim', 'A/Berlin');\n\
-    SELECT zim_main_entry('wikipedia.zim');\nSELECT * FROM read_zim_metadata('wikipedia.zim');\n\
-    SELECT zim_counter('wikipedia.zim');         -- mimetype -> count histogram\n\
-    SELECT zim_info('wikipedia.zim');            -- counts, flags, uuid\nSELECT zim_illustration('wikipedia.zim');\
-    \    -- cover image / favicon (BLOB)\nSELECT zim_random('wikipedia.zim');    \
-    \      -- a random entry's path\nSELECT zim_check('wikipedia.zim');          \
-    \ -- integrity check\n"
+    \ title FROM zim_search('library/*.zim', 'insulin', max_results := 5);\n\n-- Write\
+    \ an archive from any query: COPY ... TO ... (FORMAT zim).\n-- 'path' and 'content'\
+    \ are required; title/mimetype/redirects are optional.\nCOPY (SELECT path, title,\
+    \ mimetype, content FROM articles)\nTO 'out.zim' (FORMAT zim, TITLE 'My Archive',\
+    \ LANGUAGE 'eng', INDEX true);\n\n-- read_zim's output is COPY's input, so a ZIM\
+    \ -> ZIM copy is one statement.\n-- Read content as BLOB: content_as_varchar returns\
+    \ NULL for non-UTF-8 entries\n-- (every image and font), which would write them\
+    \ out empty.\nCOPY (SELECT * FROM read_zim('in.zim', include_content := true))\n\
+    TO 'copy.zim' (FORMAT zim);\n\n-- Single-entry access, metadata, and utilities.\n\
+    SELECT zim_get_text('wikipedia.zim', 'A/Berlin');\nSELECT zim_main_entry('wikipedia.zim');\n\
+    SELECT * FROM read_zim_metadata('wikipedia.zim');\nSELECT zim_counter('wikipedia.zim');\
+    \         -- mimetype -> count histogram\nSELECT zim_info('wikipedia.zim');  \
+    \          -- counts, flags, uuid\nSELECT zim_illustration('wikipedia.zim'); \
+    \   -- cover image / favicon (BLOB)\nSELECT zim_random('wikipedia.zim');     \
+    \     -- a random entry's path\nSELECT zim_check('wikipedia.zim');           --\
+    \ integrity check\n"
   extended_description: "The `zim` extension reads `.zim` files \u2014 the archive\
     \ format produced by\n[openZIM](https://openzim.org) and served by [Kiwix](https://kiwix.org)\
     \ \u2014\ndirectly inside DuckDB. ZIM packages an entire website into a single\n\
@@ -87,11 +96,22 @@ docs:
     (it falls back to a title-prefix listing without Xapian, so it's available on\n\
     WebAssembly too, where full-text search is not). Both are **federated**: the first\n\
     argument can be a single path, a glob, or a `LIST`, so a query runs across many\n\
-    archives at once.\n\n**Metadata, scalars & utilities**: `read_zim_metadata()`,\
-    \ `zim_metadata()` /\n`zim_metadata_keys()`, `zim_counter()` (the self-describing\
-    \ mimetype histogram),\nand `zim_info()` (counts, flags, uuid); plus `zim_get_content`\
-    \ / `zim_get_text`,\n`zim_has_entry`, `zim_redirect_target`, `zim_mimetype`, `zim_main_entry`,\n\
-    `zim_illustration` (cover image), `zim_random`, and `zim_check` (integrity).\n\
-    \nEvery VARCHAR output is **binary-safe** \u2014 non-UTF-8 bytes come back as\
-    \ `NULL`\nrather than being mangled. Built on [libzim](https://github.com/openzim/libzim);\n\
-    licensed GPL-2.0-or-later, inherited from libzim.\n"
+    archives at once.\n\n**Writing archives**: `COPY (query) TO 'out.zim' (FORMAT\
+    \ zim, ...)` builds a ZIM\nfrom any relation. Columns are resolved by name \u2014\
+    \ `path` and `content` are\nrequired, with `title`, `mimetype`, `is_redirect`/`redirect_path`\
+    \ and libzim's\n`front_article`/`compress` hints optional \u2014 and `read_zim`'s\
+    \ own output schema is\naccepted directly, so a ZIM\u2192ZIM copy is a single\
+    \ statement. Archive metadata,\na cover illustration, the main page, compression\
+    \ and a Xapian full-text index\nare set through copy options, so the archive you\
+    \ write is immediately\nsearchable with `zim_search`. Writing never overwrites\
+    \ an existing file, and a\nfailed copy leaves nothing behind; `MAIN_PATH` and\
+    \ every redirect target are\nvalidated against the entries actually written, because\
+    \ libzim silently accepts\na missing main page and silently drops dangling redirects.\n\
+    \n**Metadata, scalars & utilities**: `read_zim_metadata()`, `zim_metadata()` /\n\
+    `zim_metadata_keys()`, `zim_counter()` (the self-describing mimetype histogram),\n\
+    and `zim_info()` (counts, flags, uuid); plus `zim_get_content` / `zim_get_text`,\n\
+    `zim_has_entry`, `zim_redirect_target`, `zim_mimetype`, `zim_main_entry`,\n`zim_illustration`\
+    \ (cover image), `zim_random`, and `zim_check` (integrity).\n\nEvery VARCHAR output\
+    \ is **binary-safe** \u2014 non-UTF-8 bytes come back as `NULL`\nrather than being\
+    \ mangled. Built on [libzim](https://github.com/openzim/libzim);\nlicensed GPL-2.0-or-later,\
+    \ inherited from libzim.\n"
