@@ -1,0 +1,41 @@
+extension:
+  name: duckdb_rphonetic
+  description: Phonetic algorithms for German and European name matching
+  version: 0.1.0
+  language: Rust
+  build: cmake
+  license: Apache-2.0
+  requires_toolchains: rust;python3
+  excluded_platforms: linux_amd64_musl
+  maintainers:
+  - guizmaii
+repo:
+  github: guizmaii-opensource/duckdb-rphonetic
+  ref: b74284d0dfc71c94859468aef6ac4bbd0981dd19
+docs:
+  hello_world: "-- K\xF6lner Phonetik: a German-language counterpart to Soundex.\n\
+    -- Spelling variants of the same name encode identically.\nSELECT cologne_phonetic('M\xFC\
+    ller'), cologne_phonetic('Mueller');\n-- 657, 657\n\n-- Daitch-Mokotoff Soundex\
+    \ returns SEVERAL codes for ambiguous spellings,\n-- so a match is a set overlap\
+    \ rather than an equality test.\nSELECT daitch_mokotoff('Klein'), daitch_mokotoff('Cleyn');\n\
+    -- [586000], [586000, 486000]\n\nSELECT list_has_any(daitch_mokotoff('Klein'),\
+    \ daitch_mokotoff('Cleyn'));\n-- true\n"
+  extended_description: "Two phonetic encoders aimed at European name matching, wrapping\
+    \ the\n[rphonetic](https://crates.io/crates/rphonetic) crate by Dalvany \u2014\
+    \ a Rust\nport of Apache Commons Codec.\n\n* `cologne_phonetic(VARCHAR) -> VARCHAR`\
+    \ \u2014 K\xF6lner Phonetik (Postel, 1969),\n  the German-language counterpart\
+    \ to Soundex. Handles umlauts and \xDF, so\n  `M\xFCller` and `Mueller` share\
+    \ a code.\n* `daitch_mokotoff(VARCHAR) -> VARCHAR[]` \u2014 Daitch-Mokotoff Soundex,\
+    \ built\n  for Germanic and Slavic surnames. Returns a list because ambiguous\n\
+    \  spellings legitimately encode several ways; match with `list_has_any`.\n\n\
+    Neither exists in core DuckDB, whose `soundex` and `double_metaphone` are\ntuned\
+    \ for English. Trigram similarity is not a substitute: `Klein` and\n`Cleyn` share\
+    \ no trigrams at all, yet both encoders match them.\n\n**Behavioural note.** K\xF6\
+    lner Phonetik implementations disagree on whether a\ndropped `0` breaks a run\
+    \ of identical digits. This extension follows\n`rphonetic`, which yields `cologne_phonetic('Dieter')\
+    \ = '227'`; Apache\nCommons Codec yields `27`. The two differ on 36 of a 279-name\
+    \ test corpus.\nEvery divergence is committed to the repository and pinned by\
+    \ a test, so the\noutput cannot change silently. The published reference vectors\n\
+    (`M\xFCller-L\xFCdenscheidt` -> `65752682`, `Wikipedia` -> `3412`,\n`Breschnew`\
+    \ -> `17863`) are unaffected. Daitch-Mokotoff agrees with\nCommons Codec on all\
+    \ 279 names.\n"
