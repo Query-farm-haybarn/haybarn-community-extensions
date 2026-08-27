@@ -1,6 +1,6 @@
 extension:
   build: cmake
-  description: Schema-less JSON and OTEL ingestion + analytics for DuckDB
+  description: Schema-less JSON and OTEL ingestion shredder for DuckDB
   excluded_platforms: windows_amd64;windows_arm64;windows_amd64_mingw;windows_amd64_rtools
   language: C++
   license: MIT
@@ -8,10 +8,10 @@ extension:
   - lmangani
   name: rawduck
   requires_toolchains: parser_tools
-  version: 0.0.2
+  version: 0.0.4
 repo:
   github: quackscience/rawduck
-  ref: c7d1ede408ad518a5bab51cfdfaff445854f2002
+  ref: a14e474c1bae1459cdd22ee8d9eaf5a540ed8fa5
   canonical_name: rawduck
 docs:
   hello_world: "-- Attach a rawduck db/catalog to your session\nATTACH 'rawduck:store.db'\
@@ -27,5 +27,5 @@ docs:
     \ that don't exist yet \u2014 RawDuck creates them, types them, \nflattens nested\
     \ objects into real columns, transforms and evolves the schema as the data changes.\n\
     \nRawDuck ships with a full-featured API to ingest/query data including OpenTelemetry\
-    \ (OTLP) formats.\n\nConsult the [RawDuck README](https://github.com/quackscience/rawduck)\
+    \ (OTLP) formats.\n\nCheck out the [RawDuck README](https://github.com/quackscience/rawduck)\
     \ for more examples and details.\n"
