@@ -1,0 +1,33 @@
+extension:
+  name: azure_wasm
+  description: Read Azure Blob / ADLS Gen2 (abfss/az/wasbs) over HTTPS+SAS, without
+    the Azure SDK (Wasm-friendly)
+  version: 0.1.0
+  language: C++
+  build: cmake
+  license: MIT
+  excluded_platforms: linux_amd64;linux_arm64;osx_amd64;osx_arm64;windows_amd64;windows_amd64_mingw
+  maintainers:
+  - HynekBlaha
+repo:
+  github: HynekBlaha/duckdb-azure-wasm
+  ref: 9f605cc01ef01fe120056f8a1c746dda0ad947bf
+docs:
+  hello_world: "LOAD azure_wasm;\n-- Store the SAS credential an Iceberg REST catalog\
+    \ vends for an ADLS warehouse:\nCREATE SECRET (\n  TYPE azure,\n  PROVIDER config,\n\
+    \  ACCOUNT_NAME 'myaccount',\n  CONNECTION_STRING 'AccountName=myaccount;SharedAccessSignature=sv=...&sig=...'\n\
+    );\n-- Now abfss:// URLs are read over HTTPS with the SAS token appended:\nSELECT\
+    \ * FROM read_parquet('abfss://container@myaccount.dfs.core.windows.net/path/file.parquet');\n"
+  extended_description: "Reads Azure Blob Storage / ADLS Gen2 URLs (`abfss://`, `abfs://`,\
+    \ `az://`, `azure://`,\n`wasbs://`, `wasb://`) by looking up a matching `azure`\
+    \ secret, extracting the SAS token from its\n`connection_string`, rewriting the\
+    \ URL to a plain `https://<host>/<container>/<key>?<sas>`, and\nreading it through\
+    \ the regular HTTPS path.\n\nBecause it authenticates purely via the SAS query\
+    \ string, it needs **no Azure C++ SDK** \u2014 so,\nunlike the native `azure`\
+    \ extension, it compiles to WebAssembly. It was built to read Apache\nIceberg\
+    \ tables backed by ADLS from DuckDB-Wasm (e.g. the Lakekeeper Iceberg REST catalog\
+    \ console)\nusing catalog-vended credentials.\n\nOn `LOAD` it registers a minimal\
+    \ `azure` secret type (so `CREATE SECRET ... TYPE azure` works) and\na filesystem\
+    \ claiming the Azure URL schemes. Registration is idempotent \u2014 if Azure support\
+    \ is\nalready present it no-ops rather than failing. It performs reads only (no\
+    \ listing/globbing).\n"
