@@ -2,7 +2,7 @@ extension:
   name: three_d
   description: "3D solid processing for city models \u2014 enclosed volume, validation,\
     \ distance, and measurement of polyhedral solids."
-  version: 0.1.0
+  version: 0.2.0
   language: C++
   build: cmake
   license: MIT
@@ -10,21 +10,23 @@ extension:
   maintainers:
   - HideBa
 repo:
-  github: cityjson/duckdb-3d-extension
-  ref: a08f2406d96f8364b7957fa296825d6e4256dc0e
+  github: cityjson/duckdb-3d
+  ref: 679ee0905cb75074e58d11c04fa690669441e6fd
 docs:
   hello_world: "-- Build a 3D solid from WKB (e.g. produced by the cityjson extension)\
-    \ and measure it.\n-- ST_3DFromWKB accepts optional CityJSON geometry_properties\
-    \ to recover shell structure.\nSELECT\n    ST_3DVolume(solid)                \
-    \  AS volume_m3,\n    ST_3DSurfaceArea(solid)             AS surface_m2,\n   \
-    \ ST_Area(solid)                      AS footprint_m2,\n    ST_ZMax(solid) - ST_ZMin(solid)\
-    \     AS height_m,\n    ST_3DIsClosed(solid)                AS closed\nFROM (SELECT\
-    \ ST_3DFromWKB(geometry, geometry_properties) AS solid FROM buildings);\n\n--\
-    \ Validate a solid before measuring it (ST_3DVolume requires a valid solid).\n\
-    SELECT ST_3DValidationReport(solid) AS report FROM buildings;\n\n-- 3D distance\
-    \ between two geometries (GEOM_3D, built from WKB with ST_Geom3DFromWKB).\nSELECT\
-    \ ST_3DDistance(ST_Geom3DFromWKB(a.wkb), ST_Geom3DFromWKB(b.wkb)) AS gap_m\nFROM\
-    \ a, b;\n"
+    \ and measure it.\n-- ST_3DFromWKB accepts an optional geometry_properties sidecar,\
+    \ which restores the\n-- shell structure that WKB alone cannot carry (interior\
+    \ cavities, multi-solid parts).\nSELECT\n    ST_3DVolume(solid)              \
+    \          AS volume_m3,\n    ST_3DSurfaceArea(solid)                   AS surface_m2,\n\
+    \    ST_3DFootprintArea(solid)                 AS footprint_m2,\n    ST_3DZMax(solid)\
+    \ - ST_3DZMin(solid)       AS height_m,\n    ST_3DIsClosed(solid)            \
+    \          AS closed\nFROM (\n    SELECT ST_3DFromWKB(geometry_lod2_2, geometry_properties_lod2_2)\
+    \ AS solid\n    FROM buildings\n);\n\n-- Validate a solid before measuring it:\
+    \ ST_3DVolume requires a valid solid and\n-- raises rather than returning a plausible-looking\
+    \ wrong number.\nSELECT ST_3DValidationReport(solid) AS report FROM buildings;\n\
+    \n-- 3D distance between two geometries (GEOM_3D, built from WKB with ST_Geom3DFromWKB).\n\
+    SELECT ST_3DDistance(ST_Geom3DFromWKB(a.wkb), ST_Geom3DFromWKB(b.wkb)) AS gap_m\n\
+    FROM a, b;\n"
   extended_description: "`three_d` (repository `duckdb-3d`) makes the polyhedral solids\
     \ in 3D city models \u2014\nbuildings from CityJSON / 3DBAG, CityParquet, and\
     \ similar sources \u2014 first-class,\nqueryable values in DuckDB. DuckDB's built-in\
@@ -34,20 +36,29 @@ docs:
     \ \u2014 closed polyhedral solids, backed by a versioned binary payload that\n\
     \  preserves shell/face topology.\n- `GEOM_3D` \u2014 general 3D geometry (points,\
     \ lines, polygons, multis, polyhedral surfaces)\n  for the class-generic accessor,\
-    \ distance, and serialization functions.\n\nFunction families (PostGIS-style `ST_*`\
-    \ / `ST_3D*` names, a curated 3D subset):\n- Import / export: `ST_3DFromWKB`,\
-    \ `ST_3DTryFromWKB`, `ST_3DAsWKB`, `ST_Geom3DFromWKB`,\n  `ST_AsText`, `ST_AsGeoJSON`,\
-    \ `ST_AsBinary`\n- Introspection: `ST_3DBounds`, `ST_3DNumSolids`, `ST_3DNumShells`,\
-    \ `ST_3DNumFaces`,\n  `ST_GeometryType`, `ST_NDims`, `ST_HasZ`, `ST_X`, `ST_Y`,\
-    \ `ST_Z`, `ST_ZMin`, `ST_ZMax`,\n  `ST_CoordDim`, `ST_Dimension`, `ST_NumGeometries`\n\
-    - Validation: `ST_3DIsClosed`, `ST_3DIsManifold`, `ST_3DIsOriented`,\n  `ST_3DValidationReport`,\
-    \ `ST_IsPlanar`\n- Measurement: `ST_3DVolume`, `ST_3DSurfaceArea` / `ST_3DArea`,\
-    \ `ST_Area` (footprint),\n  `ST_3DPerimeter`, `ST_3DLength`\n- Distance: `ST_3DDistance`,\
-    \ `ST_3DDWithin`, `ST_3DMaxDistance`, `ST_3DDFullyWithin`,\n  `ST_3DIntersects`,\
-    \ `ST_3DClosestPoint`, `ST_3DShortestLine`\n- Transform / construct: `ST_Translate`,\
-    \ `ST_Scale`, `ST_RotateX/Y/Z`, `ST_Force3D`,\n  `ST_ConvexHull`, `ST_3DCentroid`,\
-    \ `ST_3DExtrude`, `ST_MakeSolid`\n\nIt composes with the `cityjson` extension:\
-    \ read CityJSON / CityJSONSeq with\n`read_cityjson(..., lod => '...')` to get\
-    \ `geometry` (WKB) plus `geometry_properties`\n(JSON), then pipe both into `ST_3DFromWKB`.\
-    \ The extension is experimental and under active\ndevelopment; APIs and payload\
-    \ formats may change.\n"
+    \ distance, and serialization functions.\n\nFunction families (PostGIS-style names,\
+    \ a curated 3D subset). 3D operations use `ST_3D*`\nnames so that `three_d` and\
+    \ DuckDB's `spatial` extension load together in any order; only\nthe handful of\
+    \ names `spatial` does not define stay un-prefixed:\n- Import / export: `ST_3DFromWKB`,\
+    \ `ST_3DTryFromWKB`, `ST_Geom3DFromWKB`, `ST_3DAsWKB`,\n  `ST_3DAsText`, `ST_3DAsGeoJSON`,\
+    \ `ST_3DAsBinary`\n- Introspection: `ST_3DBounds`, `ST_3DNumSolids`, `ST_3DNumShells`,\
+    \ `ST_3DNumFaces`,\n  `ST_3DGeometryType`, `ST_3DDimension`, `ST_3DNumGeometries`,\
+    \ `ST_3DHasZ`, `ST_3DX`,\n  `ST_3DY`, `ST_3DZ`, `ST_3DZMin`, `ST_3DZMax`, `ST_NDims`,\
+    \ `ST_CoordDim`, `ST_IsPlanar`\n- Validation: `ST_3DIsClosed`, `ST_3DIsManifold`,\
+    \ `ST_3DIsOriented`,\n  `ST_3DValidationReport`\n- Measurement: `ST_3DVolume`,\
+    \ `ST_3DSurfaceArea` / `ST_3DArea`, `ST_3DFootprintArea`,\n  `ST_3DPerimeter`,\
+    \ `ST_3DLength`\n- Distance: `ST_3DDistance`, `ST_3DDWithin`, `ST_3DMaxDistance`,\
+    \ `ST_3DDFullyWithin`,\n  `ST_3DIntersects`, `ST_3DClosestPoint`, `ST_3DShortestLine`\n\
+    - Transform / construct: `ST_3DTranslate`, `ST_3DScale`, `ST_3DRotateX`, `ST_3DRotateY`,\n\
+    \  `ST_3DRotateZ`, `ST_3DTransform`, `ST_Force3D`, `ST_3DConvexHull`, `ST_3DCentroid`,\n\
+    \  `ST_3DExtrude`, `ST_MakeSolid`\n\nGeometry is never silently repaired: validity\
+    \ is reported, and functions with a\nprecondition raise instead of guessing. `ST_3DValidationReport`\
+    \ returns the counts\n(open edges, non-manifold edges, degenerate faces, orientation\
+    \ errors) behind the verdict.\n\nThe single-argument constructors accept DuckDB's\
+    \ native `GEOMETRY` as well as a `BLOB` of\nWKB, so a GeoParquet column can be\
+    \ passed straight to `ST_Geom3DFromWKB` without a cast.\n\nIt composes with the\
+    \ `cityjson` extension: read CityJSON / CityJSONSeq with\n`read_cityjson(...,\
+    \ lod => '...')` to get a per-LoD `geometry_lod*` column (WKB) alongside\nits\
+    \ `geometry_properties_lod*` sidecar, then pipe both into `ST_3DFromWKB`. The\
+    \ extension\nis experimental and under active development; APIs and payload formats\
+    \ may change.\n"
