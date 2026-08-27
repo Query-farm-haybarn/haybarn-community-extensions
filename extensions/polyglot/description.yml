@@ -1,7 +1,7 @@
 extension:
   name: polyglot
   description: Transpile SQL from 34 different dialects into DuckDB SQL
-  version: 0.3.2
+  version: 0.3.3
   language: Rust
   build: cargo
   license: MIT
@@ -11,7 +11,7 @@ extension:
   - tobilg
 repo:
   github: tobilg/duckdb-polyglot
-  ref: c6ec8c44cd275a57852e30f6a0c7bf537ac4c665
+  ref: 8f1666dd9c1761c368f45acc5dfc48c7e54539d9
 docs:
   hello_world: "-- Transpile a PostgreSQL query to DuckDB SQL\nD SELECT polyglot_transpile('SELECT\
     \ NOW()', 'postgresql');\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
