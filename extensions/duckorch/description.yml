@@ -1,9 +1,9 @@
 extension:
   name: duckorch
-  description: "Asset-centric data orchestration with partitions, declarative automation\
-    \ sensor, Snowflake-compatible CREATE DYNAMIC ASSET, MCP server, lineage and OpenLineage\
-    \ emission \u2014 all on DuckDB"
-  version: 0.2.0
+  description: "Asset-centric data orchestration with JSON ingestion, partitions,\
+    \ declarative automation sensor, Snowflake-compatible CREATE DYNAMIC ASSET, MCP\
+    \ server, lineage and OpenLineage emission \u2014 all on DuckDB"
+  version: 0.3.0
   language: C++
   build: cmake
   license: MIT
@@ -11,7 +11,7 @@ extension:
   - nkwork9999
 repo:
   github: nkwork9999/duck-orch
-  ref: d5fd7e076d237a0d912ac0f6cedafe244f1c7ac7
+  ref: a5f55790e10c872c439ff58ba9cbe4ee82f9d0e8
 docs:
   hello_world: "LOAD duckorch;\n\n-- 1. Set up state schema and register a directory\
     \ of *.sql task files.\nPRAGMA orch_init;\nPRAGMA orch_register('./tasks/');\n\
@@ -23,7 +23,15 @@ docs:
     \ orch_create_dynamic_asset(\n  'analytics.region_total',\n  '5 minutes',\n  'SELECT\
     \ region, SUM(total) AS rt FROM analytics.daily GROUP BY region');\n\n-- 5. Sensor\
     \ \u2014 auto-materializes when upstream updates (Phase 15):\nPRAGMA orch_sensor_set_interval(30);\n\
-    PRAGMA orch_sensor_start;\n\n-- 6. Mermaid lineage:\nPRAGMA orch_visualize('lineage');\n"
+    PRAGMA orch_sensor_start;\n\n-- 6. Mermaid lineage:\nPRAGMA orch_visualize('lineage');\n\
+    \n-- 7. JSON ingestion (Phase 19): nested JSON becomes flat parent/child\n-- \
+    \   tables, and later-arriving columns are absorbed automatically.\nPRAGMA orch_ingest_preview('orders.jsonl',\
+    \ 'raw.orders');   -- shape only\nPRAGMA orch_ingest_run('orders/*.jsonl', 'raw.orders');\n\
+    PRAGMA orch_ingest_run('orders.jsonl', 'raw.orders',\n                       disposition\
+    \ = 'merge', primary_key = 'id');\nPRAGMA orch_ingest_http('https://api.example.com/orders',\
+    \ 'raw.orders',\n                        secret = 'orders_api', paginate = 'cursor',\n\
+    \                        records_path = 'data', cursor_path = 'meta.next',\n \
+    \                       cursor_param = 'cursor');\n"
   extended_description: "duckorch is a **DuckDB-native, single-file Asset orchestrator**\
     \ that\nbrings Dagster's declarative automation and Snowflake's\n`CREATE DYNAMIC\
     \ TABLE` semantics into a `LOAD duckorch;`. Designed to\nrun on a laptop or in\
@@ -56,15 +64,27 @@ docs:
     \ target_lag, sql)` synthesizes Asset +\n  `automation_condition='eager()'` so\
     \ the sensor picks it up. The\n  `duck-orch dynamic migrate-from-snowflake <dump>`\
     \ CLI parses Snowflake\n  dumps and registers each block (skipping `WAREHOUSE`/`REFRESH_MODE`).\n\
-    \n**3-route surface**: every feature reachable from CLI (`duck-orch ...`),\nSQL\
-    \ (`PRAGMA orch_*`), and MCP (Claude Code).\n\n**Companion CLI:** `duck-orch`\
-    \ with `register / run / status / graph /\ntest / validate / impact / lineage\
-    \ / schedule / asset / backfill /\nautomation / sensor / check / dynamic` subcommands,\
-    \ all `--json`-capable.\n\n**State tables:** `__orch__.{tasks, runs, lineage_edges,\
-    \ column_lineage,\ntask_edges, tests, schedules, assets, asset_materializations,\n\
-    asset_edges, asset_partitions, automation_evaluations, asset_checks,\nasset_check_results}`.\n\
-    \n**Architecture:** thin C++ shim (~3000 lines, registers PRAGMAs, runs\nSQL via\
-    \ per-thread Connection, hosts the sensor thread, exposes\nOptimizerExtension\
-    \ for ad-hoc capture) plus a Rust workspace\n(orch_common / orch_dag / orch_lineage\
-    \ / orch_runtime / orch_ol /\norch_core / orch_cli / orch_mcp), keeping all logic\
-    \ in Rust while the\nC++ layer handles DuckDB-internal calls.\n"
+    \n- **JSON ingestion** (Phase 19): `orch_ingest_run` / `orch_ingest_http`\n  normalize\
+    \ nested JSON into parent/child tables (structs flatten into\n  the parent, arrays\
+    \ become child tables linked by `_orch_parent_id` /\n  `_orch_index`). A schema\
+    \ ledger versions each shape and absorbs added\n  columns and widening types via\
+    \ `ALTER`; incompatible changes fail the\n  load with the column named. Write\
+    \ dispositions `append` / `replace` /\n  `merge` (`primary_key`-driven, children\
+    \ included). HTTP sources support\n  `page` / `offset` / `cursor` / `link` pagination,\
+    \ bearer tokens from a\n  DuckDB secret, resume cursors, and a reported page ceiling.\
+    \ A\n  three-part target (`lake.raw.orders`) loads into an attached catalog,\n\
+    \  so DuckLake is just another destination. Loaded tables register as\n  Assets\
+    \ with lineage back to the source URI.\n\n**3-route surface**: every feature reachable\
+    \ from CLI (`duck-orch ...`),\nSQL (`PRAGMA orch_*`), and MCP (Claude Code).\n\
+    \n**Companion CLI:** `duck-orch` with `register / run / status / graph /\ntest\
+    \ / validate / impact / lineage / schedule / asset / backfill /\nautomation /\
+    \ sensor / check / dynamic` subcommands, all `--json`-capable.\n\n**State tables:**\
+    \ `__orch__.{tasks, runs, lineage_edges, column_lineage,\ntask_edges, tests, schedules,\
+    \ assets, asset_materializations,\nasset_edges, asset_partitions, automation_evaluations,\
+    \ asset_checks,\nasset_check_results, ingest_schemas, ingest_schema_changes,\n\
+    ingest_loads, ingest_state, ingest_fetches}`.\n\n**Architecture:** thin C++ shim\
+    \ (~3000 lines, registers PRAGMAs, runs\nSQL via per-thread Connection, hosts\
+    \ the sensor thread, exposes\nOptimizerExtension for ad-hoc capture) plus a Rust\
+    \ workspace\n(orch_common / orch_dag / orch_lineage / orch_runtime / orch_ol /\n\
+    orch_ingest / orch_core / orch_cli / orch_mcp), keeping all logic in\nRust while\
+    \ the\nC++ layer handles DuckDB-internal calls.\n"
