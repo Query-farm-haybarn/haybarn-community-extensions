@@ -11,7 +11,7 @@ extension:
   - prequel-co
 repo:
   github: prequel-co/DuckDB-Delta-Sharing
-  ref: 9bcc9cc2abafcf0d5445709910dd77f6773c3555
+  ref: a9ab9dd48160fa108861120bc1006b5d3546d0f3
 docs:
   hello_world: "INSTALL duckdb_delta_sharing FROM community;\nLOAD duckdb_delta_sharing;\n\
     -- Required for network access\nINSTALL httpfs;\nLOAD httpfs;\n\n-- Basic Configuration\n\
@@ -42,6 +42,9 @@ docs:
 
     - **Ultra-Fast Native Reader**: Built directly on DuckDB''s `MultiFileReader`
     and C++ Parquet scanner. No Python overhead.
+
+    - **Variant Type**: The VARIANT data type stores semi-structured data in binary
+    format.
 
     - **Time Travel**: Query your data as it existed at any point in history.
 
