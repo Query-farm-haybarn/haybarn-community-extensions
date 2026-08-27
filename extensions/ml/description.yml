@@ -1,8 +1,8 @@
 extension:
   name: ml
   description: "Lightweight, columnar-native ML for DuckDB \u2014 train + inference,\
-    \ 18 algorithms, zero Python deps"
-  version: 0.1.0
+    \ 34 algorithms, zero Python deps"
+  version: 0.2.0
   language: Rust
   build: cargo
   license: MIT
@@ -12,14 +12,19 @@ extension:
   excluded_platforms: wasm_eh;wasm_mvp;wasm_threads;windows_amd64_mingw;windows_amd64_rtools
 repo:
   github: alitrack/duckdb-ml
-  ref: refs/tags/v0.1.1
+  ref: refs/tags/v0.2.0
 docs:
   hello_world: "-- Train linear regression\nSELECT * FROM ml_train('my_model', 'linear_regression',\n\
     \  '[[1.0],[2.0],[3.0]]', '[[10.0],[20.0],[30.0]]', '{}');\n\n-- Predict\nSELECT\
     \ ml_predict('my_model', 2.5);\n"
   extended_description: "## ML \u2014 Machine Learning for DuckDB\n\nPure Rust ML\
-    \ extension. 18 algorithms, zero Python dependencies.\n\n**Algorithms:**\n- Linear:\
-    \ linear_regression, ridge_regression, lasso_regression\n- Tree: decision_tree,\
-    \ random_forest\n- Gradient Boosting: xgboost_regression, xgboost_binary\n- Neural:\
-    \ mlp_regressor\n- Distance: knn_regressor, knn_classifier\n- Bayesian: naive_bayes\n\
-    - Clustering: kmeans\n- Dim Reduction: pca\n\n**Install:** `INSTALL ml FROM community;`\n"
+    \ extension. 34 algorithms, zero Python dependencies.\n\n**Algorithms (34):**\n\
+    - Regression: linear_regression, ridge_regression, lasso_regression, elastic_net,\
+    \ robust (Huber), polynomial_regression\n- Generalized Linear: logistic_regression,\
+    \ multilogistic, ordinal\n- Survival: cox, kaplan_meier\n- Trees: decision_tree,\
+    \ random_forest, rf_classifier, adaboost\n- Gradient Boosting: xgboost_regression,\
+    \ xgboost_binary (multi-class softmax), xgboost_regressor, xgboost_classifier\n\
+    - Neural: mlp_regressor\n- Distance: knn_regressor, knn_classifier\n- Bayesian:\
+    \ naive_bayes\n- Kernel: svm, svr\n- Clustering: kmeans, fuzzy_cmeans, dbscan,\
+    \ agglomerative\n- Dim Reduction: pca, lda, tsne\n- External: onnx, arima\n\n\
+    **Install:** `INSTALL ml FROM community;`\n"
