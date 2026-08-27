@@ -1,7 +1,7 @@
 extension:
   name: rdf
-  description: A DuckDB extension to read and write RDF
-  version: 2.8.1
+  description: Read and write RDF, query using SPARQL
+  version: 2.8.2
   language: C++
   build: cmake
   license: MIT
@@ -9,7 +9,7 @@ extension:
   - nonodename
 repo:
   github: nonodename/duck_rdf
-  ref: 8d20bad15a216d08d932de1660a690d6e10a3d52
+  ref: 6e595d2527f3d7ec8e19ac49871ba4b47ff2cfb3
 docs:
   hello_world: "-- 0. Assuming the extension is already installed and loaded\n\n--\
     \ 1. Get number of ntriples in a directory\nSELECT COUNT(*) FROM read_rdf('data/shards/*.nt');\n\
@@ -22,19 +22,22 @@ docs:
     \ is_valid_r2rml('mapping.ttl');\n\n-- 6. Pivot RDF to a wide table\nSELECT *\
     \ FROM pivot_rdf('data.ttl');\n\n-- 7. Read a SPARQL endpoint\nSELECT * FROM read_sparql(\n\
     \         'https://query.wikidata.org/sparql',\n         'SELECT (COUNT(*) AS\
-    \ ?count) WHERE { ?item wdt:P31 wd:Q5 .}'\n     );\n"
+    \ ?count) WHERE { ?item wdt:P31 wd:Q5 .}'\n     );\n\n-- 8. Execute a SPARQL query\
+    \ using against DuckDB tables using an R2RML mapping\nSELECT * FROM execute_sparql(\n\
+    \         'PREFIX ex: <http://example.com/ns#> SELECT ?e ?name WHERE { ?e ex:name\
+    \ ?name }',\n         'full_r2rml_mapping.ttl'\n     );\n"
   extended_description: "The `duck_rdf` extension enables DuckDB to read and write\
     \ RDF (Resource Description Framework)\ndata directly, using the [SERD](https://drobilla.gitlab.io/serd/doc/singlehtml/)\
     \ library for\nparsing and serialization.\n\n### Supported Formats\n\n**Read:**\
     \ Turtle (`.ttl`), NTriples (`.nt`), NQuads (`.nq`), TriG (`.trig`), and\nRDF/XML\
-    \ (`.rdf`/`.xml`, experimental \u2014 read-only).\n\n**Write:** NTriples, Turtle,\
-    \ NQuads (via R2RML mapping).\n\n### Reading RDF\n\n`read_rdf()` returns six columns:\
-    \ `subject`, `predicate`, `object` (always populated),\nand `graph`, `language_tag`,\
-    \ `datatype` (nullable). It accepts a file path or glob pattern;\nmultiple matched\
-    \ files are scanned in parallel. `.gz` and `.zst` compressed files are\nsupported\
-    \ (note that you need to load the parquet extension for the libzstd library to\
-    \ be \nloaded). The RDF format is auto-detected by file extension but can be overridden\
-    \ with the `file_type` parameter.\n\n```sql\nSELECT subject, predicate FROM read_rdf('data.ttl');\n\
+    \ (`.rdf`/`.xml`).\n\n**Write:** NTriples, Turtle, NQuads (via R2RML mapping).\n\
+    \n### Reading RDF\n\n`read_rdf()` returns six columns: `subject`, `predicate`,\
+    \ `object` (always populated),\nand `graph`, `language_tag`, `datatype` (nullable).\
+    \ It accepts a file path or glob pattern;\nmultiple matched files are scanned\
+    \ in parallel. `.gz` and `.zst` compressed files are\nsupported (note that you\
+    \ need to load the parquet extension for the libzstd library to be \nloaded).\
+    \ The RDF format is auto-detected by file extension but can be overridden with\
+    \ the `file_type` parameter.\n\n```sql\nSELECT subject, predicate FROM read_rdf('data.ttl');\n\
     SELECT COUNT(*) FROM read_rdf('data/shards/*.nt');\nSELECT * FROM read_rdf('data/*.dat',\
     \ file_type = 'ttl', strict_parsing = false);\n```\n\n**Optional parameters:**\n\
     \n| Parameter | Default | Description |\n|---|---|---|\n| `strict_parsing` | `true`\
@@ -46,23 +49,30 @@ docs:
     \ file sizes \nsubjects may be repeated if encountered out of sequence). While\
     \ a pivot is possible in the \nSQL domain, it is subject to memory limits which\
     \ this function aims to avoid by doing two \npasses on the RDF, the first profiling\
-    \ the shape of the data using `profile_rdf()`.\n\nThe experimental `read_sparql(endpoint,\
-    \ query)` sends a SPARQL SELECT query to a remote \nendpoint and returns the result\
-    \ set as a DuckDB table. Column names are derived from the \nSPARQL variable names;\
-    \ all columns are VARCHAR. Unbound variables are returned as empty strings.\n\n\
-    ```sql\n-- Count number of humans in wikidata\nSELECT * FROM read_sparql(\n  \
-    \          'https://query.wikidata.org/sparql',\n            'SELECT (COUNT(*)\
-    \ AS ?count) WHERE {   ?item wdt:P31 wd:Q5 .}'\n        );\n```\n### Writing RDF\
-    \ (R2RML)\n\nWrite RDF using [R2RML](https://www.w3.org/TR/r2rml/) mapping files\
-    \ with DuckDB's `COPY TO`\nsyntax. Two modes are supported:\n\n**Inside-out mode**\
-    \ \u2014 DuckDB drives the query; the mapping has no `rr:logicalTable`:\n```sql\n\
-    COPY (SELECT empno, ename, deptno FROM emp)\nTO 'output.nt' (FORMAT r2rml, mapping\
-    \ 'mapping.ttl');\n```\n\n**Full R2RML mode** \u2014 the mapping defines its own\
-    \ queries:\n```sql\nCOPY (SELECT 1) TO 'output.nt' (FORMAT r2rml, mapping 'mapping.ttl');\n\
-    ```\n\n**Write options:**\n\n| Option | Required | Default | Description |\n|---|---|---|---|\n\
-    | `mapping` | Yes | \u2014 | Path to R2RML mapping file (`.ttl`) |\n| `rdf_format`\
-    \ | No | `ntriples` | Output format: `ntriples`, `turtle`, or `nquads` |\n| `ignore_non_fatal_errors`\
-    \ | No | `true` | Raise an exception on the first parse error when `false` |\n\
-    \n### Validation Helpers\n\n```sql\nSELECT is_valid_r2rml('mapping.ttl');    \
-    \  -- validate an R2RML mapping file\nSELECT can_call_inside_out('mapping.ttl');\
-    \ -- check if inside-out mode is supported\n```\n"
+    \ the shape of the data using `profile_rdf()`.\n\nThe `read_sparql(endpoint, query)`\
+    \ function sends a SPARQL SELECT query to a remote \nendpoint and returns the\
+    \ result set as a DuckDB table. Column names are derived from the \nSPARQL variable\
+    \ names; all columns are VARCHAR. Unbound variables are returned as empty strings.\n\
+    \n```sql\n-- Count number of humans in wikidata\nSELECT * FROM read_sparql(\n\
+    \            'https://query.wikidata.org/sparql',\n            'SELECT (COUNT(*)\
+    \ AS ?count) WHERE {   ?item wdt:P31 wd:Q5 .}'\n        );\n```\n\nYou can also\
+    \ execute a SPARQL 1.1 query `execute_sparql(query, mapping)` against DuckDB tables\
+    \ \nusing an R2RML mapping file to define the mapping between relational data\
+    \ and RDF. The SPARQL \nquery is converted to SQL at query time using a rules\
+    \ based optimzer The function returns the \nresult set as a DuckDB table. A good\
+    \ subset of SPARQL is supported. For more information see\nthe [docs](https://github.com/nonodename/duck_rdf/blob/main/docs/sparql.md).\n\
+    \nTo see the query that would be run, use `sparql_to_sql(sparql, mapping)`.\n\n\
+    ### Writing RDF (R2RML)\n\nWrite RDF using [R2RML](https://www.w3.org/TR/r2rml/)\
+    \ mapping files with DuckDB's `COPY TO`\nsyntax. Two modes are supported:\n\n\
+    **Inside-out mode** \u2014 DuckDB drives the query; the mapping has no `rr:logicalTable`:\n\
+    ```sql\nCOPY (SELECT empno, ename, deptno FROM emp)\nTO 'output.nt' (FORMAT r2rml,\
+    \ mapping 'mapping.ttl');\n```\n\n**Full R2RML mode** \u2014 the mapping defines\
+    \ its own queries:\n```sql\nCOPY (SELECT 1) TO 'output.nt' (FORMAT r2rml, mapping\
+    \ 'mapping.ttl');\n```\n\n**Write options:**\n\n| Option | Required | Default\
+    \ | Description |\n|---|---|---|---|\n| `mapping` | Yes | \u2014 | Path to R2RML\
+    \ mapping file (`.ttl`) |\n| `rdf_format` | No | `ntriples` | Output format: `ntriples`,\
+    \ `turtle`, or `nquads` |\n| `ignore_non_fatal_errors` | No | `true` | Raise an\
+    \ exception on the first parse error when `false` |\n\n### Validation Helpers\n\
+    \n```sql\nSELECT is_valid_r2rml('mapping.ttl');      -- validate an R2RML mapping\
+    \ file\nSELECT can_call_inside_out('mapping.ttl'); -- check if inside-out mode\
+    \ is supported\n```\n"
