@@ -1,9 +1,10 @@
 extension:
   name: anofox_tabfm
-  description: "Zero-shot tabular machine learning inside DuckDB \u2014 classification\
-    \ and regression with real tabular foundation models (Mitra, TabPFN v2, TabPFN\
-    \ 2.5, TabICL, Orion-BiX, TabFM) on ONNX Runtime, no training loop"
-  version: 0.3.0
+  description: "Zero-shot tabular machine learning inside DuckDB \u2014 classification,\
+    \ regression, synthetic-data generation and imputation with real tabular foundation\
+    \ models (Mitra, TabPFN v2/2.5/3, TabICL, Orion-BiX, TabFM) on ONNX Runtime, no\
+    \ training loop"
+  version: 2026.08.15
   language: C++
   build: cmake
   license: MIT
@@ -12,7 +13,7 @@ extension:
   excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_mingw;linux_amd64_musl
 repo:
   github: DataZooDE/anofox-tabfm
-  ref: 0c7f83ee8d94c0b4d9c520bd3b49edebb8c859bb
+  ref: 51f0850f0e635d35b7ba054b1bd732b18a026c35
 docs:
   hello_world: "-- Fetch a real tabular foundation model once (Mitra, Apache-2.0,\
     \ ~300 MB,\n-- no license gate). Cached under ~/.cache/anofox-tabfm and reused\
@@ -32,35 +33,56 @@ docs:
     \ TabPFN-style\nin-context learners \u2014 into DuckDB, so tabular classification\
     \ and regression\nbecome a single SQL statement. There is no training loop, no\
     \ Python, and no\nMLOps: the model reads your labelled rows as context and predicts\
-    \ the rest.\n\n### Built-in models\nSix models ship in the extension and are selected\
-    \ with `model :=` (or a\n`SET anofox_tabfm_default_model` once per session):\n\
+    \ the rest.\n\n### Built-in models\nSeven models ship in the extension and are\
+    \ selected with `model :=` (or a\n`SET anofox_tabfm_default_model` once per session):\n\
     \n- **mitra** \u2014 AWS AutoGluon (Apache-2.0), no license gate, ~300 MB. A great\
     \ default.\n- **tabpfn-v2** \u2014 Prior Labs (Apache-2.0, attribution).\n- **tabicl-v2**\
     \ \u2014 Inria (BSD-3-Clause).\n- **orion-bix** \u2014 Lexsi Labs (MIT), no license\
     \ gate. Classification only.\n- **tabpfn-v2-5** \u2014 Prior Labs TabPFN 2.5.\
     \ **Non-commercial**: the weights\n  and their outputs may not be used for commercial\
-    \ or production purposes.\n- **tabfm-v1** \u2014 Google TabFM (non-commercial,\
-    \ gated; ~6.6 GB).\n\n`SELECT model, license, commercial FROM tabfm_list_models()`\
-    \ reports each\nmodel's license and whether it is commercially usable \u2014 worth\
-    \ checking\nbefore shipping anything built on one.\n\nOnly weight-free computation\
-    \ graphs are bundled \u2014 **no model weights are\ndistributed with the extension**.\
-    \ You download the weights yourself from\nHugging Face into a local cache (`~/.cache/anofox-tabfm`),\
-    \ and for a gated\nmodel you first accept its license\n(`SET anofox_tabfm_accept_hf_license\
-    \ = true`). Repositories that Hugging Face\nitself gates additionally need a token,\
-    \ supplied with a standard DuckDB\nsecret:\n\n```sql\nCREATE SECRET hf (TYPE http,\
-    \ BEARER_TOKEN 'hf_xxx', SCOPE 'https://huggingface.co');\n```\n\n### Bring your\
-    \ own model\nRegister any compatible model entirely from SQL \u2014 no external\
-    \ JSON manifest.\nWeights can be `.safetensors` or a native PyTorch `.ckpt` (read\
-    \ without Python):\n\n```sql\nCALL tabfm_register_model(\n  id := 'my-model',\n\
-    \  classification_graph   := 'model.onnx',\n  classification_weights := 'model.safetensors',\n\
-    \  license := 'apache-2.0');\n```\n\n### Inference\nRuns on [ONNX Runtime](https://onnxruntime.ai/),\
-    \ statically linked into the\nextension (CPU execution provider). CUDA and ROCm/MIGraphX\
-    \ flavors exist in\nthe source tree for self-builds; this community build ships\
-    \ the portable CPU\nflavor.\n\n### Surface\n- `tabfm_classify` / `tabfm_regress`\
-    \ \u2014 zero-shot predict (a single table with\n  NULL targets, or a separate\
-    \ `test :=` set)\n- `tabfm_predict`, `tabfm_predict_by`, `tabfm_predict_agg`,\
-    \ `tabfm_predict_win`\n- `tabfm_register_model` / `tabfm_unregister_model` \u2014\
-    \ pure-SQL model registration\n- `tabfm_download` / `tabfm_models` / `tabfm_list_models`\
+    \ or production purposes.\n- **tabpfn-v3** \u2014 Prior Labs TabPFN 3. **Non-commercial**:\
+    \ testing,\n  evaluation and internal benchmarking only.\n- **tabfm-v1** \u2014\
+    \ Google TabFM (non-commercial, gated; ~6.6 GB).\n\n`SELECT model, license, commercial\
+    \ FROM tabfm_list_models()` reports each\nmodel's license and whether it is commercially\
+    \ usable \u2014 worth checking\nbefore shipping anything built on one.\n\nOnly\
+    \ weight-free computation graphs are bundled \u2014 **no model weights are\ndistributed\
+    \ with the extension**. You download the weights yourself from\nHugging Face into\
+    \ a local cache (`~/.cache/anofox-tabfm`), and for a gated\nmodel you first accept\
+    \ its license\n(`SET anofox_tabfm_accept_hf_license = true`). Repositories that\
+    \ Hugging Face\nitself gates additionally need a token, supplied with a standard\
+    \ DuckDB\nsecret:\n\n```sql\nCREATE SECRET hf (TYPE http, BEARER_TOKEN 'hf_xxx',\
+    \ SCOPE 'https://huggingface.co');\n```\n\n### Bring your own model\nRegister\
+    \ any compatible model entirely from SQL \u2014 no external JSON manifest.\nWeights\
+    \ can be `.safetensors` or a native PyTorch `.ckpt` (read without Python):\n\n\
+    ```sql\nCALL tabfm_register_model(\n  id := 'my-model',\n  classification_graph\
+    \   := 'model.onnx',\n  classification_weights := 'model.safetensors',\n  license\
+    \ := 'apache-2.0');\n```\n\n### Synthetic data and imputation\nThe same in-context\
+    \ engine also runs *backwards*: instead of predicting one\ncolumn, it models the\
+    \ whole table as a joint distribution and samples from it.\n\n```sql\nSELECT *\
+    \ FROM tabfm_generate('customers', 500);        -- 500 synthetic rows\nCREATE\
+    \ TABLE clean AS SELECT * FROM tabfm_impute('raw');  -- fill every NULL\n```\n\
+    \nGeneration works column by column, each column sampled conditioned on the\n\
+    ones already generated (the chain rule), so the **relationships between\ncolumns\
+    \ survive** \u2014 not just each column's marginal. It needs only\nclassification\
+    \ weights, so it works with every model above, including\nclassification-only\
+    \ ones.\n\n`tabfm_impute` is the deterministic sibling: it takes the conditional\
+    \ best\nestimate rather than sampling, so continuous fills keep full precision\
+    \ and\nnon-NULL cells are never modified.\n\nOn the Prior Labs breast-cancer benchmark\
+    \ (30 features), a classifier given\n**only synthetic** in-context examples scores\
+    \ 97.8% on held-out real rows\nagainst 98.3% for the real training data, preserving\
+    \ correlation structure at\n0.97 across all 435 feature pairs. Correlations are\
+    \ somewhat attenuated by the\nquantile binning used for continuous columns \u2014\
+    \ see `docs/GENERATE.md` in the\nrepository for what the method does and does\
+    \ not preserve. It is **not** a\ndifferential-privacy mechanism.\n\n### Inference\n\
+    Runs on [ONNX Runtime](https://onnxruntime.ai/), statically linked into the\n\
+    extension (CPU execution provider). CUDA and ROCm/MIGraphX flavors exist in\n\
+    the source tree for self-builds; this community build ships the portable CPU\n\
+    flavor.\n\n### Surface\n- `tabfm_classify` / `tabfm_regress` \u2014 zero-shot\
+    \ predict (a single table with\n  NULL targets, or a separate `test :=` set)\n\
+    - `tabfm_generate` / `tabfm_impute` \u2014 synthesize rows from a table's joint\n\
+    \  distribution, or fill its NULL cells\n- `tabfm_predict`, `tabfm_predict_by`,\
+    \ `tabfm_predict_agg`, `tabfm_predict_win`\n- `tabfm_register_model` / `tabfm_unregister_model`\
+    \ \u2014 pure-SQL model registration\n- `tabfm_download` / `tabfm_models` / `tabfm_list_models`\
     \ / `tabfm_load` /\n  `tabfm_unload` / `tabfm_remove` \u2014 all accept `model\
     \ :=`\n- `tabfm_devices` \u2014 discover CPU/GPU execution providers\n- `SET anofox_tabfm_*`\
     \ settings (default model, license gate, cache dir,\n  threads, device, tracing)\n\
