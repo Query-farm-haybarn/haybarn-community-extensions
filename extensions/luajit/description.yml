@@ -3,7 +3,7 @@ extension:
   description: "In-process LuaJIT UDFs for DuckDB \u2014 JIT-compiled, parallel (per-thread\
     \ states), trusted sandbox, GROUP BY aggregates, LIST/STRUCT/MAP bridges, embedded\
     \ Fennel compiler"
-  version: 0.31.1
+  version: 0.32.2
   language: C
   build: cmake
   license: MIT
@@ -12,7 +12,7 @@ extension:
   excluded_platforms: wasm_eh;wasm_mvp;wasm_threads;windows_amd64_mingw;windows_amd64_rtools
 repo:
   github: alitrack/duckdb-luajit
-  ref: refs/tags/v0.31.1
+  ref: 7dc1ada394605fc1f62401d4a0d60613d0e920d0
 docs:
   hello_world: "-- Load and compile a UDF in one shot\nLOAD luajit;\nSELECT message\
     \ FROM luajit_module(\n    mode := 'quick_compile',\n    source := 'return function(x)\
