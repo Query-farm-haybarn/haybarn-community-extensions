@@ -1,0 +1,67 @@
+extension:
+  name: anofox_optimize
+  description: "Combinatorial decision algorithms as SQL \u2014 bin packing, knapsack,\
+    \ wave batching, sequencing, scheduling, assortment and portfolio selection"
+  language: C++
+  build: cmake
+  license: BSL 1.1
+  maintainers:
+  - jrosskopf
+  excluded_platforms: windows_amd64_rtools;windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
+repo:
+  github: DataZooDE/anofox-optimize
+  ref: 2e2073098660f245204a1cc49de52506a900dc1b
+docs:
+  hello_world: "-- Cartons waiting to ship, and a container that holds 1000 units.\n\
+    CREATE TABLE cartons AS SELECT * FROM VALUES\n  (1, 420.0), (2, 380.0), (3, 260.0),\
+    \ (4, 240.0),\n  (5, 190.0), (6, 180.0), (7, 150.0), (8, 130.0)\n  AS t(carton_id,\
+    \ size);\n\n-- How few containers hold everything? `best_of` runs every packing\n\
+    -- algorithm in the family and returns whichever used the fewest bins.\nSELECT\
+    \ opt_pack_best_of(list(size ORDER BY carton_id), 1000.0).bins_used AS containers\n\
+    FROM cartons;\n\n-- Which shipments go on a cheaper carrier that only takes 1000\
+    \ units?\n-- Value == weight, so this is subset-sum, and `exact` finds the perfect\n\
+    -- fill that greedy rules miss.\nSELECT opt_knapsack_exact(\n         list(weight\
+    \ ORDER BY shipment_id),\n         list(weight ORDER BY shipment_id),\n      \
+    \   1000.0\n       ).total_weight AS loaded_on_cheap_carrier\nFROM (VALUES (1,\
+    \ 505.0), (2, 380.0), (3, 260.0), (4, 240.0), (5, 115.0))\n     AS s(shipment_id,\
+    \ weight);\n"
+  extended_description: "**anofox_optimize** puts combinatorial decision algorithms\
+    \ behind DuckDB\nfunctions. Pack containers, choose an assortment, sequence a\
+    \ machine,\nallocate a portfolio \u2014 in SQL, against the tables the data already\
+    \ lives\nin. No solver process, no external service, no modelling language.\n\n\
+    ### Eight families, one signature each\n\nEvery member of a family takes identical\
+    \ arguments, so swapping one\nidentifier swaps the algorithm and nothing else:\n\
+    \n| Family | Decision | Example |\n|---|---|---|\n| `pack_*` | fit items into\
+    \ the fewest containers | `opt_pack_best_of` |\n| `knapsack_*` | pick a subset\
+    \ under one capacity | `opt_knapsack_exact` |\n| `wave_*` | group orders into\
+    \ capacity-limited waves | `opt_wave_best_of` |\n| `sequence_*` | order jobs to\
+    \ cut changeover cost | `opt_sequence_two_opt` |\n| `schedule_*` | order jobs\
+    \ against due dates with setups | `opt_schedule_best_of` |\n| `assortment_*` |\
+    \ choose what to stock when products interact | `opt_assortment_best_of` |\n|\
+    \ `portfolio_*` | choose assets and weights under a holding limit | `opt_portfolio_best_of`\
+    \ |\n| `matrix_from_triples` | build a matrix from `(from, to, value)` rows |\
+    \ \u2014 |\n\nEvery function has a canonical `anofox_optimize_*` name and a short\
+    \ `opt_*`\nalias \u2014 they are the same function. `opt_*_best_of` runs every\
+    \ algorithm in\nits family and returns the winner; that is the place to start.\n\
+    \n### Honesty about guarantees\n\nTwo functions return a **proven optimum** and\
+    \ say so in their names:\n`knapsack_exact` and `schedule_exact`. Everything else\
+    \ is heuristic and\ncarries no guarantee. Functions that would blow up refuse\
+    \ rather than hang \u2014\n`schedule_exact` rejects more than 14 jobs with an\
+    \ error naming the\nheuristic to use instead.\n\nEach family also ships a deliberately\
+    \ **weak** member (`pack_next_fit`,\n`portfolio_top_return`, `assortment_top_margin`,\
+    \ `sequence_as_given`),\nbecause you need an honest baseline to know whether optimizing\
+    \ bought you\nanything \u2014 and \"what we do today\" is usually a greedy rule.\n\
+    \n### Two ways to pick the wrong function\n\nBoth are silent, so they are worth\
+    \ knowing up front. `assortment_*` and\n`assortment_recapture_*` take identical\
+    \ arguments and model opposite\neconomics \u2014 products cannibalising each other,\
+    \ versus demand flowing to the\nsurvivors when you delist. And `sequence_*` and\
+    \ `schedule_*` both order\njobs, but only `schedule_*` knows about due dates.\n\
+    \n### Testing\n\nThe suite asserts against optima computed **outside** the extension:\n\
+    Falkenauer triplets whose optimum is fixed by construction, subset-sum\nsolved\
+    \ by DP, Held-Karp scheduling, and portfolio enumeration over all\n15,504 subsets.\
+    \ That standard has already paid for itself \u2014 it caught a\nlocal search returning\
+    \ 168 against a proven optimum of 60, and an \"exact\"\nscheduler that was not\
+    \ exact.\n\nThe extension collects anonymous usage telemetry, switched off with\n\
+    `SET anofox_telemetry_enabled = false`. See the\n[project repository](https://github.com/DataZooDE/anofox-optimize)\
+    \ for\nguides, the theory notes, and an API reference generated from\n`duckdb_functions()`\
+    \ of the built extension.\n"
