@@ -3,7 +3,7 @@ extension:
   description: Comprehensive processing extension for web markup languages (XML and
     HTML) with SAX streaming for large files, intelligent schema inference, XPath-based
     data extraction, and HTML table parsing.
-  version: 2.6.1
+  version: 2.7.0
   language: C++
   build: cmake
   license: MIT
@@ -14,7 +14,7 @@ extension:
   excluded_platforms: windows_amd64;windows_amd64_mingw
 repo:
   github: teaguesterling/duckdb_webbed
-  ref: refs/tags/v2.6.1
+  ref: c1b32efa4b8106d04ae74d0d898d9a650461792f
 docs:
   docs_url: https://duckdb-webbed.readthedocs.io
   hello_world: '-- Load the extension
@@ -119,6 +119,6 @@ docs:
     \ blocks back to HTML\n\nSee https://duckdb-webbed.readthedocs.io for comprehensive\
     \ documentation and examples.\n\nBuilt on libxml2 for robust, standards-compliant\
     \ parsing with comprehensive error handling and memory-safe RAII implementation.\
-    \ 91 test suites with 3011 assertions, including DOM/SAX equivalence, adversarial/security,\
+    \ 94 test suites with 3155 assertions, including DOM/SAX equivalence, adversarial/security,\
     \ and multi-file parallelism testing. The extension supports mixed file systems,\
     \ configurable schema inference, and efficient processing of large document collections.\n"
