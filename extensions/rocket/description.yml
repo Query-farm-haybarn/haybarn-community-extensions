@@ -1,0 +1,76 @@
+extension:
+  name: rocket
+  description: ROCKET random convolutional kernel features for time-series classification
+  version: 0.1.0
+  language: C++
+  build: cmake
+  license: MIT
+  maintainers:
+  - maxdemarzi
+repo:
+  github: maxdemarzi/duckdb-rocket
+  ref: c33d6b1a109e0ba9abf1722ad3fa424b79d31d86
+docs:
+  hello_world: '-- 250 kernels produce 500 features: element 2i is kernel i''s global
+    max,
+
+    -- 2i+1 its proportion of positive values.
+
+    SELECT rocket_transform(values, 250, 0, 0) AS features FROM series;
+
+
+    -- Kernel i is a pure function of (seed, i), so a group of kernels is addressable
+
+    -- without generating the groups before it. These are the same kernels:
+
+    SELECT rocket_transform(s, 4, 7, 4) = rocket_transform(s, 8, 7, 0)[9:16];
+
+    -- true
+
+
+    -- Multivariate: outer list channels, inner list timepoints. Still 2 features
+
+    -- per kernel -- the selected channels are summed inside one convolution.
+
+    SELECT rocket_transform(channels, 250, 0, 0) FROM multivariate_series;
+
+
+    -- Variable-length: pass an explicit reference length so every row shares one
+
+    -- kernel bank. Without it each row draws its own, and column j stops meaning
+
+    -- the same thing across rows.
+
+    SELECT rocket_transform(values, 250, 0, 0, 64) FROM ragged_series;
+
+    '
+  extended_description: "`rocket_transform` implements ROCKET (Dempster, Petitjean\
+    \ & Webb, 2020): it convolves a\nseries with random kernels of random length,\
+    \ dilation, padding and bias, and reduces each\nkernel's response to two features\
+    \ \u2014 the global maximum and the proportion of positive\nvalues. No training\
+    \ is involved, so there is no model to fit or store.\n\n```\nrocket_transform(series\
+    \ DOUBLE[], kernels_per_group BIGINT, seed BIGINT, first_kernel BIGINT)\n  ->\
+    \ DOUBLE[]\n```\n\nFeatures are interleaved: element `2i` is kernel `i`'s max\
+    \ and `2i+1` its PPV.\n\n`first_kernel` selects a contiguous slice of one conceptual\
+    \ kernel bank. Kernel `i` is a\npure function of `(seed, i)` \u2014 derived through\
+    \ SplitMix64 used as a splittable seed source \u2014\nso group `g` can be generated\
+    \ without generating groups `0..g-1`, and kernels can be fanned\nacross threads\
+    \ with no shared generator state. This is what makes it practical to split a\n\
+    10,000-kernel bank into groups narrow enough for a downstream classifier's per-estimator\n\
+    feature budget.\n\nMultivariate series go in as `DOUBLE[][]` (channels of timepoints).\
+    \ Each kernel draws a\nrandom subset of channels with independent weights per\
+    \ channel and still produces exactly\ntwo features, because the selected channels\
+    \ are summed inside a single convolution. A\none-channel series produces byte-identical\
+    \ kernels through either overload.\n\nFor variable-length data, pass an explicit\
+    \ reference length as a fifth argument. Kernel\nweights do not depend on series\
+    \ length but dilation and padding do, so without it each row\ndraws its own kernel\
+    \ bank and the columns stop being comparable across rows. Note also that\nthe\
+    \ max feature is biased upward by series length while PPV is not \u2014 if length\
+    \ correlates\nwith the label, half the features carry that correlation.\n\nThe\
+    \ pseudo-random stream is specified byte-for-byte in the project's SPEC.md, and\
+    \ the\nextension is validated against golden vectors emitted by an independent\
+    \ Python\nimplementation: maximum absolute difference 1.8e-15, with PPV differences\
+    \ of exactly zero.\n\nThe intended use is composition with a tabular foundation\
+    \ model \u2014 for example\n`anofox_tabfm`'s `tabfm_classify` \u2014 to classify\
+    \ time series without training anything:\nfeatures go in as columns, class probabilities\
+    \ come back, and probabilities are averaged\nacross kernel groups.\n"
