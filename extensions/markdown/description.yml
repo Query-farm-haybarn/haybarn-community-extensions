@@ -2,7 +2,7 @@ extension:
   name: markdown
   description: Read, analyze, and write Markdown files with block-level document representation
     and inline element support
-  version: 1.5.1
+  version: 1.6.0
   language: C++
   build: cmake
   license: MIT
@@ -11,7 +11,7 @@ extension:
   vcpkg_commit: bffcbb75f71553824aa948a7e7b4f798662a6fa7
 repo:
   github: teaguesterling/duckdb_markdown
-  ref: refs/tags/v1.5.1
+  ref: 3e8e0d59abce16c227f5d52d26fd094c9448917a
 docs:
   hello_world: "-- Load the extension\nLOAD markdown;\n\n-- Read Markdown files with\
     \ glob patterns\nSELECT content FROM read_markdown('docs/**/*.md');\n\n-- Parse\
