@@ -4,7 +4,7 @@ extension:
     \ from SQL \u2014 born-typed columns, deterministic content-addressed keys that\
     \ join across groups by construction, and an embedded AGS dictionary. A read-only\
     \ SQL surface. Local, http(s):// and s3:// (with httpfs)."
-  version: 0.10.0
+  version: 0.11.0
   language: Rust
   build: cargo
   license: MIT
@@ -14,7 +14,7 @@ extension:
   - niko86
 repo:
   github: niko86/laterite-duckdb
-  ref: b6ef2debe3ebd6b7c72c81d0dcc9ff7b62e1ee31
+  ref: bae75a0daf8d026e282f5892ef535e32ed828d74
 docs:
   hello_world: "-- Read a group as a typed table (columns typed from the file's own\
     \ TYPE row):\nSELECT loca_id, loca_gl\nFROM read_ags('site.ags', 'LOCA')\nWHERE\
