@@ -1,7 +1,7 @@
 extension:
   name: altertable
   description: Query Altertable's lakehouse directly from your local DuckDB.
-  version: 0.4.0
+  version: 0.5.0
   language: C++
   build: cmake
   excluded_platforms: linux_amd64;linux_arm64;linux_amd64_musl;linux_arm64_musl;osx_amd64;osx_arm64;windows_amd64;windows_arm64;windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
@@ -12,34 +12,16 @@ extension:
   requires_toolchains: vcpkg;parser_tools
 repo:
   github: altertable-ai/duckdb-altertable
-  ref: c3fa5a0d8dfcda92b768629168949d81a0a275ed
+  ref: 2d2be3fc58758f13899770bc37682fb9e333e888
 docs:
-  hello_world: 'INSTALL altertable FROM community;
-
-    LOAD altertable;
-
-
-    -- Attach an Altertable catalog using Arrow Flight SQL
-
-    ATTACH ''user=my-user password=my-pass catalog=my-altertable-catalog'' AS db (TYPE
-    ALTERTABLE);
-
-
-    -- Query remote Altertable tables with standard SQL
-
-    SELECT * FROM db.main.events;
-
-
-    -- Create and load remote tables through the attached database
-
-    CREATE TABLE db.main.example_events (id INTEGER, name VARCHAR);
-
-    INSERT INTO db.main.example_events VALUES (1, ''launch'');
-
-
-    DETACH db;
-
-    '
+  hello_world: "INSTALL altertable FROM community;\nLOAD altertable;\n\n-- Attach\
+    \ an Altertable database\nCREATE SECRET my_altertable (\n    TYPE altertable,\n\
+    \    USER 'my-user',\n    PASSWORD 'my-pass'\n);\nATTACH 'catalog=my-altertable-catalog'\
+    \ AS db (TYPE ALTERTABLE, SECRET my_altertable);\n\n-- Query remote Altertable\
+    \ tables with standard SQL\nSELECT * FROM db.main.events;\n\n-- Create and load\
+    \ remote tables through the attached database\nCREATE TABLE db.main.example_events\
+    \ (id INTEGER, name VARCHAR);\nINSERT INTO db.main.example_events VALUES (1, 'launch');\n\
+    \nDETACH db;\n"
   extended_description: 'The Altertable extension connects DuckDB to Altertable databases
     over the
 
@@ -56,7 +38,8 @@ docs:
 
     - direct reads from attached schemas and tables
 
-    - attached writes with `CREATE TABLE`, `CREATE TABLE AS`, and `INSERT`
+    - attached writes with `CREATE TABLE`, `CREATE TABLE AS`, `INSERT`, `UPDATE` and
+    `DELETE`
 
     - DuckDB secrets support for storing Altertable credentials
 
