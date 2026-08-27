@@ -1,0 +1,65 @@
+extension:
+  name: quack_flamegraph
+  description: Query Brendan Gregg folded CPU/allocation profiles as DuckDB tables
+  version: 0.1.0
+  language: Rust
+  build: cargo
+  license: MIT
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_rtools;windows_amd64_mingw;linux_amd64_musl
+  requires_toolchains: rust;python3
+  maintainers:
+  - kevintruong
+repo:
+  github: kevintruong/quack-flamegraph
+  ref: 253fab90fe4dcddc70f519ea79bd42dd74ce0d3d
+docs:
+  hello_world: 'INSTALL quack_flamegraph FROM community;
+
+    LOAD quack_flamegraph;
+
+
+    -- Hottest self time
+
+    SELECT leaf, exclusive
+
+    FROM flamegraph_exclusive(''cpu.folded'')
+
+    ORDER BY exclusive DESC
+
+    LIMIT 10;
+
+
+    -- Sample coverage (inclusive)
+
+    SELECT frame, inclusive
+
+    FROM flamegraph_inclusive(''cpu.folded'')
+
+    ORDER BY inclusive DESC
+
+    LIMIT 10;
+
+
+    -- Raw stacks
+
+    SELECT list_extract(frames, -1) AS leaf, samples
+
+    FROM read_folded(''cpu.folded'')
+
+    ORDER BY samples DESC
+
+    LIMIT 10;
+
+    '
+  extended_description: "`quack_flamegraph` reads [folded stack](https://www.brendangregg.com/FlameGraphs/cpuflamegraphs.html)\n\
+    files produced by `stackcollapse-*`, `perf --folded`, samply/xctrace collapse,\
+    \ and similar tools.\n\n### Functions\n\n- `read_folded(path)` \u2014 table function\
+    \ returning `frames VARCHAR[]`, `samples BIGINT`, `source VARCHAR`\n- `flamegraph_exclusive(path)`\
+    \ \u2014 leaf self-time (`GROUP BY` last frame)\n- `flamegraph_inclusive(path)`\
+    \ \u2014 `unnest(frames)` (recursive names inflate)\n- `flamegraph_coverage(path)`\
+    \ \u2014 unique-stack sample presence (`list_distinct`)\n- `flamegraph_edges(path)`\
+    \ \u2014 parent\u2192child sample mass\n- `flamegraph_hot_stacks(path)` \u2014\
+    \ stacks ordered for concentration checks\n\nThe parser drops zero-sample parent\
+    \ frames (common in Instruments/sample collapse), takes the last space-separated\
+    \ field as the count, and strips an optional `Thread_\u2026:` prefix.\n\nBuilt\
+    \ with DuckDB's [Rust C Extension API template](https://github.com/duckdb/extension-template-rs).\n"
