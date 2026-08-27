@@ -1,7 +1,7 @@
 extension:
   name: splunk
   description: Read logs from a Splunk search REST API into OTLP-shaped tables
-  version: 0.1.0
+  version: 0.2.0
   language: C++
   build: cmake
   license: MIT
@@ -10,7 +10,7 @@ extension:
   - smithclay
 repo:
   github: smithclay/duckdb-splunk
-  ref: 636b92030562f5c1e4a4b9d1aacd66f69ced0b6d
+  ref: 1c69eeecba53c63b0e1f5eb07c7933757daf1355
 docs:
   hello_world: "-- Store your Splunk credentials once (kept out of query text; redacted\
     \ in duckdb_secrets()).\nCREATE SECRET (\n    TYPE splunk,\n    URL 'https://splunk.example.com:8089',\n\
