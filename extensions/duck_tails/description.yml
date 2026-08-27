@@ -3,7 +3,7 @@ extension:
   description: Smart Development Intelligence for DuckDB - Git-aware data analysis
     capabilities that allow querying git history, accessing files at any revision,
     and performing version-aware data analysis with SQL.
-  version: 1.4.2
+  version: 1.5.0
   language: C++
   build: cmake
   license: MIT
@@ -14,7 +14,7 @@ extension:
   haybarn_skip_tests: true
 repo:
   github: teaguesterling/duck_tails
-  ref: db69b5579ccf46cab8208587e6a59f54cb5f224f
+  ref: aac04047feb111f087c416e488bb2625955b0d79
 docs:
   hello_world: "-- Load the extension\nLOAD 'duck_tails';\n\n-- Query git history\
     \ (defaults to current directory)\nSELECT commit_hash, author_name, message, author_date\n\
