@@ -13,4 +13,4 @@ extension:
   version: '2025120401'
 repo:
   github: query-farm/a5
-  ref: abc8c18c819299d6e71faaf85fb120cb409c5bdc
+  ref: 960ca3652954e1b360ce32f3e334705060a80f03
