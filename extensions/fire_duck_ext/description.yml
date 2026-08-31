@@ -1,7 +1,7 @@
 extension:
   name: fire_duck_ext
   description: Query Google Cloud Firestore directly from DuckDB using SQL
-  version: 0.2.1
+  version: 0.3.0
   language: C++
   build: cmake
   license: MIT
@@ -10,7 +10,7 @@ extension:
   - BorisBesky
 repo:
   github: BorisBesky/fire_duck_ext
-  ref: 072e51e59b2fdb3daeac4a5c62aca8d8eeb617cb
+  ref: bd8a57c48d7fe2d8da0caf4a2bbf6a42c92fb578
 docs:
   hello_world: "LOAD fire_duck_ext;\n\n-- Authenticate with a service account key\
     \ file (see the README for API-key\n-- and Firebase-user auth, including browser-safe\
@@ -24,7 +24,7 @@ docs:
   extended_description: 'fire_duck_ext lets you work with Google Cloud Firestore directly
     from DuckDB
 
-    using SQL. Scan collections with firestore_scan(), including collection-group
+    using SQL. Read with firestore_scan(), which also covers collection-group
 
     queries (firestore_scan(''~collection'')) and subcollection-ID discovery
 
@@ -36,18 +36,32 @@ docs:
 
     functions firestore_array_union(), firestore_array_remove(), and
 
-    firestore_array_append(). WHERE filters and SQL ORDER BY / LIMIT are pushed
+    firestore_array_append().
 
-    down to Firestore where possible to reduce data transferred.
+
+    WHERE filters, SQL ORDER BY / LIMIT, the column projection, and a bare
+
+    COUNT(*) are pushed down to Firestore where possible. A query then
+
+    transfers only what it uses: matching rows, selected fields, and for a
+
+    count, no documents at all.
+
+
+    Scans stream a page at a time, so a collection of any size can be read
+
+    without holding it in memory, and the page size adapts when documents turn
+
+    out to be unusually large. Settings cover paging, schema sampling, and
+
+    optional parallel scanning.
 
 
     Firestore''s schemaless documents are mapped to typed DuckDB columns
 
-    automatically, with configurable handling for nested maps (map_encoding)
+    automatically, with configurable handling for nested maps and for fields
 
-    and fields that only appear in some documents (schema_sample_size,
-
-    unmapped_column, columns).
+    that appear in only some documents.
 
 
     Secrets require PROJECT_ID and one of: a service-account key **file path**
@@ -72,9 +86,8 @@ docs:
     Firebase-user auth (service-account auth needs OpenSSL and is native-only).
 
 
-    See the project (https://github.com/BorisBesky/fire_duck_ext) for the full parameter
-    reference, type mapping,
+    See the project README for the parameter and settings reference, type
 
-    pushdown semantics, and platform notes.
+    mapping, pushdown semantics, and platform notes.
 
     '
