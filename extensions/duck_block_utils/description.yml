@@ -2,7 +2,7 @@ extension:
   name: duck_block_utils
   description: Build, transform, validate, and extract content from structured documents
     using the duck_block type
-  version: 1.5.0
+  version: 1.6.1
   language: C++
   build: cmake
   license: MIT
@@ -10,7 +10,7 @@ extension:
   - teaguesterling
 repo:
   github: teaguesterling/duckdb_duck_block_utils
-  ref: 0263b0efa01d3a05f8fc9841e1bc21fc21602aa1
+  ref: 078a9b343824510fcc1c087b46fa0f48969bad8f
 docs:
   hello_world: "-- Build a document programmatically\nSELECT db_assemble([\n    db_heading(1,\
     \ 'Hello World'),\n    db_paragraph([\n        db_text('This is '),\n        db_bold('important'),\n\

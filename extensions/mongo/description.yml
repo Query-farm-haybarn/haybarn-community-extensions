@@ -2,17 +2,17 @@ extension:
   name: mongo
   description: Integrates DuckDB with MongoDB, enabling direct SQL queries over MongoDB
     collections without exporting data or ETL
-  version: 0.2.6
+  version: 0.2.8
   language: C++
   build: cmake
   license: MIT
   maintainers:
   - stephaniewang526
-  vcpkg_commit: 9aa0650e5c8d23fe66701bafb3ec03ac732a3ff1
+  vcpkg_commit: f74a2eade17a628413746557d04db25ccf6e76f9
   excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_mingw;
 repo:
   github: stephaniewang526/duckdb-mongo
-  ref: ee677c1392068aeb480e505b8b023d322ab0f4e0
+  ref: 42e8bd1a4bc03924b0d746c55ecf227b86b546fe
 docs:
   hello_world: '-- Attach to MongoDB
 
