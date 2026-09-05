@@ -8,8 +8,8 @@ extension:
   maintainers:
   - rustyconover
   name: vgi
-  requires_toolchains: parser_tools
-  version: '2026071600'
+  requires_toolchains: parser_tools;rust
+  version: '2026090500'
 repo:
   github: query-farm/vgi
   ref: ff212e0addf8c2b56b1bc6bf59c9b5c5c004bb13
