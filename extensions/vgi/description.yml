@@ -3,6 +3,7 @@ docs:
 extension:
   build: cmake
   description: VGI (Vector Gateway Interface) — DuckDB extension for extending DuckDB in any language over Apache Arrow IPC. No C++/compilation required.
+  excluded_platforms: windows_amd64_mingw
   language: C++
   license: MIT
   maintainers:
