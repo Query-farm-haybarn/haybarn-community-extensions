@@ -1,0 +1,92 @@
+extension:
+  name: quackhole
+  description: Query a DuckDB behind NAT from anywhere, over an encrypted peer-to-peer
+    connection
+  version: 0.0.2
+  language: C++
+  build: cmake
+  license: MIT
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_mingw;linux_amd64_musl
+  requires_toolchains: rust
+  maintainers:
+  - smithclay
+repo:
+  github: smithclay/quackhole
+  ref: 25afe8a902798774ca3e03f4c0b2ce9887342e1c
+docs:
+  hello_world: '-- quackhole is a transport bridge to connect duckdb instances
+
+    -- running anywhere.
+
+
+    -- On the machine you want to reach, behind NAT or a firewall:
+
+    INSTALL quack; LOAD quack;
+
+    LOAD quackhole;
+
+
+    -- accept external connections that provide a special token
+
+    FROM quackhole_serve(token := ''your-shared-token'');
+
+
+    -- From anywhere else -- a different network, a different continent.
+
+    INSTALL quack; LOAD quack;
+
+    LOAD quackhole;
+
+
+    CALL quackhole_attach(''qh1_...'', name := ''laptop'');
+
+
+    FROM laptop.logs WHERE ts > now() - INTERVAL ''1 hour'';
+
+
+    -- Roles are per call, not per machine: one DuckDB can serve and attach at
+
+    -- the same time. To run both on ONE machine, set a throwaway key first --
+
+    -- otherwise both load the same key, share an endpoint id, and iroh refuses
+
+    -- the dial with "connecting to ourself is not supported":
+
+    --   SET GLOBAL quackhole_ephemeral = true;
+
+    '
+  extended_description: "## Use it for\n\n- Querying a DuckDB behind NAT with no inbound\
+    \ port open on either side\n- Joining across several remote DuckDBs at once, since\
+    \ roles are per call\n- Restricting who may connect with an `allow` list of endpoint\
+    \ ids, checked\n  before any Quack traffic\n- Reaching a laptop from a **browser**\
+    \ \u2014 DuckDB-Wasm can attach to an\n  unmodified `quackhole_serve`\n\n## Interface\n\
+    \n| Function | What it does |\n|---|---|\n| `quackhole_serve([token], [target],\
+    \ [allow], [ephemeral], [auto_serve])` | Start Quack on `target` (default `127.0.0.1:9494`)\
+    \ if needed, bind an iroh endpoint, accept streams into it. Returns the ticket\
+    \ and a workbench link |\n| `quackhole_attach(ticket, [name])` | Secret, scope,\
+    \ relay and `ATTACH` for the peer a ticket names, under the catalog `name` (default\
+    \ `remote`) |\n| `quackhole_stop()` | Stop the accept loop. Cached outbound connections\
+    \ stay usable |\n| `quackhole_status()` | Endpoint id, relay URL, whether serving,\
+    \ and one row per known peer with its path (`direct` or `relay`) |\n\nSettings\
+    \ are read when the endpoint binds, which can happen implicitly on the\nfirst\
+    \ `ATTACH` to a `.iroh` host, so set them globally: `quackhole_key_path`\n(default\
+    \ `~/.quackhole/key`), `quackhole_ephemeral`, `quackhole_relay_url`.\n\n## Security\n\
+    \nThe endpoint key at `~/.quackhole/key` (mode `0600`) **is** the address.\nPersisting\
+    \ it is what lets an address survive a restart; losing it means a new\naddress,\
+    \ not a disclosure of data at rest.\n\niroh guarantees that the server is who\
+    \ the address says and that the relay can\nneither read nor forge traffic. Quackhole\
+    \ adds the optional `allow` list and a\nfixed `target`, so only the Quack port\
+    \ is reachable. Quack itself governs which\nSQL runs. Relays see endpoint ids,\
+    \ timing, and byte counts \u2014 not SQL, results,\ntokens, or which database\
+    \ is attached.\n\n## Good to know\n\n- Early-stage. Measured over a public relay\
+    \ between networks with no route\n  between them: `ATTACH` about a second, warm\
+    \ queries 0.14\u20130.21s, a 200k-row\n  scan under 2.5s.\n- **Hole punching is\
+    \ unverified.** Every measurement so far is relayed, so\n  nothing yet says how\
+    \ often iroh gets a direct connection through real CGNAT\n  or a symmetric NAT.\
+    \ Expect relay latency until you have measured otherwise.\n- Quackhole carries\
+    \ Quack traffic only. `read_csv('https://<id>.iroh:9494/x.csv')`\n  reaches httpfs,\
+    \ not quackhole; use `ATTACH` and SQL.\n- Browsers are client-only and relay-only,\
+    \ and need cross-origin isolation\n  (COOP/COEP).\n- An idle `ATTACH` holds a\
+    \ relay path open at roughly one packet every five\n  seconds, and cached connections\
+    \ are never evicted.\n- Native only: macOS, Linux, Windows. This is not a wasm\
+    \ extension.\n"

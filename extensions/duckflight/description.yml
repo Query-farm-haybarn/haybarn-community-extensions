@@ -1,0 +1,44 @@
+extension:
+  name: duckflight
+  description: Query DuckDB from PostgreSQL and Arrow Flight SQL clients, including
+    psql, ADBC, and Airport
+  version: 0.1.6
+  language: Rust
+  build: cargo
+  license: MIT
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64;windows_amd64_rtools;windows_amd64_mingw;linux_amd64_musl
+  requires_toolchains: rust;python3
+  maintainers:
+  - nicosuave
+repo:
+  github: sidequery/duckflight-extension
+  ref: a4cfbfa9865054a3c4d57338b9501685ced47141
+docs:
+  hello_world: "-- Let PostgreSQL clients query this DuckDB database.\nSELECT * FROM\
+    \ duckflight_pg_serve(\n  '127.0.0.1:5433', '/path/to/duckflight.toml'\n);\n\n\
+    -- Let Arrow Flight SQL clients query the same database.\nSELECT * FROM duckflight_flight_serve(\n\
+    \  '127.0.0.1:31337', '/path/to/duckflight.toml'\n);\n"
+  extended_description: "Use DuckDB as a database server. DuckFlight lets existing\
+    \ PostgreSQL and Arrow Flight SQL\nclients query the same live DuckDB database\
+    \ that loaded the extension\u2014no export, copy, or\nsecond database required.\n\
+    \nConnect with PostgreSQL tools such as `psql`, Psycopg, JDBC, and BI applications;\
+    \ Arrow ADBC\nFlight SQL clients; or another DuckDB instance through the Airport\
+    \ extension. Reads and writes\nare immediately visible to DuckDB and every connected\
+    \ client.\n\nBoth listeners require authentication. A single `duckflight.toml`\
+    \ configures users, access\ntokens, and optional TLS. See the\n[quick start and\
+    \ authentication guide](https://github.com/sidequery/duckflight-extension/blob/main/README.md#authentication-setup).\n\
+    \nServer-control functions:\n\n| Function | Purpose |\n| --- | --- |\n| `duckflight_pg_serve(address,\
+    \ config_file)` | Starts an authenticated PostgreSQL listener; returns its protocol\
+    \ and bound address. |\n| `duckflight_flight_serve(address, config_file)` | Starts\
+    \ an authenticated Arrow Flight SQL listener; returns its protocol and bound address.\
+    \ |\n| `duckflight_stop(protocol, address)` | Stops the specified listener and\
+    \ returns its status. |\n| `duckflight_servers()` | Lists running listeners and\
+    \ their bound addresses. |\n| `duckflight_core_status()` | Reports whether the\
+    \ runtime loaded, its ABI version, and status details. |\n\nThe automatically\
+    \ detected functions below also include PostgreSQL compatibility macros\nand internal\
+    \ session/catalog helpers installed by the runtime. These support PostgreSQL\n\
+    queries and client metadata discovery; they are not additional server controls\
+    \ or a complete\nimplementation of PostgreSQL functions. Their catalog comments\
+    \ describe each helper.\nDuckDB 1.5.5 does not expose function-description setters\
+    \ through the table-function C API,\nso the five native server functions are documented\
+    \ above.\n"

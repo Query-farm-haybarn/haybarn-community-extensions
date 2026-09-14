@@ -1,7 +1,7 @@
 extension:
   name: duckdb_rphonetic
   description: Phonetic algorithms for German and European name matching
-  version: 0.1.0
+  version: 0.2.0
   language: Rust
   build: cmake
   license: Apache-2.0
@@ -10,8 +10,8 @@ extension:
   maintainers:
   - guizmaii
 repo:
-  github: guizmaii-opensource/duckdb-rphonetic
-  ref: b74284d0dfc71c94859468aef6ac4bbd0981dd19
+  github: guizmaii-opensource/duckdb_rphonetic
+  ref: ac89f6debd3f5339df18553fc504b682f05d1185
 docs:
   hello_world: "-- K\xF6lner Phonetik: a German-language counterpart to Soundex.\n\
     -- Spelling variants of the same name encode identically.\nSELECT cologne_phonetic('M\xFC\
@@ -35,7 +35,9 @@ docs:
     \ of identical digits. This extension follows\n`rphonetic`, which yields `cologne_phonetic('Dieter')\
     \ = '227'`; Apache\nCommons Codec yields `27`. The two differ on 36 of a 279-name\
     \ test corpus.\nEvery divergence is committed to the repository and pinned by\
-    \ a test, so the\noutput cannot change silently. The published reference vectors\n\
-    (`M\xFCller-L\xFCdenscheidt` -> `65752682`, `Wikipedia` -> `3412`,\n`Breschnew`\
-    \ -> `17863`) are unaffected. Daitch-Mokotoff agrees with\nCommons Codec on all\
-    \ 279 names.\n"
+    \ a test, so the\noutput cannot change silently. An `H` carries no code at all\
+    \ and, since\n0.2.0, never breaks a run: `cologne_phonetic('M\xFClhler') = '657'`,\
+    \ the same\nas `M\xFCller`, on which both implementations agree. The published\
+    \ reference vectors\n(`M\xFCller-L\xFCdenscheidt` -> `65752682`, `Wikipedia` ->\
+    \ `3412`,\n`Breschnew` -> `17863`) are unaffected. Daitch-Mokotoff agrees with\n\
+    Commons Codec on all 279 names.\n"

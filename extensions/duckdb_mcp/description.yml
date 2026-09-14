@@ -4,7 +4,7 @@ extension:
     integration between SQL databases and MCP servers. Provides both client capabilities
     for accessing remote MCP resources via SQL and server capabilities for exposing
     database content as MCP resources.
-  version: 2.2.0
+  version: 2.3.0
   language: C++
   build: cmake
   license: Apache-2.0
@@ -13,7 +13,7 @@ extension:
   - teaguesterling
 repo:
   github: teaguesterling/duckdb_mcp
-  ref: 7db1650a1b4c04914ae724dd43244e690094ffc0
+  ref: a6b8648e4e0ec121da534b704b962ac41e2638bf
 docs:
   hello_world: "-- Load the MCP extension\nLOAD 'duckdb_mcp';\n\n-- Connect to an\
     \ MCP server using stdio transport\nATTACH 'python3' AS data_server (\n    TYPE\
