@@ -1,0 +1,51 @@
+extension:
+  name: healthkit_export
+  description: Read Apple Health app exports (HealthKit export.zip / export.xml) as
+    typed DuckDB tables (records, workouts, activity rings, workout routes and GPX
+    points).
+  version: 0.2.0
+  language: C
+  build: cmake
+  license: Apache-2.0
+  requires_toolchains: python3
+  maintainers:
+  - Mjboothaus
+  excluded_platforms: linux_amd64;linux_arm64;linux_amd64_musl;linux_arm64_musl;windows_amd64;windows_amd64_mingw;windows_amd64_rtools;windows_arm64;wasm_mvp;wasm_eh;wasm_threads
+repo:
+  github: Mjboothaus/duckdb-healthkit-export
+  ref: 861303b54ca993208b31375583afd49dfc524a9b
+docs:
+  hello_world: '-- After INSTALL healthkit_export FROM community; LOAD healthkit_export;
+
+    -- Use a Health app export.zip (or test fixture path when developing from source)
+
+    SELECT type_short, count(*) AS n
+
+    FROM read_healthkit_export(''export.zip'')
+
+    GROUP BY 1
+
+    ORDER BY n DESC
+
+    LIMIT 10;
+
+    '
+  extended_description: "**healthkit_export** is a DuckDB scanner for exports produced\
+    \ by the\n[Apple Health](https://www.apple.com/ios/health/) app (HealthKit `export.zip`\
+    \ /\n`export.xml`). Written in **C** on DuckDB's **stable C API**\n([extension-template-c](https://github.com/duckdb/extension-template-c)).\n\
+    \n**Not affiliated with, endorsed by, or sponsored by Apple Inc.** Apple, Apple\
+    \ Health,\nand HealthKit are trademarks of Apple Inc.\n\n### Table functions\n\
+    - `read_healthkit_export(path)` \u2014 top-level Health records\n- `healthkit_workouts(path)`\
+    \ \u2014 workouts\n- `healthkit_activity_summaries(path)` \u2014 daily activity\
+    \ rings\n- `healthkit_workout_routes(path)` \u2014 route metadata + GPX path\n\
+    - `healthkit_workout_route_points(path)` \u2014 GPX track points\n\n`path` may\
+    \ be `export.zip`, a directory containing `export.xml`, or `export.xml` itself.\n\
+    \n### Design notes\nLarge exports are a full **scan** (first pass can be memory-heavy).\
+    \ Prefer materialising\nslices with `COPY \u2026 TO '\u2026.parquet'` for day-to-day\
+    \ analytics.\n\nTop-level `<Record>` only \u2014 nested Correlation children are\
+    \ skipped (same samples usually\nalso appear top-level).\n\n### Platform\nInitial\
+    \ community builds target **macOS** (Apple Silicon / Intel). Other platforms may\n\
+    follow once CI is green.\n\n### Rename note\nThis listing **replaces** the short-lived\
+    \ `apple_health` community id (unintended branding).\nUse `INSTALL healthkit_export\
+    \ FROM community` going forward.\n\n### Source\nhttps://github.com/Mjboothaus/duckdb-healthkit-export\
+    \ \u2014 optional Python helpers in-repo are\n**not** part of this extension binary.\n"

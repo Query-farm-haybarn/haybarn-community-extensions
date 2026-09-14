@@ -9,7 +9,7 @@ extension:
   - jrosskopf
 repo:
   github: DataZooDE/duckdb-gdrive
-  ref: e4d78a732f38225a9690e99828cc5c5e72a8a8d1
+  ref: 73b8a5e729f29338d883b5277b99644be66c8c4b
 docs:
   hello_world: "-- Unattended: a service account. To WRITE you need a Shared Drive\
     \ --\n-- service accounts have no personal Drive storage quota and get\n-- 403\
@@ -44,11 +44,17 @@ docs:
     \ buckets use the `gcs`\nextension.\n\nReads are ranged, so a Parquet scan fetches\
     \ footers and column chunks\nrather than whole files. Path resolution is cached\
     \ per secret and per\ndrive, because Drive has no path addressing and each segment\
-    \ otherwise\ncosts an API call.\n\nTwo behaviours are deliberately strict. Drive\
-    \ permits two files with the\nsame name in one folder, so a path is not a unique\
-    \ identifier: rather than\npick one and make results depend on Drive's internal\
-    \ ordering, ambiguity\nis an error naming both file ids. And Drive cannot write\
-    \ at a byte offset,\nso positional writes raise an error instead of silently corrupting\
+    \ otherwise\ncosts an API call.\n\nCredentials come from Application Default Credentials\
+    \ by default, which\nnow includes **workload identity federation** \u2014 so a\
+    \ workload running in\nKubernetes or another federated environment authenticates\
+    \ with the\nshort-lived token its platform provides, and needs no downloaded\n\
+    service-account key to store, mount or rotate. A key file\n(`PROVIDER service_account`)\
+    \ and an interactive user credential\n(`gcloud auth application-default login`)\
+    \ both still work.\n\nTwo behaviours are deliberately strict. Drive permits two\
+    \ files with the\nsame name in one folder, so a path is not a unique identifier:\
+    \ rather than\npick one and make results depend on Drive's internal ordering,\
+    \ ambiguity\nis an error naming both file ids. And Drive cannot write at a byte\
+    \ offset,\nso positional writes raise an error instead of silently corrupting\
     \ a file.\n\nDrive is slower than object storage by a wide margin, and enforces\n\
     per-user API quotas that object storage does not. A ranged read costs\n~1.3 s\
     \ regardless of how few bytes it requests, against ~1 ms for S3/GCS.\nUse this\

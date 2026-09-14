@@ -4,7 +4,7 @@ extension:
     Supports glob patterns, line selection with context, and GitHub-style '#L12-24'
     fragments so a line range can be attached to any path, including URIs served by
     other extensions.
-  version: 0.3.0
+  version: 0.4.0
   language: C++
   build: cmake
   license: MIT
@@ -12,7 +12,7 @@ extension:
   - teaguesterling
 repo:
   github: teaguesterling/duckdb_read_lines
-  ref: 2426d08add6b0242572af2a75437aa6c67d4c970
+  ref: de60f5dab22b4c40aacfa1af58977600b89bd98a
 docs:
   hello_world: '-- Read all lines from a file
 
