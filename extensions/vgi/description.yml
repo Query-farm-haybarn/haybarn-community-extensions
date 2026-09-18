@@ -13,4 +13,4 @@ extension:
   version: '2026090500'
 repo:
   github: query-farm/vgi
-  ref: 7f371aa854a0cbb168713a294c56d2f7b572fdf3
+  ref: 58845c35c99286c7903b7c2a9ab404ecd609fc39
