@@ -146,6 +146,19 @@ with open('env.sh', 'w+') as hdl:
         image_variant = 'rust'
     else:
         image_variant = 'full'
+    # Same list-vs-string split for the platform fields: mssql and
+    # mssql_ducklake carry `excluded_platforms: [osx_amd64, ...]` upstream.
+    # These land in build.yml's exclude_archs/opt_in_archs, which expect the
+    # ';'-separated form — a Python list repr matches no platform name, so
+    # every "excluded" platform would quietly build anyway.
+    if isinstance(excluded_platforms, (list, tuple)):
+        excluded_platforms = ';'.join(
+            str(p).strip() for p in excluded_platforms if str(p).strip()
+        )
+    if isinstance(opt_in_platforms, (list, tuple)):
+        opt_in_platforms = ';'.join(
+            str(p).strip() for p in opt_in_platforms if str(p).strip()
+        )
     if excluded_platforms:
         hdl.write(f"COMMUNITY_EXTENSION_EXCLUDE_PLATFORMS={excluded_platforms}\n")
     if opt_in_platforms:

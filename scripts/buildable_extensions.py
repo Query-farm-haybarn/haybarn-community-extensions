@@ -44,6 +44,13 @@ ALL_PLATFORMS = frozenset({
 
 def excluded_set(desc: dict) -> frozenset[str]:
     raw = (desc.get("extension") or {}).get("excluded_platforms") or ""
+    # Some upstream descriptors (mssql, mssql_ducklake) use a YAML *list* here
+    # instead of the ';'-separated string. Upstream's build.py never splits the
+    # field so it tolerates both shapes by accident; we have to parse it, so
+    # normalize first — otherwise the list form dies with
+    # "'list' object has no attribute 'replace'".
+    if isinstance(raw, (list, tuple)):
+        return frozenset(str(p).strip() for p in raw if str(p).strip())
     # Descriptors use ';' but tolerate ',' and stray whitespace.
     return frozenset(p for p in raw.replace(",", ";").split(";") if p.strip())
 
