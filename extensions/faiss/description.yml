@@ -55,7 +55,7 @@ docs:
     in faiss, and query this data, making reliable vector search more accessible.
     On all linux platforms, this platform also supports GPU indexes, you can move
     a supported index to the GPU using `CALL FAISS_MOVE_GPU({index_name}, {gpu number})`.
-    Currently only CUDA is supported, note that GPU support may be split into a seperate
+    Currently only CUDA is supported, note that GPU support may be split into a separate
     extension in the future.
 
 
