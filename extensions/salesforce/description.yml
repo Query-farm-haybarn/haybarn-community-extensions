@@ -8,8 +8,8 @@ extension:
     \ compatibility guard), a per-job API quota governor, parent + grandparent relationship\
     \ STRUCT columns with diagnostics, queryAll (archived + deleted), Tooling-API\
     \ fast schema, and metadata helpers (manual cache refresh, picklist values, record\
-    \ types)."
-  version: 0.14.1
+    \ types). Requires DuckDB v1.5.4 or newer."
+  version: 0.15.0
   language: C++
   build: cmake
   license: MIT
@@ -18,7 +18,7 @@ extension:
   excluded_platforms: osx_amd64;wasm_mvp;wasm_eh;wasm_threads;windows_amd64_mingw;linux_amd64_musl;linux_arm64;linux_arm64_musl;windows_arm64
 repo:
   github: flozer/duckdb-salesforce
-  ref: v0.14.1
+  ref: 819d86800e95772740197ac5e3b4ad9a48270aff
 docs:
   hello_world: '-- Published build is signed: INSTALL salesforce FROM community; LOAD
     salesforce;
@@ -32,43 +32,22 @@ docs:
     SELECT Id, Name FROM sf.Account WHERE Name = ''Acme'' LIMIT 10;
 
     '
-  extended_description: 'duckdb-salesforce attaches a Salesforce org as a read-only
-    DuckDB catalog.
-
-    Tables map to sObjects; SELECT runs over REST /query (or /queryAll for
-
-    archived + soft-deleted rows), Bulk API 2.0 (lazy-streamed, optional
-
-    parallel PK chunking), or an auto-selected transport, with SOQL projection +
-
-    predicate pushdown and COUNT pushdown. salesforce_aggregate() runs explicit
-
-    server-side SOQL aggregates (MIN/MAX/SUM/AVG/COUNT, optional filter and
-
-    GROUP BY) without dragging rows down, and salesforce_relationships() reports
-
-    parent/grandparent expansion. Read-only metadata helpers are available too:
-
-    salesforce_refresh_metadata() (manual per-ATTACH cache refresh),
-
-    salesforce_picklist_values(), and salesforce_record_types(). A Bulk
-
-    blob/base64 compatibility guard keeps incompatible scans off Bulk, and
-
-    blob bodies / epoch datetimes have clear documented limitations. Opt-in
-
-    parent- and grandparent-relationship STRUCT columns, a per-job API quota
-
-    governor, and Tooling-API fast schema discovery round it out. Authentication
-
-    is OAuth 2.0 refresh-token or JWT
-
-    bearer, with credentials from inline options, environment variables, or an
-
-    SFDX auth URL; credentials stay in memory and are never logged; TLS
-
-    server-certificate verification is always on. Read-only: all mutating
-
-    catalog operations throw.
-
-    '
+  extended_description: "duckdb-salesforce attaches a Salesforce org as a read-only\
+    \ DuckDB catalog.\nTables map to sObjects; SELECT runs over REST /query (or /queryAll\
+    \ for\narchived + soft-deleted rows), Bulk API 2.0 (lazy-streamed, optional\n\
+    parallel PK chunking), or an auto-selected transport, with SOQL projection +\n\
+    predicate pushdown and COUNT pushdown. salesforce_aggregate() runs explicit\n\
+    server-side SOQL aggregates (MIN/MAX/SUM/AVG/COUNT, optional filter and\nGROUP\
+    \ BY) without dragging rows down, and salesforce_relationships() reports\nparent/grandparent\
+    \ expansion. Read-only metadata helpers are available too:\nsalesforce_refresh_metadata()\
+    \ (manual per-ATTACH cache refresh),\nsalesforce_picklist_values(), and salesforce_record_types().\
+    \ A Bulk\nblob/base64 compatibility guard keeps incompatible scans off Bulk, and\n\
+    blob bodies / epoch datetimes have clear documented limitations. Opt-in\nparent-\
+    \ and grandparent-relationship STRUCT columns, a per-job API quota\ngovernor,\
+    \ and Tooling-API fast schema discovery round it out. Authentication\nis OAuth\
+    \ 2.0 refresh-token or JWT\nbearer, with credentials from inline options, environment\
+    \ variables, or an\nSFDX auth URL; credentials stay in memory and are never logged;\
+    \ TLS\nserver-certificate verification is always on. Read-only: all mutating\n\
+    catalog operations throw. Built and tested against DuckDB v1.5.4 and\nv1.5.5 (v1.5.2/v1.5.3\
+    \ support was dropped in v0.15.0 \u2014 see\nCHANGELOG.md). Full change history\
+    \ in this repo's CHANGELOG.md.\n"
