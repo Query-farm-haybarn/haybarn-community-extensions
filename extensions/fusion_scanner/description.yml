@@ -2,7 +2,7 @@ extension:
   name: fusion_scanner
   description: Query Oracle Fusion from DuckDB through BI Publisher, with SSO, an
     ATTACH-able catalog and cached metadata
-  version: 0.1.0
+  version: 0.3.0
   language: C++
   build: cmake
   license: MIT
@@ -12,4 +12,31 @@ extension:
   - krokozyab
 repo:
   github: krokozyab/ofquack
-  ref: 114c79c3f339e9cd5dab8ef568e4a7cb8bce2516
+  ref: 8490c817869f4049b9372e9520cf081a4c80f5b4
+docs:
+  hello_world: "-- The connection lives in a secret, so credentials stay out of SQL\
+    \ text\n-- and query history.\nCREATE SECRET fusion (\n    TYPE oracle_fusion,\n\
+    \    ENDPOINT 'https://<your-fusion-host>',\n    REPORT_PATH '/Custom/Financials/RP_ARB.xdo',\n\
+    \    USERNAME '<user>',\n    PASSWORD '<password>'\n);\n\nSELECT * FROM oracle_fusion_query(\n\
+    \    'SELECT currency_code, name FROM FND_CURRENCIES_TL WHERE rownum < 10'\n);\n\
+    \n-- Or attach it and query tables by name.\nATTACH 'fusion' AS f (TYPE oracle_fusion);\n\
+    SELECT * FROM f.main.GL_JE_HEADERS LIMIT 10;\n"
+  extended_description: "Oracle Fusion exposes no SQL endpoint. This extension reaches\
+    \ its database\nthe way Oracle leaves open: a SELECT is wrapped in a SOAP `runReport`\
+    \ call\nto BI Publisher, a report runs it through `dbms_xmlgen`, and the rows\
+    \ come\nback as XML.\n\nThat detour requires a report deployed on the Fusion side\
+    \ \u2014 `DM_ARB.xdm`\nand `RP_ARB.xdo`, taking a `p_sql` parameter. The extension\
+    \ cannot work\nagainst a stock instance. See the repository for the catalog archives.\n\
+    \nRead-only by construction: BI Publisher cannot write.\n\n**Credentials** live\
+    \ in a DuckDB secret. Where the instance is behind\ncorporate single sign-on,\
+    \ `PROVIDER browser` opens a browser, lets the\nperson sign in however their organisation\
+    \ requires, and collects the token\nFusion issues to that session \u2014 no client\
+    \ secret, no registered\napplication, and no password in the process. Tokens are\
+    \ kept in memory\nonly.\n\n**ATTACH** exposes Fusion's tables as an ordinary read-only\
+    \ catalog, typed\nfrom Fusion's own dictionary. Attaching costs no request; resolving\
+    \ a table\ncosts that table's columns. Metadata is cached on disk between sessions,\n\
+    because every dictionary read is a SOAP call measured in seconds.\n\n**Large results**\
+    \ are paged by rewriting the statement, and transient\nfailures are retried with\
+    \ exponential backoff. Requests to one host are\nserialised: each `runReport`\
+    \ opens a BI Publisher session that the server\nholds on to, and a handful of\
+    \ parallel scans leaves hundreds behind.\n"
