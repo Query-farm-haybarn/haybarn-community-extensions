@@ -3,7 +3,7 @@ extension:
   description: A DuckDB extension written in Rust for querying, analysing and inspecting
     AI coding agents history. Read conversations, plans, todos, history, and usage
     stats directly from your local agent data directories.
-  version: 0.3.0
+  version: 0.4.0
   language: Rust
   build: cargo
   license: MIT
@@ -11,9 +11,10 @@ extension:
   requires_toolchains: rust
   maintainers:
   - axsaucedo
+  - asubbarao
 repo:
   github: axsaucedo/agent_data_duckdb
-  ref: 134e48d47d5a901bc923f258ad1cd29b82d3a2ff
+  ref: ca2c0b85d1065aa58cea6211e6d1e982f340b3bf
 docs:
   hello_world: "-- How many conversations have I had with Claude?\nSELECT COUNT(DISTINCT\
     \ session_id) AS sessions,\n       COUNT(*) AS total_messages\n-- Calling the\
@@ -30,31 +31,32 @@ docs:
     \ read_conversations(path='~/.copilot')\n)\nGROUP BY source;\n"
   extended_description: "\n**Supported agents:** [Claude Code](https://docs.anthropic.com/en/docs/claude-code)\
     \ (`~/.claude`), Claude Desktop, [GitHub Copilot CLI](https://docs.github.com/en/copilot/github-copilot-in-the-cli)\
-    \ (`~/.copilot`), [OpenAI Codex](https://openai.com/codex) (`~/.codex`), and [Gemini\
-    \ CLI](https://github.com/google-gemini/gemini-cli) (`~/.gemini`).\n\nWritten\
-    \ in \U0001F980 Rust.\n\n### Default Behavior\n\nWhen called **without arguments**,\
-    \ each function reads from its provider's default path:\n\n| Function | Default\
-    \ path | Detected as |\n|----------|-------------|-------------|\n| `read_conversations()`\
-    \ | `~/.claude` | Claude Code |\n| `read_plans()` | `~/.claude` | Claude Code\
-    \ |\n| `read_todos()` | `~/.claude` | Claude Code |\n| `read_history()` | `~/.claude`\
-    \ | Claude Code |\n| `read_stats()` | `~/.claude` | Claude Code |\n\nTo read another\
-    \ agent's data, pass the path explicitly:\n\n```sql\nFROM read_conversations(path='~/.copilot');\n\
+    \ (`~/.copilot`), [Cursor](https://cursor.com) (`source='cursor'`), [OpenAI Codex](https://openai.com/codex)\
+    \ (`~/.codex`), [Gemini CLI](https://github.com/google-gemini/gemini-cli) (`~/.gemini`),\
+    \ and [xAI Grok](https://x.ai) (`~/.grok`, `source='grok'`).\n\nWritten in \U0001F980\
+    \ Rust.\n\n### Default Behavior\n\nWhen called **without arguments**, each function\
+    \ reads from its provider's default path:\n\n| Function | Default path | Detected\
+    \ as |\n|----------|-------------|-------------|\n| `read_conversations()` | `~/.claude`\
+    \ | Claude Code |\n| `read_plans()` | `~/.claude` | Claude Code |\n| `read_todos()`\
+    \ | `~/.claude` | Claude Code |\n| `read_history()` | `~/.claude` | Claude Code\
+    \ |\n| `read_stats()` | `~/.claude` | Claude Code |\n\nTo read another agent's\
+    \ data, pass the path explicitly:\n\n```sql\nFROM read_conversations(path='~/.copilot');\n\
     FROM read_conversations(path='~/.codex');\nFROM read_conversations(path='~/.gemini');\n\
-    ```\n\n### Available Functions\n\nAll functions accept two optional parameters:\n\
-    - **`path`** \u2014 data directory path (default: `~/.claude`). Auto-detected\
-    \ from folder structure (`projects/` \u2192 Claude, `session-state/` \u2192 Copilot,\
-    \ dated `sessions/` \u2192 Codex, `tmp/` + `installation_id` \u2192 Gemini).\n\
-    - **`source`** \u2014 explicit provider override: `'claude'`, `'claude-desktop'`,\
-    \ `'copilot'`, `'codex'`, or `'gemini'`. Use when auto-detection fails or for\
-    \ non-standard directory layouts.\n\nEvery table includes a **`source`** column\
-    \ (`'claude'` or `'copilot'`) as the first column.\n\n> `read_conversations([path\
-    \ (opt)], [source (opt)])`\n\n## Join Keys\n\nTables can be joined within the\
-    \ same source:\n\n```sql\n-- Conversations \u2194 History (via session_id)\nSELECT\
-    \ c.*, h.display\nFROM read_conversations(path='~/.claude') c\nJOIN read_history(path='~/.claude')\
-    \ h ON c.session_id = h.session_id;\n\n-- Cross-source: always filter by source\n\
-    SELECT * FROM (\n    SELECT * FROM read_conversations(path='~/.claude')\n    UNION\
-    \ ALL\n    SELECT * FROM read_conversations(path='~/.copilot')\n) WHERE source\
-    \ = 'copilot';\n```\n\n| Join | Left Key | Right Key | Notes |\n|------|----------|-----------|-------|\n\
+    FROM read_conversations(path='~/.grok');\n```\n\n### Available Functions\n\nAll\
+    \ functions accept two optional parameters:\n- **`path`** \u2014 data directory\
+    \ path (default: `~/.claude`). Auto-detected from folder structure (`projects/`\
+    \ \u2192 Claude, `session-state/` \u2192 Copilot, dated `sessions/` \u2192 Codex,\
+    \ `tmp/` + `installation_id` \u2192 Gemini).\n- **`source`** \u2014 explicit provider\
+    \ override: `'claude'`, `'claude-desktop'`, `'copilot'`, `'cursor'`, `'codex'`,\
+    \ `'gemini'`, or `'grok'`. Use when auto-detection fails or for non-standard directory\
+    \ layouts.\n\nEvery table includes a **`source`** column (`'claude'` or `'copilot'`)\
+    \ as the first column.\n\n> `read_conversations([path (opt)], [source (opt)])`\n\
+    \n## Join Keys\n\nTables can be joined within the same source:\n\n```sql\n-- Conversations\
+    \ \u2194 History (via session_id)\nSELECT c.*, h.display\nFROM read_conversations(path='~/.claude')\
+    \ c\nJOIN read_history(path='~/.claude') h ON c.session_id = h.session_id;\n\n\
+    -- Cross-source: always filter by source\nSELECT * FROM (\n    SELECT * FROM read_conversations(path='~/.claude')\n\
+    \    UNION ALL\n    SELECT * FROM read_conversations(path='~/.copilot')\n) WHERE\
+    \ source = 'copilot';\n```\n\n| Join | Left Key | Right Key | Notes |\n|------|----------|-----------|-------|\n\
     | conversations <-> history | `session_id` | `session_id` | Same source only |\n\
     | conversations <-> todos | `session_id` | `session_id` | Same source only |\n\
     | conversations <-> plans | `slug` | `plan_name` | Claude only |\n| conversations\
