@@ -8,7 +8,6 @@ extension:
   maintainers:
   - hannes
   requires_toolchains: rust
-  vcpkg_commit: ce613c41372b23b1f51333815feb3edd87ef8a8b
   custom_toolchain_script: true
   opt_in_platforms: windows_arm64;
 repo:
