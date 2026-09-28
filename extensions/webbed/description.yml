@@ -3,7 +3,7 @@ extension:
   description: Comprehensive processing extension for web markup languages (XML and
     HTML) with SAX streaming for large files, intelligent schema inference, XPath-based
     data extraction, and HTML table parsing.
-  version: 2.9.1
+  version: 2.9.2
   language: C++
   build: cmake
   license: MIT
@@ -14,7 +14,7 @@ extension:
   excluded_platforms: windows_amd64;windows_amd64_mingw
 repo:
   github: teaguesterling/duckdb_webbed
-  ref: cdd866f0b6b6be7927a3bb56e2c16e18fe04e9b4
+  ref: 4b70396efc17cb74a3723a7d1ee650aa5e4fa064
   ref_next: cdd866f0b6b6be7927a3bb56e2c16e18fe04e9b4
 docs:
   docs_url: https://duckdb-webbed.readthedocs.io

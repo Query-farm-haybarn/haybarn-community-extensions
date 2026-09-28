@@ -2,7 +2,7 @@ extension:
   name: duck_block_utils
   description: Build, transform, validate, and extract content from structured documents
     using the duck_block type
-  version: 3.3.0
+  version: 3.4.0
   language: C++
   build: cmake
   license: MIT
@@ -10,8 +10,8 @@ extension:
   - teaguesterling
 repo:
   github: teaguesterling/duckdb_duck_block_utils
-  ref: 95a84e6dbfb25d1925df2ad402f978c438a3f724
-  ref_next: 95a84e6dbfb25d1925df2ad402f978c438a3f724
+  ref: 39941a70c7d4e48d5e70ffdaddb680793e59968a
+  ref_next: 39941a70c7d4e48d5e70ffdaddb680793e59968a
 docs:
   hello_world: "-- Build a document programmatically\nSELECT duck_blocks_assemble([\n\
     \    duck_block_heading(1, 'Hello World'),\n    duck_block_paragraph([\n     \
@@ -39,10 +39,11 @@ docs:
     \          -- 'block', 'inline' or 'value'\n    element_type VARCHAR,        \
     \       -- 'heading', 'paragraph', 'bold', 'link', etc.\n    content VARCHAR,\
     \                    -- text, iff the element has a single text child\n    level\
-    \ INTEGER,                      -- depth in a depth-first ordering; top is 1\n\
-    \    encoding VARCHAR,                   -- 'text', 'json', 'yaml', 'html', 'xml',\n\
-    \                                        --   'latex', 'markdown', 'toml'\n  \
-    \  attributes MAP(VARCHAR, VARCHAR),   -- element-specific metadata\n    element_order\
+    \ INTEGER,                      -- depth in a depth-first ordering; top is 1 (0\
+    \ is the\n                                        --   optional explicit document\
+    \ root)\n    encoding VARCHAR,                   -- 'text', 'json', 'yaml', 'html',\
+    \ 'xml',\n                                        --   'latex', 'markdown', 'toml'\n\
+    \    attributes MAP(VARCHAR, VARCHAR),   -- element-specific metadata\n    element_order\
     \ INTEGER               -- position in the document\n)\n```\n\n`level` is structural\
     \ depth, never a heading rank - a heading's rank lives in\n`attributes['heading_level']`.\
     \ `content` is populated if and only if an element has\na single text child; a\

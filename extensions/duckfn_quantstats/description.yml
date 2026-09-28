@@ -1,0 +1,64 @@
+extension:
+  name: duckfn_quantstats
+  description: Complete quantstats HTML tearsheets from SQL - one long table in, one
+    full report per instrument out, benchmarks included
+  version: 0.1.0
+  language: Rust
+  build: cargo
+  license: MIT
+  requires_toolchains: rust;python3
+  maintainers:
+  - shijianjs
+repo:
+  github: shijianjs/duckfn-quantstats
+  ref: 2c2c1a47a15d2649d214a8bf1351c7be5426d6bb
+docs:
+  hello_world: "-- demo/prices.csv is a committed snapshot of daily closes for GOOGL,\
+    \ MSFT and the S&P 500 index (SPX)\nCREATE TABLE prices AS\nSELECT * FROM read_csv('https://raw.githubusercontent.com/shijianjs/duckfn-quantstats/main/demo/prices.csv');\n\
+    \n-- 1. The whole table in one call: one report per instrument, opened in the\
+    \ system default browser\n--    once it has been generated\nSELECT (r).symbol,\
+    \ (r).strategy_title, length((r).html) AS html_bytes, (r).file_path\nFROM (\n\
+    \    SELECT unnest(qs_html_reports_by_prices(\n               symbol, date, price,\n\
+    \               {'title': symbol,\n                'strategy_title': symbol,\n\
+    \                'open_in_browser': true}::qs_html_report_options)) AS r\n   \
+    \ FROM prices\n);\n\n-- 2. With a benchmark: SPX is just another symbol in the\
+    \ table (name it in the options),\n--    and it gets no report of its own\nSELECT\
+    \ (r).symbol, (r).file_path\nFROM (\n    SELECT unnest(qs_html_reports_by_prices(\n\
+    \               symbol, date, price,\n               {'benchmark': ['SPX'],\n\
+    \                'benchmark_title': ['S&P 500'],\n                'title': symbol,\n\
+    \                'strategy_title': symbol,\n                'rf': 0.04,\n    \
+    \            'open_in_browser': true}::qs_html_report_options)) AS r\n    FROM\
+    \ prices\n);\n"
+  extended_description: "Two aggregate functions that turn one date-ordered long table\
+    \ into a whole set of\n[quantstats](https://github.com/ranaroussi/quantstats)\
+    \ HTML tearsheets, one report per instrument\n(and one per benchmark, when the\
+    \ options name several):\n\n| Function | Input |\n| --- | --- |\n| `qs_html_reports(symbol,\
+    \ date, period_return, options)` | periodic returns |\n| `qs_html_reports_by_prices(symbol,\
+    \ date, price, options)` | prices or NAVs, differenced into returns inside the\
+    \ function |\n\nBoth return the same `STRUCT(symbol, benchmark, strategy_title,\
+    \ benchmark_title, html, file_path)[]`,\nso `unnest(...)` spreads it into rows,\
+    \ `list_transform(...)` picks fields, and `(\u2026)[1].html` grabs a\nsingle report.\
+    \ No `GROUP BY` appears in the SQL: `symbol` is the grouping key and the function\
+    \ splits\nby it internally. Reports are ordered by `symbol` (and by the `benchmark`\
+    \ list within one symbol),\nindependent of input order and thread count.\n\nA\
+    \ benchmark is just another symbol of the same table, named in the `benchmark`\
+    \ option as a **list**\n(`['SPX', 'NDX']`); those symbols are input only and get\
+    \ no report of their own, so \"one instrument\nagainst M benchmarks\" comes back\
+    \ as M reports differing in the `benchmark` field. The options are a\nnamed STRUCT\
+    \ (`qs_html_report_options`, created at load time) evaluated **per row**, which\
+    \ is how\neach instrument gets its own `title` / `strategy_title` \u2014 build\
+    \ it out of the `symbol` column:\n`{'title': symbol, 'strategy_title': symbol,\
+    \ 'benchmark': ['SPX']}::qs_html_report_options`.\nOther keys: `rf` (annualized\
+    \ risk-free rate), `periods_per_year`, `match_dates`, `output_dir` and\n`open_in_browser`.\n\
+    \nWith `output_dir` each report is also written through DuckDB's VFS \u2014 local\
+    \ disk, `s3://\u2026` once\n`httpfs` is loaded, and the wasm build's file system\
+    \ all take the same path \u2014 under a name the\nfunction generates (`<time>-<strategy>-<benchmark>-<random>.html`,\
+    \ nothing is ever overwritten), and\nthe path it actually wrote comes back in\
+    \ `file_path`. With `open_in_browser` the reports are handed\nto the system default\
+    \ browser instead. Reports are a few hundred KB of HTML each (a dozen inline\n\
+    SVGs), so a directory or a browser tab is friendlier than `unnest`-ing them into\
+    \ a terminal.\n\nRequires **DuckDB 1.5 or newer**: the host file system used for\
+    \ `output_dir` only reached DuckDB's\nC API in 1.5. On wasm, `output_dir` works\
+    \ and `open_in_browser` is ignored (there is no browser\nprocess to launch; the\
+    \ HTML string comes back to the host as it is).\n\nDevelopment notes, the full\
+    \ option table and the error paths: <https://github.com/shijianjs/duckfn-quantstats>.\n"
