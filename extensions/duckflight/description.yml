@@ -2,7 +2,7 @@ extension:
   name: duckflight
   description: Query DuckDB from PostgreSQL and Arrow Flight SQL clients, including
     psql, ADBC, and Airport
-  version: 0.1.6
+  version: 0.1.7
   language: Rust
   build: cargo
   license: MIT
@@ -12,7 +12,7 @@ extension:
   - nicosuave
 repo:
   github: sidequery/duckflight-extension
-  ref: a4cfbfa9865054a3c4d57338b9501685ced47141
+  ref: 714ac17eb22c9515d70b4a3224c2b571478d5314
 docs:
   hello_world: "-- Let PostgreSQL clients query this DuckDB database.\nSELECT * FROM\
     \ duckflight_pg_serve(\n  '127.0.0.1:5433', '/path/to/duckflight.toml'\n);\n\n\

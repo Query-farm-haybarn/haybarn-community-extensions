@@ -3,7 +3,7 @@ extension:
   description: "FastAPI-class HTTP framework inside DuckDB \u2014 CREATE ROUTE turns\
     \ SQL into typed, validated endpoints; one process is DB + HTTP (+ PDF/renderer\
     \ via companion extensions)."
-  version: 0.1.2
+  version: 0.1.3
   language: C++
   build: cmake
   license: MIT
@@ -12,7 +12,7 @@ extension:
   excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_mingw;windows_amd64_rtools;windows_arm64
 repo:
   github: asubbarao/quackapi
-  ref: 398d42cd41d3fb494420063d60b5aa367343d271
+  ref: ed4552bb201d4fa9bef933b3f96829304e2d8c46
 docs:
   hello_world: "LOAD quackapi;\n\n-- JSON endpoint: the SELECT is the handler\nCREATE\
     \ ROUTE hello GET '/hello' AS SELECT 'world' AS msg;\n\n-- Path params bind as\
