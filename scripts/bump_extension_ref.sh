@@ -53,11 +53,41 @@ subjects=$(gh api "repos/$github/compare/$old_ref...$new_ref" \
              --jq '.commit.message | split("\n")[0]' 2>/dev/null || echo "ref bump")
 
 # Rewrite only the ref line (preserve the manually-maintained version field).
-old_ref="$old_ref" new_ref="$new_ref" desc="$desc" python3 - <<'PY'
-import os, re
+# If the committed file pinned excluded_platforms, re-assert it afterwards: a
+# wholesale regeneration must not silently re-enable a platform we disabled.
+prev_excluded=$(git -C "$repo_root" show "HEAD:extensions/$ext/description.yml" 2>/dev/null \
+                  | grep -E '^[[:space:]]*excluded_platforms:' | head -1 || true)
+
+old_ref="$old_ref" new_ref="$new_ref" desc="$desc" prev_excluded="$prev_excluded" python3 - <<'PY'
+import os, re, sys
+
 p = os.environ["desc"]
 s = open(p).read()
 s = s.replace(f"ref: {os.environ['old_ref']}", f"ref: {os.environ['new_ref']}", 1)
+
+prev = os.environ.get("prev_excluded", "").strip()
+if prev and not re.search(r"(?m)^\s*excluded_platforms:", s):
+    lines = s.split("\n")
+    try:
+        start = next(i for i, l in enumerate(lines) if l == "extension:")
+    except StopIteration:
+        sys.exit(f"error: no extension: block in {p}; refusing to drop '{prev}'")
+    # Insert alphabetically among the extension block's keys, matching house style.
+    at = None
+    for i in range(start + 1, len(lines)):
+        if re.match(r"^\S", lines[i]):      # next top-level block
+            at = i
+            break
+        m = re.match(r"^  (\w+):", lines[i])
+        if m and m.group(1) > "excluded_platforms":
+            at = i
+            break
+    if at is None:
+        at = len(lines)
+    lines.insert(at, "  " + prev)
+    s = "\n".join(lines)
+    print(f"re-asserted {prev!r} (regeneration would have dropped it)")
+
 open(p, "w").write(s)
 PY
 
