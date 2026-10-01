@@ -16,22 +16,18 @@ extension:
 
 repo:
   github: query-farm/duckdb-grainlift
-  ref: cc18a60fdeaa0214971a4ad72359e8150b8a1c44
+  ref: 7048f1c175bc84e83a9a42ebc4acae9af709e287
 
 docs:
   hello_world: |
     INSTALL grainlift FROM community;
     LOAD grainlift;
-    -- Run a query on a database behind a Grainlift gateway
-    SET VARIABLE gl = (SELECT grainlift_connect({
-        'uri': 'grainlift+https://gateway.example.com',
-        'target': 'sqlite',
-        'bearer_token': 'your-token'}));
-    SELECT * FROM grainlift_scan(getvariable('gl')::BIGINT, 'SELECT 42 AS answer');
-    -- Or attach it as a catalog
+    -- Attach a database behind a Grainlift gateway (or grainlift+iroh://<endpoint-id>)
     ATTACH 'grainlift+https://gateway.example.com' AS remote
-        (TYPE grainlift, target 'sqlite', bearer_token 'your-token');
+        (TYPE grainlift, target 'postgres', bearer_token 'your-token');
     SHOW ALL TABLES;
+    -- Run SQL in the remote database's own dialect
+    SELECT * FROM grainlift_scan('remote', 'SELECT 42 AS answer');
   extended_description: |
     `grainlift` lets DuckDB-WASM in the browser query databases served by a
     [Grainlift](https://github.com/Query-farm/grainlift) gateway
@@ -40,8 +36,9 @@ docs:
     statically and its HTTP traffic goes through DuckDB's HTTP stack, so it
     works where native ADBC drivers cannot be loaded.
 
-    - `grainlift_connect`, `grainlift_scan`, `grainlift_execute`, metadata
-      functions, and `ATTACH ... (TYPE grainlift)` with filter pushdown,
+    - `ATTACH ... (TYPE grainlift)` with filter pushdown, plus
+      `grainlift_scan`, `grainlift_execute` and metadata functions that name
+      the attached database,
       `INSERT`/`CREATE TABLE AS` (bulk ingestion) and `CREATE`/`DROP TABLE`.
     - `grainlift+http(s)://` works on `wasm_eh` and `wasm_threads`;
       `grainlift+iroh://` (reach gateways behind NAT, no open ports) needs the
