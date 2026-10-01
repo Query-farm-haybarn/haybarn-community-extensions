@@ -137,6 +137,13 @@ with open('env.sh', 'w+') as hdl:
         toolchain_set = {
             t.strip() for t in (requires_toolchains or '').split(';') if t.strip()
         }
+    # `rust_nightly` (Haybarn-only): the extension needs the pinned nightly +
+    # rust-src baked into the `rust-nightly` wasm image (wasm_threads Rust code
+    # rebuilds std with `-Z build-std` for atomics). Native legs treat it as
+    # plain `rust`, so it also implies the `rust` token downstream.
+    wasm_rust_nightly = 'rust_nightly' in toolchain_set
+    if wasm_rust_nightly:
+        toolchain_set = (toolchain_set - {'rust_nightly'}) | {'rust'}
     # Re-emit in the canonical ';'-separated form the downstream reusable
     # workflow expects; writing a Python list repr would hand it garbage.
     requires_toolchains = ';'.join(sorted(toolchain_set))
@@ -146,6 +153,13 @@ with open('env.sh', 'w+') as hdl:
         image_variant = 'rust'
     else:
         image_variant = 'full'
+    # Wasm images come in base / rust / rust-nightly only.
+    if wasm_rust_nightly:
+        wasm_image_variant = 'rust-nightly'
+    elif image_variant == 'base':
+        wasm_image_variant = 'base'
+    else:
+        wasm_image_variant = 'rust'
     # Same list-vs-string split for the platform fields: mssql and
     # mssql_ducklake carry `excluded_platforms: [osx_amd64, ...]` upstream.
     # These land in build.yml's exclude_archs/opt_in_archs, which expect the
@@ -175,3 +189,4 @@ with open('env.sh', 'w+') as hdl:
         escaped_config = test_config.replace("\n", "")
         hdl.write(f"COMMUNITY_EXTENSION_TEST_CONFIG={escaped_config}\n")
     hdl.write(f"COMMUNITY_EXTENSION_IMAGE_VARIANT={image_variant}\n")
+    hdl.write(f"COMMUNITY_EXTENSION_WASM_IMAGE_VARIANT={wasm_image_variant}\n")

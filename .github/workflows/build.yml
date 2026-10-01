@@ -152,6 +152,8 @@ jobs:
       # Mapped from `requires_toolchains` by scripts/build.py — one of
       # base / rust / full, selecting which pre-built GHCR image to pull.
       COMMUNITY_EXTENSION_IMAGE_VARIANT: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_IMAGE_VARIANT }}
+      # base / rust / rust-nightly — the wasm GHCR image (see scripts/build.py).
+      COMMUNITY_EXTENSION_WASM_IMAGE_VARIANT: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_WASM_IMAGE_VARIANT }}
       COMMUNITY_EXTENSION_VCPKG_URL: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_VCPKG_URL == '' && 'https://github.com/microsoft/vcpkg.git' || steps.parse.outputs.COMMUNITY_EXTENSION_VCPKG_URL }}
       # Haybarn: the upstream-versioned `case()` selecting different vcpkg pins
       # per DuckDB version is collapsed: we only target v1.5.5 today. When/if
@@ -229,7 +231,9 @@ jobs:
       # get the rust wasm image, which has rustc + the
       # wasm32-unknown-emscripten target baked in. Fixes extensions like
       # inflector that declare `requires_toolchains: rust`.
-      wasm_image_variant: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_IMAGE_VARIANT == 'base' && 'base' || 'rust' }}
+      # `requires_toolchains: rust_nightly` selects the rust-nightly image
+      # (pinned nightly + rust-src, for `-Z build-std` on wasm_threads).
+      wasm_image_variant: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_WASM_IMAGE_VARIANT || (needs.prepare.outputs.COMMUNITY_EXTENSION_IMAGE_VARIANT == 'base' && 'base' || 'rust') }}
       # Build against Haybarn engine (NOT upstream duckdb/duckdb).
       # override_duckdb_repository is fed to `git clone` directly inside
       # haybarn-extension-ci-tools' Makefile (set_duckdb_repository target),

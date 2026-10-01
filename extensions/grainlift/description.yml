@@ -1,0 +1,52 @@
+extension:
+  name: grainlift
+  description: Query any database exposed by a Grainlift gateway from Haybarn DuckDB-WASM, over HTTP(S) or Iroh, through a statically linked ADBC driver.
+  version: 0.4.0
+  language: C++
+  build: cmake
+  license: MIT
+  maintainers:
+    - rustyconover
+  # WASM only: on Linux, macOS and Windows use adbc_scanner with the
+  # adbc-driver-grainlift driver instead. iroh:// needs wasm_threads (COI).
+  excluded_platforms: linux_amd64;linux_amd64_musl;linux_arm64;linux_arm64_musl;osx_amd64;osx_arm64;windows_amd64;windows_amd64_mingw;windows_arm64;wasm_mvp
+  # The statically linked Rust driver needs the pinned nightly + rust-src
+  # (-Z build-std) for wasm_threads.
+  requires_toolchains: rust_nightly
+
+repo:
+  github: query-farm/duckdb-grainlift
+  ref: 57e899f584078bf3f08c966f123361b486c82fc1
+
+docs:
+  hello_world: |
+    INSTALL grainlift FROM community;
+    LOAD grainlift;
+    -- Run a query on a database behind a Grainlift gateway
+    SET VARIABLE gl = (SELECT grainlift_connect({
+        'uri': 'grainlift+https://gateway.example.com',
+        'target': 'sqlite',
+        'bearer_token': 'your-token'}));
+    SELECT * FROM grainlift_scan(getvariable('gl')::BIGINT, 'SELECT 42 AS answer');
+    -- Or attach it as a catalog
+    ATTACH 'grainlift+https://gateway.example.com' AS remote
+        (TYPE grainlift, target 'sqlite', bearer_token 'your-token');
+    SHOW ALL TABLES;
+  extended_description: |
+    `grainlift` lets DuckDB-WASM in the browser query databases served by a
+    [Grainlift](https://github.com/Query-farm/grainlift) gateway
+    (`pip install grainlift-adbc-gateway`): SQLite, PostgreSQL, DuckDB and any
+    other ADBC driver the gateway hosts. The Grainlift ADBC driver is linked
+    statically and its HTTP traffic goes through DuckDB's HTTP stack, so it
+    works where native ADBC drivers cannot be loaded.
+
+    - `grainlift_connect`, `grainlift_scan`, `grainlift_execute`, metadata
+      functions, and `ATTACH ... (TYPE grainlift)` with filter pushdown,
+      `INSERT`/`CREATE TABLE AS` (bulk ingestion) and `CREATE`/`DROP TABLE`.
+    - `grainlift+http(s)://` works on `wasm_eh` and `wasm_threads`;
+      `grainlift+iroh://` (reach gateways behind NAT, no open ports) needs the
+      cross-origin-isolated `wasm_threads` build and the page's Iroh adapter.
+
+    This extension is built for Haybarn WASM only. On Linux, macOS and Windows,
+    use [`adbc_scanner`](https://duckdb.org/community_extensions/extensions/adbc_scanner)
+    with the `adbc-driver-grainlift` driver.
