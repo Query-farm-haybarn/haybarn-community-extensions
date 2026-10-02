@@ -16,7 +16,7 @@ extension:
 
 repo:
   github: query-farm/duckdb-grainlift
-  ref: edad3353d21b9120df4d0fe2f0e8a80f77b11665
+  ref: 24a2e9413bae528681fc66ff8abec307b1bafbe1
 
 docs:
   hello_world: |
