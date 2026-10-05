@@ -1,7 +1,7 @@
 extension:
   name: grainlift
   description: Query any database exposed by a Grainlift gateway from Haybarn DuckDB-WASM, over HTTP(S) or Iroh, through a statically linked ADBC driver.
-  version: 0.4.0
+  version: 0.5.0
   language: C++
   build: cmake
   license: MIT
@@ -16,7 +16,7 @@ extension:
 
 repo:
   github: query-farm/duckdb-grainlift
-  ref: 24a2e9413bae528681fc66ff8abec307b1bafbe1
+  ref: 796c6d18ee08afb7d04460309475f6d60f7e905f
 
 docs:
   hello_world: |
@@ -43,6 +43,12 @@ docs:
     - `grainlift+http(s)://` works on `wasm_eh` and `wasm_threads`;
       `grainlift+iroh://` (reach gateways behind NAT, no open ports) needs the
       cross-origin-isolated `wasm_threads` build and the page's Iroh adapter.
+    - Credentials can come from `CREATE SECRET (TYPE grainlift, ...)`. A
+      secret is used when its scope matches the ATTACH URI at a URL boundary
+      (never `gateway.example.com.evil.net` for `gateway.example.com`), or
+      when named with `attach_secret`; `attach_secret ''` turns lookup off.
+      Since 0.5.0 unscoped secrets are used only when named, and credential
+      options are redacted in `duckdb_databases()`.
 
     This extension is built for Haybarn WASM only. On Linux, macOS and Windows,
     use [`adbc_scanner`](https://duckdb.org/community_extensions/extensions/adbc_scanner)
