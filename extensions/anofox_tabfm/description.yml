@@ -4,7 +4,7 @@ extension:
     \ regression, synthetic-data generation and imputation with real tabular foundation\
     \ models (Mitra, TabDPT, TabPFN v2/2.5/2.6/3, TabICL, Orion-BiX/MSP, TabFM) on\
     \ ONNX Runtime, no training loop"
-  version: 2026.08.29
+  version: 2026.09.30
   language: C++
   build: cmake
   license: MIT
@@ -14,7 +14,7 @@ extension:
   excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_mingw;linux_amd64_musl
 repo:
   github: DataZooDE/anofox-tabfm
-  ref: 94d7f0e45a2bd18066b8f52bf004a81351511dd6
+  ref: ff5af557ca31a1ef0cf63c3345789f68d62c4dd7
 docs:
   hello_world: "-- Fetch a real tabular foundation model once (Mitra, Apache-2.0,\
     \ ~300 MB,\n-- no license gate). Cached under ~/.cache/anofox-tabfm and reused\

@@ -1,5 +1,6 @@
 extension:
   name: anofox_optimize
+  version: 2026.09.26
   description: "Combinatorial decision algorithms as SQL \u2014 bin packing, knapsack,\
     \ wave batching, sequencing, scheduling, assortment and portfolio selection"
   language: C++
@@ -10,7 +11,7 @@ extension:
   excluded_platforms: windows_amd64_rtools;windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
 repo:
   github: DataZooDE/anofox-optimize
-  ref: 2e2073098660f245204a1cc49de52506a900dc1b
+  ref: 5ea8943bf6052489ff3ae824e9a657d2e0ba8c14
 docs:
   hello_world: "-- Cartons waiting to ship, and a container that holds 1000 units.\n\
     CREATE TABLE cartons AS SELECT * FROM VALUES\n  (1, 420.0), (2, 380.0), (3, 260.0),\

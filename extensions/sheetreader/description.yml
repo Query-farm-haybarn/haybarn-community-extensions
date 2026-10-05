@@ -11,7 +11,7 @@ extension:
   - freddie-freeloader
 repo:
   github: polydbms/sheetreader-duckdb
-  ref: e2b9366c4c409f012a6a31191e629c96628e17e6
+  ref: 813bda9e95d1bcb08e79042314bbd1948d22b979
 docs:
   hello_world: "-- Create table from XLSX file & use default values for parameters\n\
     CREATE TABLE data AS FROM sheetreader('data.xlsx');\n\n-- Example usage of available\

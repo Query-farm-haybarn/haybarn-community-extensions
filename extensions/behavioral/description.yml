@@ -3,7 +3,7 @@ extension:
   description: Behavioral analytics functions inspired by ClickHouse (sessionize,
     retention, window_funnel, window_funnel_events, sequence_match, sequence_count,
     sequence_match_events, sequence_next_node)
-  version: 0.9.1
+  version: 0.10.0
   language: Rust
   build: cargo
   license: MIT
@@ -13,18 +13,20 @@ extension:
   - tomtom215
 repo:
   github: tomtom215/duckdb-behavioral
-  ref: 649dbac043925ff478d52d1be342734793dcca36
+  ref: 940780e577e4e78ae8d1f1b6b3c463a0e3bc39af
 docs:
   hello_world: "-- Session assignment with 30-minute timeout\nSELECT ts, sessionize(ts,\
     \ INTERVAL '30 minutes') OVER (ORDER BY ts) AS session_id\nFROM events;\n\n--\
     \ Conversion funnel analysis\nSELECT user_id, window_funnel(INTERVAL '1 hour',\
     \ ts,\n    event = 'view', event = 'cart', event = 'purchase')\nFROM events GROUP\
     \ BY user_id;\n"
-  extended_description: 'Behavioral analytics functions for DuckDB, providing complete
-    ClickHouse parity:
+  extended_description: 'Behavioral analytics functions for DuckDB, following ClickHouse''s
+    parametric
+
+    behavioral functions (differentially tested against ClickHouse 26.9):
 
 
-    - **sessionize**: Window function assigning session IDs based on timestamp gaps
+    - **sessionize**: Session IDs over an ordered window, based on timestamp gaps
 
     - **retention**: Cohort retention analysis returning boolean arrays
 
@@ -32,7 +34,7 @@ docs:
 
     - **window_funnel_events**: Timestamps of the best funnel chain as LIST(TIMESTAMP)
 
-    - **sequence_match**: Pattern matching over event sequences (NFA-based)
+    - **sequence_match**: Pattern matching over event sequences
 
     - **sequence_count**: Count non-overlapping pattern matches
 
@@ -43,14 +45,25 @@ docs:
     - **behavioral_version**: Diagnostic scalar returning the loaded extension version
 
 
-    All aggregate functions support up to 32 boolean event conditions. Invalid
+    Up to 32 event conditions per call. Invalid configuration (unknown modes,
 
-    configuration (unknown modes, malformed patterns, month-based intervals)
+    malformed patterns, month-based intervals) raises descriptive SQL errors.
 
-    raises descriptive SQL errors. Pure Rust implementation
+    Built on DuckDB''s stable C API; pure Rust, with no unsafe code outside the
 
-    with zero unsafe code in business logic. Benchmarked at 830 Melem/s (sessionize)
+    FFI layer.
 
-    and 95 Melem/s (sequence_match) on commodity hardware.
+
+    Known DuckDB limitation (duckdb/duckdb#26109, affects every C API
+
+    aggregate): do not call these functions with ORDER BY inside the call,
+
+    with OVER (), or over a frame written BETWEEN UNBOUNDED PRECEDING AND
+
+    UNBOUNDED FOLLOWING; DuckDB can crash. None is needed: the functions sort
+
+    by timestamp themselves, and OVER (PARTITION BY user_id) gives the
+
+    whole-partition value.
 
     '

@@ -2,7 +2,7 @@ extension:
   name: urlpattern
   description: WHATWG URLPattern API for matching and extracting components from URLs
     using pattern syntax
-  version: 0.4.1
+  version: 0.4.2
   language: C++
   build: cmake
   license: MIT
@@ -12,7 +12,8 @@ extension:
   - teaguesterling
 repo:
   github: teaguesterling/duckdb_urlpattern
-  ref: refs/tags/v0.4.1
+  ref: 0b7dae3e564ffdaeb90f36407c8ab97e56d1175b
+  ref_next: 0b7dae3e564ffdaeb90f36407c8ab97e56d1175b
 docs:
   hello_world: '-- Test if a URL matches a pattern
 

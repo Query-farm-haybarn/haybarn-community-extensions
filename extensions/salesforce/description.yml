@@ -9,7 +9,7 @@ extension:
     \ STRUCT columns with diagnostics, queryAll (archived + deleted), Tooling-API\
     \ fast schema, and metadata helpers (manual cache refresh, picklist values, record\
     \ types). Requires DuckDB v1.5.4 or newer."
-  version: 0.15.0
+  version: 0.18.0
   language: C++
   build: cmake
   license: MIT
@@ -18,7 +18,7 @@ extension:
   excluded_platforms: osx_amd64;wasm_mvp;wasm_eh;wasm_threads;windows_amd64_mingw;linux_amd64_musl;linux_arm64;linux_arm64_musl;windows_arm64
 repo:
   github: flozer/duckdb-salesforce
-  ref: 819d86800e95772740197ac5e3b4ad9a48270aff
+  ref: 6a03b024e62f4e98781267786a5d46800edea8f8
 docs:
   hello_world: '-- Published build is signed: INSTALL salesforce FROM community; LOAD
     salesforce;
@@ -48,6 +48,15 @@ docs:
     \ 2.0 refresh-token or JWT\nbearer, with credentials from inline options, environment\
     \ variables, or an\nSFDX auth URL; credentials stay in memory and are never logged;\
     \ TLS\nserver-certificate verification is always on. Read-only: all mutating\n\
-    catalog operations throw. Built and tested against DuckDB v1.5.4 and\nv1.5.5 (v1.5.2/v1.5.3\
-    \ support was dropped in v0.15.0 \u2014 see\nCHANGELOG.md). Full change history\
-    \ in this repo's CHANGELOG.md.\n"
+    catalog operations throw. Since v0.15.1 every function self-documents\nthrough\
+    \ duckdb_functions() (description, runnable example, real parameter\nnames), so\
+    \ SQL clients and AI agents can discover the surface from the\nconnection. Since\
+    \ v0.16.0-v0.17.0, no-group COUNT, COUNT(DISTINCT), MIN\nand MAX queries push\
+    \ down transparently (kill-switch\nsf_aggregate_pushdown; MIN/MAX need a sortable\
+    \ numeric/temporal/boolean\nfield; SUM/AVG deliberately stay local \u2014 the\
+    \ server sums in floating\npoint), salesforce_relationship_graph recurses child\
+    \ relationships up to\nmax_depth with cycle protection, and the Report Bridge\
+    \ resolves a report's\nbase object from the official reportTypeMetadata when the\
+    \ first category\nis unambiguous. Built and tested against DuckDB v1.5.4, v1.5.5\
+    \ and\nv1.5.6 (v1.5.2/v1.5.3 support was dropped in v0.15.0 \u2014 see CHANGELOG.md).\n\
+    Full change history in this repo's CHANGELOG.md.\n"

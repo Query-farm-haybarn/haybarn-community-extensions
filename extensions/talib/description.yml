@@ -12,7 +12,7 @@ extension:
   excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_rtools;windows_amd64_mingw
 repo:
   github: neuesql/atm_talib
-  ref: 53c4312814729d037f865126025cc4235aa4afea
+  ref: baebee616765169eab9efac31d469d64f8aecf79
 docs:
   hello_world: "-- Scalar form: operate on a pre-collected list\nSELECT t_sma([1.0,\
     \ 2.0, 3.0, 4.0, 5.0], 3);\n\n-- Aggregate/window form: use OVER() for row-by-row\
@@ -24,8 +24,8 @@ docs:
     \  ORDER BY date), list(high  ORDER BY date),\n                 list(low   ORDER\
     \ BY date), list(close ORDER BY date))\nFROM ohlc;\n"
   extended_description: "100+ TA-Lib indicators as native DuckDB functions: overlap\
-    \ studies\n| Category | Count | Examples |\n|----------|-------|---------|\n|\
-    \ \U0001F500 Overlap Studies | 8+ | `t_sma`, `t_ema`, `t_wma`, `t_dema`, `t_tema`\
+    \ studies\n\n| Category | Count | Examples |\n|----------|-------|---------|\n\
+    | \U0001F500 Overlap Studies | 8+ | `t_sma`, `t_ema`, `t_wma`, `t_dema`, `t_tema`\
     \ |\n| \U0001F3C3 Momentum | 15+ | `t_rsi`, `t_macd`, `t_willr`, `t_cci`, `t_adx`\
     \ |\n| \U0001F50A Volume | 1+ | `t_ad` |\n| \U0001F30A Volatility | 2+ | `t_atr`,\
     \ `t_natr` |\n| \U0001F56F\uFE0F Pattern Recognition | 49+ | `t_cdldoji`, `t_cdlhammer`,\
