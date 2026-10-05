@@ -1,0 +1,47 @@
+extension:
+  name: lance_conversion
+  description: Stream any DuckDB query into Lance datasets with Blob v2 storage and
+    scalar, vector, text, and Bloom filter indexes
+  version: 0.1.2
+  language: C++ & Rust
+  build: cmake
+  license: MIT
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64;windows_amd64_mingw;osx_amd64
+  requires_toolchains: rust
+  maintainers:
+  - dentiny
+repo:
+  github: dentiny/duckdb_lance_conversion
+  ref: a4cb23dd4df9f00edcbf1687521a5860d41c802d
+docs:
+  hello_world: "INSTALL lance_conversion FROM community;\nLOAD lance_conversion;\n\
+    \nCOPY (\n  SELECT *\n  FROM read_parquet('events/**/*.parquet')\n) TO 'events.lance'\
+    \ (FORMAT LANCE);\n"
+  extended_description: "`lance_conversion` registers Lance as a native DuckDB `COPY`\
+    \ destination.\nDuckDB reads, filters, joins, casts, and projects the source query,\
+    \ then\nstreams its output into the Rust Lance writer without an intermediate\n\
+    Parquet export or full-input materialization.\n\nAny source that DuckDB can query\
+    \ can be written to Lance, including DuckDB\ntables and views, Parquet, CSV, JSON,\
+    \ and S3-backed data:\n\n```sql\nCOPY events TO 'events.lance' (FORMAT LANCE);\n\
+    \nCOPY (\n  SELECT *\n  FROM read_json_auto('events.json')\n) TO 'events_from_json.lance'\
+    \ (FORMAT LANCE);\n```\n\nThe extension also provides `read_huggingface` for Hugging\
+    \ Face Parquet\ndatasets and `read_warc` for local or S3 WARC/WARC.GZ files:\n\
+    \n```sql\nCOPY (\n  SELECT * FROM read_huggingface('lhoestq/demo1')\n) TO 'demo1.lance'\
+    \ (FORMAT LANCE);\n\nCOPY (\n  SELECT id, type, date, content_type, body\n  FROM\
+    \ read_warc('archive.warc.gz')\n) TO 'archive.lance' (FORMAT LANCE);\n```\n\n\
+    Lance writes support Create (the default), Append, and Overwrite modes:\n\n```sql\n\
+    COPY new_events TO 'events.lance' (FORMAT LANCE, APPEND);\nCOPY replacement TO\
+    \ 'events.lance' (FORMAT LANCE, OVERWRITE);\n```\n\n`SAMPLE_PERCENT` and `SAMPLE_ROWS`\
+    \ write a random sample of the source\nrows instead of every row:\n\n```sql\n\
+    COPY events TO 'events_10pct.lance' (FORMAT LANCE, SAMPLE_PERCENT 10);\nCOPY events\
+    \ TO 'events_sample.lance' (FORMAT LANCE, SAMPLE_ROWS 1000);\n```\n\nBlob v2 layout,\
+    \ data file sizing, and indexes are configurable directly\nfrom the `COPY` statement:\n\
+    \n```sql\nCOPY (\n  SELECT id, event_id, category, description, embedding, asset_uri\n\
+    \  FROM read_parquet('catalog/**/*.parquet')\n) TO 'catalog.lance' (\n  FORMAT\
+    \ LANCE,\n  TARGET_FILE_SIZE 536870912,\n  BLOB_INLINE_SIZE_THRESHOLD 2097152,\n\
+    \  BLOB_DEDICATED_SIZE_THRESHOLD 16777216,\n  BLOB_COLUMNS (asset_uri),\n  SCALAR_INDEX_COLUMNS\
+    \ (id, category),\n  VECTOR_INDEX_COLUMNS (embedding),\n  TEXT_INDEX_COLUMNS (description),\n\
+    \  BLOOM_FILTER_INDEX_COLUMNS (event_id)\n);\n```\n\nLocal and S3-compatible Lance\
+    \ destinations are supported. S3 credentials,\nendpoint, region, TLS, and URL\
+    \ style are resolved from DuckDB secrets and\npassed to the OpenDAL-backed Lance\
+    \ object store.\n"

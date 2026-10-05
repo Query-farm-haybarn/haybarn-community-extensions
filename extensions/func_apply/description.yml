@@ -2,7 +2,7 @@ extension:
   name: func_apply
   description: Dynamic function invocation - call any scalar function or macro by
     name at runtime
-  version: 0.3.0
+  version: 0.3.3
   language: C++
   build: cmake
   license: MIT
@@ -10,7 +10,8 @@ extension:
   - teaguesterling
 repo:
   github: teaguesterling/duckdb_func_apply
-  ref: ed51705a1db83eb382423aff564fe8373c2322b7
+  ref: 3ba0d303de29032a83290c3961838a1ae883642b
+  ref_next: 3ba0d303de29032a83290c3961838a1ae883642b
 docs:
   hello_world: '-- Load the extension
 
