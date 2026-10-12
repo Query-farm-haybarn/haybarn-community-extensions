@@ -4,7 +4,7 @@ extension:
     and Communication in Medicine).
 
     '
-  version: 0.7.0
+  version: 0.7.2
   language: C++
   build: cmake
   excluded_platforms: wasm_mvp;wasm_eh;wasm_threads
@@ -13,7 +13,7 @@ extension:
   - nmontesg
 repo:
   github: nmontesg/duck-dicom
-  ref: v0.7.0
+  ref: 73df5583e9661a2c13663aa4b233c2e436e28dca
 docs:
   hello_world: 'INSTALL dicom FROM community;
 

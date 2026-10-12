@@ -1,5 +1,5 @@
 docs:
-  extended_description: For more information regarding usage, see the [documentation](https://query.farm/duckdb_extension_minijinja.html).
+  extended_description: For more information regarding usage, see the [documentation](https://query.farm/products/extensions/minijinja/).
 extension:
   build: cmake
   description: Adds templating to DuckDB, enabling dynamic generation of text, HTML,
@@ -13,4 +13,4 @@ extension:
   version: '2025120401'
 repo:
   github: query-farm/minijinja
-  ref: a4e836bf4878f0d754cef3bac1e1920affb69bac
+  ref: afa3be307799b04aaa2c2af2830b2729934f2501

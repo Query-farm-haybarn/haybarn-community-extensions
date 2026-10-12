@@ -2,7 +2,7 @@ extension:
   name: duck_dggs
   description: DuckDB extension for discrete global grid systems (DGGS) powered by
     DGGRID v8.
-  version: 0.1.9
+  version: 0.1.10
   language: C++
   build: cmake
   license: MIT
@@ -10,7 +10,8 @@ extension:
   - am2222
 repo:
   github: am2222/duckdb-dggs
-  ref: 998d9a9f749f427a31cb83a1f237fd11dc899579
+  ref: a034e0beec21b7e4764173b624ab7f1d69f12f87
+  ref_next: a034e0beec21b7e4764173b624ab7f1d69f12f87
 docs:
   hello_world: "INSTALL duck_dggs FROM community;\nLOAD duck_dggs;\n\n-- Geographic\
     \ point \u2192 cell ID at resolution 5 (default ISEA4H grid)\nSELECT geo_to_seqnum('POINT(0.0\

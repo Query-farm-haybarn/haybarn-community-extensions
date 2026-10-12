@@ -11,7 +11,7 @@ extension:
   requires_toolchains: rust
 repo:
   github: CogitatorTech/gaggle
-  ref: 67450c4490b63c6054a73dc1989fddf248aaca23
+  ref: 671ed4ca8f062d2d3c9b22985c378a78d0054ad2
 docs:
   hello_world: '-- 0. Assuming the extension is already installed and loaded
 
