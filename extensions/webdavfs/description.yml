@@ -1,23 +1,18 @@
 extension:
-  # Haybarn: disabled because the extension does not yet build
-  # against DuckDB 1.5.2 — upstream community-extensions also has
-  # no v1.5.2 binary. Re-enable when upstream lands a v1.5.2-
-  # compatible release (sync_from_upstream will pick up the bump).
-  # Tracker: https://github.com/midwork-finds-jobs/duckdb-webdavfs/issues/14
-  excluded_platforms: linux_amd64;linux_arm64;linux_amd64_musl;linux_arm64_musl;osx_amd64;osx_arm64;windows_amd64;windows_arm64;windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
   name: webdavfs
   description: Allows reading and writing files over WebDAV protocol
-  version: '2026020501'
+  version: '2026091401'
   language: C++
   build: cmake
   license: MIT
+  excluded_platforms: linux_amd64;linux_arm64;linux_amd64_musl;linux_arm64_musl;osx_amd64;osx_arm64;windows_amd64;windows_arm64;windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
   requires_toolchains: vcpkg
   maintainers:
   - onnimonni
   vcpkg_commit: dd3097e305afa53f7b4312371f62058d2e665320
 repo:
   github: midwork-finds-jobs/duckdb-webdavfs
-  ref: 49d8be58834230f4466c6c75199e960c50e21a51
+  ref: 0259545780249ba6c9656b1cfca9a57168cfb63d
 docs:
   hello_world: "-- Load the extension\nINSTALL webdavfs FROM community;\nLOAD webdavfs;\n\
     \n-- Authenticate with any WebDAV server eg nextcloud or owncloud\nCREATE SECRET\
@@ -43,7 +38,7 @@ docs:
     cheapest storage options available.
 
 
-    See: https://github.com/midwork-finds-jobs/webdavfs/blob/main/README.md for more
-    examples and details.
+    See: https://github.com/midwork-finds-jobs/duckdb-webdavfs/blob/main/README.md
+    for more examples and details.
 
     '

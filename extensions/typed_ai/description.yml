@@ -1,0 +1,98 @@
+extension:
+  name: typed_ai
+  description: Use TypeSafe Jev (or another AI, even a free one on your laptop) to
+    sort, filter and check the text in your tables. Get yes or no, pick one, or a
+    rating, see how sure it is, and never spend more than your limit.
+  version: 0.1.0
+  language: C++
+  build: cmake
+  license: MIT
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads
+  maintainers:
+  - hfmsio
+repo:
+  github: hfmsio/duckdb-typed-ai
+  ref: d99fa461d5722e48136277ac788068e7fad6a1b9
+  ref_next: d99fa461d5722e48136277ac788068e7fad6a1b9
+docs:
+  hello_world: "-- Sort a lost-and-found desk with TypeSafe Jev. The key comes from\
+    \ TYPESAFE_API_KEY.\nCREATE SECRET jev (TYPE typed_ai, PROVIDER 'jev', API_KEY\
+    \ getenv('TYPESAFE_API_KEY'));\n\n-- Other choices: run one of these in place\
+    \ of the line above. The rest stays the same.\n-- A free local model (run `ollama\
+    \ pull gemma2:2b` first). Weaker answers; nothing leaves\n-- your laptop.\n--\
+    \ CREATE SECRET local (TYPE typed_ai, PROVIDER 'openai', MODEL 'gemma2:2b',\n\
+    --   URL 'http://localhost:11434/v1/chat/completions', USD_PER_MTOK_IN 0, USD_PER_MTOK_OUT\
+    \ 0);\n-- OpenAI. In our October 2026 test it cost about 2.5 times as much as\
+    \ Jev and was less\n-- accurate.\n-- CREATE SECRET oai (TYPE typed_ai, PROVIDER\
+    \ 'openai', MODEL 'gpt-4o-mini',\n--   API_KEY getenv('OPENAI_API_KEY'), USD_PER_MTOK_IN\
+    \ 0.15, USD_PER_MTOK_OUT 0.60);\n\nCREATE TABLE found AS FROM (VALUES\n  ('insulin\
+    \ pen in a blue case', 'waiting room'),\n  ('laptop with a school sticker', 'train\
+    \ to the airport'),\n  ('wedding ring wrapped in a napkin', 'cafe counter'),\n\
+    \  ('box of live crickets labelled lizard food', 'train to Leeds'),\n  ('cello\
+    \ in a hard case', 'platform 3'),\n  ('half-eaten sandwich', 'train to Leeds'),\n\
+    \  ('broken umbrella', 'platform 1')) t(item, place);\nCREATE TABLE shelves AS\
+    \ FROM (VALUES ('medical'), ('electronics'), ('valuables'),\n  ('animals'), ('food\
+    \ and rubbish'), ('general')) t(name);\n\n-- Odds from 0 to 1\nSELECT item, typed_prob(item,\
+    \ 'the owner needs this back today') AS urgent\nFROM found ORDER BY urgent DESC;\n\
+    -- insulin pen in a blue case                  0.59\n-- laptop with a school sticker\
+    \                0.54\n-- wedding ring wrapped in a napkin            0.54\n--\
+    \ half-eaten sandwich                         0.37\n-- broken umbrella       \
+    \                      0.34\n-- cello in a hard case                        0.31\n\
+    -- box of live crickets labelled lizard food   0.30\n\n-- Pick a shelf; the options\
+    \ come from a table\nSELECT item, typed_pick(item, 'which shelf?', (SELECT list(name)\
+    \ FROM shelves)) AS shelf\nFROM found;\n-- insulin pen in a blue case        \
+    \          medical\n-- laptop with a school sticker                electronics\n\
+    -- wedding ring wrapped in a napkin            valuables\n-- box of live crickets\
+    \ labelled lizard food   animals\n-- cello in a hard case                    \
+    \    general\n-- half-eaten sandwich                         food and rubbish\n\
+    -- broken umbrella                             general\n\n-- The whole row goes\
+    \ in, so the model sees where it was found\nSELECT item FROM found f WHERE typed_is(f,\
+    \ 'it was left on a train');\n-- laptop with a school sticker\n-- box of live\
+    \ crickets labelled lizard food\n-- half-eaten sandwich\n\n-- What did that cost?\n\
+    SELECT requests, printf('$%.5f', spent_usd) AS spent FROM typed_usage();\n-- 3\
+    \   $0.00009\n"
+  extended_description: "`typed_ai` lets you ask an AI simple questions about each\
+    \ row of a table, straight from SQL. It is built\nfor [TypeSafe Jev](https://docs.typesafe.ai),\
+    \ which in our tests (October 2026) gave the most accurate answers at\nthe lowest\
+    \ cost, since it answers many rows in one request. It also works with OpenAI,\
+    \ or with a free local AI on\nyour own computer through Ollama. New AI services\
+    \ work too, with no update needed, as long as they use\nOpenAI's format and report\
+    \ how sure they are: point a secret at their web address.\n\n| Function | What\
+    \ you get back |\n| --- | --- |\n| `typed_is(value, statement [, cutoff])` | true\
+    \ or false, for filtering with `WHERE` |\n| `typed_prob(value, statement)` | how\
+    \ likely the statement is true, from 0 to 1 |\n| `typed_pick(value, question,\
+    \ options)` | the best option; the options can come from a table |\n| `typed_score(value,\
+    \ question, levels)` | a rating on your scale, e.g. 0 for the lowest level up\
+    \ to 3 |\n| `typed_ask(value, question_json)` | the full answer, with the odds\
+    \ for every option |\n| `typed_usage()` | what you have spent, your limit, and\
+    \ how many answers were reused for free |\n\n`value` can be text, any other value,\
+    \ or a whole row.\n\nSafe by default:\n\n- At most 1,000 rows per query and $1.00\
+    \ in total, until you raise `typed_max_rows` or `typed_budget_usd`.\n- `SET typed_dry_run\
+    \ = true` shows what a query would cost without asking the AI anything.\n- If\
+    \ a job stops partway, the answers you paid for are kept. Run it again and you\
+    \ pay only for the rest.\n\nEach value you check is sent to the AI service you\
+    \ set up. For private data, use a local model, so nothing\nleaves your computer.\n\
+    \n#### Audit an AI agent\n\nDid the agent do more than it was asked? The whole\
+    \ row goes in, so the model compares the request with the action.\n\n```sql\n\
+    CREATE TABLE agent_log AS FROM (VALUES\n  ('book a table for 2 on Friday', 'booked\
+    \ a table for 2, Friday 7pm'),\n  ('cancel my gym membership', 'cancelled it and\
+    \ deleted all workout history'),\n  ('find a cheaper phone plan', 'listed 3 cheaper\
+    \ plans'),\n  ('reply to Sam that I am running late', 'replied to Sam and to everyone\
+    \ in the team chat'),\n  ('pay the electricity bill', 'paid the bill and set up\
+    \ autopay for 12 months'))\n  t(asked, did);\n\nSELECT asked, typed_prob(a, 'the\
+    \ agent did more than the user asked for') AS overreach\nFROM agent_log a ORDER\
+    \ BY overreach DESC;\n-- reply to Sam that I am running late   0.95\n-- pay the\
+    \ electricity bill              0.95\n-- cancel my gym membership            \
+    \  0.93\n-- book a table for 2 on Friday          0.60   (the agent chose 7pm\
+    \ on its own)\n-- find a cheaper phone plan             0.19\n```\n\n#### Find\
+    \ private data before sharing\n\nJev and a local model both name the kind of private\
+    \ data. To keep the notes on your machine, run\n`SET typed_profile = 'local'`\
+    \ first; the yes/no odds are less reliable on a small local model.\n\n```sql\n\
+    CREATE TABLE notes AS FROM (VALUES\n  (1, 'Customer liked the new blue colour,\
+    \ wants it in size 10.'),\n  (2, 'Call Priya back on 07700 900123 after 5pm.'),\n\
+    \  (3, 'Said she is on chemo, so deliveries must be left at the door.'),\n  (4,\
+    \ 'Paid with a card ending 4417, asked for a refund next month.'),\n  (5, 'Asked\
+    \ if the store opens on bank holidays.')) t(id, note);\n\nSELECT id, typed_pick(note,\
+    \ 'what private data does this note contain?',\n  ['none', 'contact details',\
+    \ 'health', 'money']) AS found FROM notes;\n-- 1 none   2 contact details   3\
+    \ health   4 money   5 none\n```\n"

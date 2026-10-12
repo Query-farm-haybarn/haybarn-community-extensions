@@ -1,7 +1,7 @@
 extension:
   name: maxmind
   description: Read MaxMind databases (GeoLite, GeoIP, and more)
-  version: 0.10.0
+  version: 0.11.0
   language: Zig
   build: cmake
   license: ISC
@@ -10,7 +10,7 @@ extension:
   - marselester
 repo:
   github: marselester/duckdb-maxmind
-  ref: dc2e6e60f619403c4714e95f014f6444a2653f9c
+  ref: 6d0327c9b8bd90f19c4287dcf634301e79f8557e
 docs:
   hello_world: 'SELECT geolite_city(''./GeoLite2-City.mmdb'', ''1.0.64.0'', '''');
 

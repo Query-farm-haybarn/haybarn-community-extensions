@@ -11,7 +11,7 @@ extension:
   - eddelbuettel
 repo:
   github: eddelbuettel/duckdb-mlpack
-  ref: ead4698674d803909b1f9c01b083ecc7ea586c3a
+  ref: b62f9267ca5dfe8292ca8c47da527cb4b52ede96
 docs:
   hello_world: '-- Perform adaBoost (using weak learner ''Perceptron'' by default)
 

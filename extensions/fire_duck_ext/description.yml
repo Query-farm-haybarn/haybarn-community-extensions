@@ -1,7 +1,7 @@
 extension:
   name: fire_duck_ext
   description: Query Google Cloud Firestore directly from DuckDB using SQL
-  version: 0.3.1
+  version: 0.3.2
   language: C++
   build: cmake
   license: MIT
@@ -10,7 +10,7 @@ extension:
   - BorisBesky
 repo:
   github: BorisBesky/fire_duck_ext
-  ref: 898cb0d8dc9a3a6270a076e38ba8a1d00d683a62
+  ref: 133172d96db2292e36297492e21fc69b9cd25358
 docs:
   hello_world: "LOAD fire_duck_ext;\n\n-- Authenticate with a service account key\
     \ file (see the README for API-key\n-- and Firebase-user auth, including browser-safe\
@@ -36,7 +36,9 @@ docs:
 
     functions firestore_array_union(), firestore_array_remove(), and
 
-    firestore_array_append().
+    firestore_array_append(). Every function documents itself in
+
+    duckdb_functions() with a description, parameter names, and an example.
 
 
     WHERE filters, SQL ORDER BY / LIMIT, the column projection, and a bare
