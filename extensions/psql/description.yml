@@ -10,6 +10,7 @@ extension:
 repo:
   github: ywelsch/duckdb-psql
   ref: 4e310a6056dff4808de4be4bd0c0e571ed6d7a5a
+  ref_next: 83c06eb1847e5b46037e31b5688bdb23c9b18035
 docs:
   hello_world: "from 'https://raw.githubusercontent.com/ywelsch/duckdb-psql/main/example/invoices.csv'\
     \ |>\nwhere invoice_date >= date '1970-01-16' |>\nselect\n  *, \n  0.8 as transaction_fees,\n\

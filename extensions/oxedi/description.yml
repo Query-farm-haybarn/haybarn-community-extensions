@@ -1,0 +1,35 @@
+extension:
+  name: oxedi
+  description: Read X12 EDI 835 remittance files as tables, losslessly, and write
+    tables back into an 835
+  version: 0.2.0
+  language: Rust
+  build: cargo
+  license: MIT
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;linux_amd64_musl;linux_arm64_musl;windows_amd64_mingw;windows_amd64_rtools
+  requires_toolchains: rust;python3
+  maintainers:
+  - javillegasna
+repo:
+  github: javillegasna/oxedi
+  ref: f0f0cb92e4356e15fe0f5d89300d8825983b4d2c
+docs:
+  hello_world: "INSTALL oxedi FROM community;\nLOAD oxedi;\n\n-- Claims of one file,\
+    \ of several files, or of a glob\nFROM read_835('remittance.835');\nFROM read_835(['a.835',\
+    \ 'b.835'], filename := true);\nFROM read_835('remits/*.835', table_name := 'services');\n\
+    \n-- Findings of the parse (also for files that are not valid 835)\nFROM read_835('remits/*.835',\
+    \ table_name := 'diagnostics', ignore_errors := true);\n\n-- Text columns are\
+    \ VARCHAR; binary := true keeps the raw bytes\nFROM read_835('remittance.835',\
+    \ binary := true);\n\n-- Export to Parquet\nCOPY (SELECT * FROM read_835('remits/*.835',\
+    \ table_name := 'claims'))\n  TO 'claims.parquet';\n\n-- Write tables back into\
+    \ an 835: one STRUCT column, a list of rows per table\nCOPY (SELECT {\n    'payments':\
+    \             (SELECT list(t ORDER BY t.\"row\") FROM read_835('remittance.835',\
+    \ table_name := 'payments') t),\n    'claims':               (SELECT list(t ORDER\
+    \ BY t.\"row\") FROM read_835('remittance.835', table_name := 'claims') t),\n\
+    \    'services':             (SELECT list(t ORDER BY t.\"row\") FROM read_835('remittance.835',\
+    \ table_name := 'services') t),\n    'adjustments':          (SELECT list(t ORDER\
+    \ BY t.\"row\") FROM read_835('remittance.835', table_name := 'adjustments') t),\n\
+    \    'provider_adjustments': (SELECT list(t ORDER BY t.\"row\") FROM read_835('remittance.835',\
+    \ table_name := 'provider_adjustments') t)\n  })\n  TO 'out.835' (FORMAT edi835,\
+    \ sender_id 'ACMEPAYER', receiver_id 'SUNRISECLINIC',\n                date DATE\
+    \ '2024-01-10', time TIME '09:00');\n"

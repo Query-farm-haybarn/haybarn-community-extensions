@@ -3,7 +3,7 @@ extension:
   description: Read documents natively into the duck_block vocabulary -- DOCX, ODT,
     EPUB, RTF, LaTeX, Org, RST, ipynb, MediaWiki and Textile -- and write them back
     as Pandoc JSON, without linking Pandoc
-  version: 0.5.3
+  version: 0.6.2
   language: C++
   build: cmake
   license: MIT
@@ -13,22 +13,25 @@ extension:
   vcpkg_commit: 84bab45d415d22042bd0b9081aea57f362da3f35
 repo:
   github: teaguesterling/duckdb_panduck
-  ref: 4dc698503e5b56a4c17999eca1c5dc72a177add7
-  ref_next: 4dc698503e5b56a4c17999eca1c5dc72a177add7
+  ref: fbc56ed5c5d550a9dd601c617649a56625c89d19
+  ref_next: fbc56ed5c5d550a9dd601c617649a56625c89d19
 docs:
   hello_world: "LOAD panduck;\n\n-- Read a document straight into flattened duck_block\
     \ rows\nSELECT * FROM read_docx_blocks('report.docx');\nSELECT * FROM read_epub_blocks('book.epub');\n\
-    SELECT * FROM read_latex_blocks('paper.tex');\n\n-- Or let the path pick the reader\n\
-    SELECT * FROM panduck_read_blocks('notes.org');\nSELECT panduck_format_for('paper.tex');\
-    \       -- 'latex'\nSELECT panduck_can_read('archive.docx');      -- true\n\n\
-    -- Formats with no file: parse a string directly\nSELECT * FROM read_mediawiki_blocks_string('==\
-    \ Heading ==');\n\n-- Outline any supported document\nSELECT * FROM doc_toc('report.docx');\n\
-    \n-- Pull one section out, by heading or by a fragment of one\nSELECT * FROM doc_section('report.docx',\
-    \ 'Methods');\nSELECT * FROM doc_section('report.docx', 'Meth', match := 'contains');\n\
-    \n-- ...or find the section by what it SAYS rather than what it is called\nSELECT\
-    \ * FROM doc_search_sections('report.docx', 'p < 0.05');\n\n-- Render one back\
-    \ out (md, html or text)\nSELECT doc_render('report.docx', 'md');\n\n-- Write\
-    \ back out as Pandoc JSON that a real pandoc accepts\nSELECT panduck_write_pandoc_ast('doc.json',\n\
+    SELECT * FROM read_latex_blocks('paper.tex');\n\n-- Every reader goes through\
+    \ DuckDB's filesystem, so any path DuckDB can open\n-- works: httpfs, s3://, encrypted,\
+    \ in-memory\nLOAD httpfs;\nSELECT * FROM read_docx_blocks('https://example.org/report.docx');\n\
+    \n-- Or let the path pick the reader\nSELECT * FROM panduck_read_blocks('notes.org');\n\
+    SELECT panduck_format_for('paper.tex');       -- 'latex'\nSELECT panduck_can_read('archive.docx');\
+    \      -- true\n\n-- Formats with no file: parse a string directly\nSELECT * FROM\
+    \ read_mediawiki_blocks_string('== Heading ==');\n\n-- Outline any supported document\n\
+    SELECT * FROM doc_toc('report.docx');\n\n-- Pull one section out, by heading or\
+    \ by a fragment of one\nSELECT * FROM doc_section('report.docx', 'Methods');\n\
+    SELECT * FROM doc_section('report.docx', 'Meth', match := 'contains');\n\n-- ...or\
+    \ find the section by what it SAYS rather than what it is called\nSELECT * FROM\
+    \ doc_search_sections('report.docx', 'p < 0.05');\n\n-- Render one back out (md,\
+    \ html or text)\nSELECT doc_render('report.docx', 'md');\n\n-- Write back out\
+    \ as Pandoc JSON that a real pandoc accepts\nSELECT panduck_write_pandoc_ast('doc.json',\n\
     \    (SELECT list(b) FROM read_odt_blocks('doc.odt') b)\n);\n\n-- Or get the AST\
     \ as a struct without touching the filesystem\nSELECT panduck_blocks_to_pandoc_ast(\n\
     \    (SELECT list(b) FROM read_rtf_blocks('memo.rtf') b)\n);\n"
@@ -178,7 +181,7 @@ docs:
 
     reference implementations -- RTF, DOCX, ODT, EPUB, LaTeX, Org, RST, ipynb, MediaWiki,
 
-    Textile -- plus a Pandoc AST reader, with 2931 test assertions, differential validation
+    Textile -- plus a Pandoc AST reader, with 3108 test assertions, differential validation
 
     against a real pandoc on every fixture, and eleven jobs in CI. PDF, Markdown and
     HTML

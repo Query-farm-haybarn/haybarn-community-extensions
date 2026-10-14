@@ -1,0 +1,49 @@
+extension:
+  name: duckdb_object_storage
+  description: Store writable DuckDB databases in local or S3-compatible object storage
+    through SlateDB
+  version: 0.1.0
+  language: Rust & C++
+  build: cmake
+  license: MIT
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64;windows_amd64_mingw;windows_amd64_rtools;windows_arm64;windows_arm64_mingw
+  requires_toolchains: rust
+  maintainers:
+  - dentiny
+repo:
+  github: dentiny/duckdb-object-storage
+  ref: 57845cd6c768d3227ea37822d2a043cc250d519b
+docs:
+  hello_world: 'INSTALL duckdb_object_storage FROM community;
+
+    LOAD duckdb_object_storage;
+
+
+    ATTACH ''duckdb_objfs://database.db'' AS object_db;
+
+    CREATE TABLE object_db.items(i INTEGER);
+
+    INSERT INTO object_db.items VALUES (1), (2);
+
+    CHECKPOINT object_db;
+
+
+    SELECT * FROM object_db.items;
+
+    '
+  extended_description: "`duckdb_object_storage` provides a DuckDB virtual filesystem\
+    \ backed by\nSlateDB. A native DuckDB database, including the files required for\
+    \ WAL\nrecovery, can be stored through the `duckdb_objfs://` URI scheme.\n\nThe\
+    \ default backend stores SlateDB objects on the local filesystem:\n\n```sql\n\
+    SET duckdb_objfs_root = '/var/lib/duckdb-objfs';\nATTACH 'duckdb_objfs://analytics.db'\
+    \ AS analytics;\n```\n\nAn in-memory backend is available for testing:\n\n```sql\n\
+    SET duckdb_objfs_backend = 'memory';\nATTACH 'duckdb_objfs://temporary.db' AS\
+    \ temporary;\n```\n\nFor S3 and S3-compatible services, credentials and endpoint\
+    \ options are\nresolved through DuckDB's Secret Manager:\n\n```sql\nINSTALL cache_httpfs\
+    \ FROM community;\nLOAD cache_httpfs;\n\nCREATE SECRET duckdb_objfs_s3 (\n  TYPE\
+    \ S3,\n  PROVIDER credential_chain,\n  REGION 'us-east-1',\n  SCOPE 's3://my-bucket/duckdb-data'\n\
+    );\n\nSET duckdb_objfs_backend = 's3';\nSET duckdb_objfs_bucket = 'my-bucket';\n\
+    SET duckdb_objfs_root = 'duckdb-data';\nATTACH 'duckdb_objfs://analytics.db' AS\
+    \ analytics;\n```\n\nThe extension supports configurable in-memory and persistent\
+    \ local SST\ncaches, cache statistics, OpenDAL I/O statistics, read-only attachments,\n\
+    and multiple read-only processes alongside a single writer.\n"

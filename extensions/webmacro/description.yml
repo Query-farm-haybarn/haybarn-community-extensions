@@ -1,6 +1,5 @@
 docs:
-  extended_description: The HTTP Client Extension is experimental, use at your own
-    risk!
+  extended_description: For more information regarding usage, see the [documentation](https://query.farm/products/extensions/webmacro/).
   hello_world: "-- Create a DuckDB Scalar or Table macro statement and save it to\
     \ a gist;\n\n-- Load your remote macro onto your system using the gist url\n\n\
     D SELECT load_macro_from_url('https://gist.githubusercontent.com/lmangani/518215a68e674ac662537d518799b893/raw/5f305480fdd7468f4ecda3686011bab8e8e711bf/bsky.sql')\
@@ -74,6 +73,7 @@ extension:
   license: MIT
   maintainers:
   - lmangani
+  - rustyconover
   name: webmacro
   version: '2025120401'
   excluded_platforms: linux_amd64;linux_arm64;linux_amd64_musl;linux_arm64_musl;osx_amd64;osx_arm64;windows_amd64;windows_arm64;windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads

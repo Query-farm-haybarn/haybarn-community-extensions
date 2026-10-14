@@ -12,7 +12,7 @@ extension:
   - dentiny
 repo:
   github: dentiny/duckdb-opendal-filesystem
-  ref: 6e1479e7b8ed4f95dfe40273560f5227c5464d4c
+  ref: 174049fc96d09f03c7c20a4912987f1c3f248f5d
 docs:
   hello_world: "FORCE INSTALL duckdb_opendalfs FROM community;\nLOAD duckdb_opendalfs;\n\
     \nCREATE SECRET production_s3 (\n    TYPE opendal_s3,\n    SCOPE 's3://analytics',\n\

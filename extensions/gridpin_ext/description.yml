@@ -2,7 +2,7 @@ extension:
   name: gridpin_ext
   description: "Offline geocoding from a single country file \u2014 forward and reverse,\
     \ no server, no network"
-  version: 0.1.0
+  version: 0.4.0
   language: Rust
   build: cargo
   license: Apache-2.0
@@ -12,18 +12,18 @@ extension:
   - gridpin-reserve
 repo:
   github: gridpin/duckdb-gridpin
-  ref: cf94e5d3994e48fbf12b67a2b808cdde9bda428d
+  ref: 0f4e7e09393858c196bb7fb5cbcf8a6bbd97e391
 docs:
   hello_world: "-- Country data files are free downloads: https://gridpin.dev\n--\
-    \ (France, Italy, the Netherlands and Serbia today; one file per country.)\nLOAD\
-    \ gridpin_ext;\n\n-- Point the extension at a downloaded sheet. One sheet is loaded\
-    \ at a time.\nSELECT gridpin_load('./france.bin');\n\n-- Forward geocoding: an\
-    \ address string in, a JSON object out.\nSELECT gridpin_geocode('10 rue de rivoli\
-    \ paris');\n\n-- Reverse geocoding: coordinates in, the nearest address out.\n\
-    SELECT gridpin_reverse(48.8686, 2.3305);\n\n-- It is an ordinary scalar function,\
-    \ so a whole table geocodes in one query.\nSELECT id,\n       json_extract(gridpin_geocode(address),\
-    \ '$.lat') AS lat,\n       json_extract(gridpin_geocode(address), '$.lon') AS\
-    \ lon\nFROM customers;\n"
+    \ (France, Italy, the Netherlands, Serbia, Germany, Spain and Brazil today; one\
+    \ file per country.)\nLOAD gridpin_ext;\n\n-- Point the extension at a downloaded\
+    \ sheet. One sheet is loaded at a time.\nSELECT gridpin_load('./france.bin');\n\
+    \n-- Forward geocoding: an address string in, a JSON object out.\nSELECT gridpin_geocode('10\
+    \ rue de rivoli paris');\n\n-- Reverse geocoding: coordinates in, the nearest\
+    \ address out.\nSELECT gridpin_reverse(48.8686, 2.3305);\n\n-- It is an ordinary\
+    \ scalar function, so a whole table geocodes in one query.\nSELECT id,\n     \
+    \  json_extract(gridpin_geocode(address), '$.lat') AS lat,\n       json_extract(gridpin_geocode(address),\
+    \ '$.lon') AS lon\nFROM customers;\n"
   extended_description: "GridPin resolves addresses to coordinates and back **entirely\
     \ offline**: one\nmemory-mapped file per country, millisecond lookups on a single\
     \ core, and typo\ntolerance built into the index. There is no server to run, no\
@@ -34,12 +34,16 @@ docs:
     \ with `lat`, `lon`, `street`, `city` |\n| `gridpin_reverse(lat, lon)` | coordinates\
     \ \u2192 JSON object for the nearest address |\n| `gridpin_load_poi(path)` | optional\
     \ points-of-interest layer, consulted after addresses |\n| `gridpin_reset()` |\
-    \ drop the loaded sheet so another country can be loaded |\n\nA query issued before\
-    \ `gridpin_load` is a clear error rather than a crash, and an\naddress with no\
-    \ match returns `{}` \u2014 an empty result is a documented contract, not a\n\
-    guess.\n\n### Data files\n\nCountry sheets are published as free downloads at\n\
-    [gridpin.dev](https://gridpin.dev) and in the [releases of the main\nrepository](https://github.com/gridpin/gridpin/releases).\
+    \ drop the loaded sheet so another country can be loaded |\n\nEvery function carries\
+    \ a description and parameter names, so SQL assistants and\nAI agents can discover\
+    \ them through `duckdb_functions()`.\n\nA query issued before `gridpin_load` is\
+    \ a clear error rather than a crash, and an\naddress with no match returns `{}`\
+    \ \u2014 an empty result is a documented contract, not a\nguess.\n\n### Data files\n\
+    \nCountry sheets are published as free downloads at\n[gridpin.dev](https://gridpin.dev)\
+    \ and in the [releases of the main\nrepository](https://github.com/gridpin/gridpin/releases).\
     \ Each sheet carries its own\nsource licence (France comes from the national BAN\
-    \ registry under Licence Ouverte;\nItaly, the Netherlands and Serbia are built\
-    \ from Overture). The engine itself is\nApache-2.0 and lives at [gridpin/gridpin](https://github.com/gridpin/gridpin);\
+    \ registry under Licence Ouverte;\nItaly, the Netherlands, Serbia, Germany, Spain\
+    \ and Brazil are built from Overture,\nwith OpenAddresses, CartoCiudad and IBGE\
+    \ CNEFE sources where the country publishes\nthem). Germany covers 15 of 16 L\xE4\
+    nder (Bavaria is not covered). The engine itself is\nApache-2.0 and lives at [gridpin/gridpin](https://github.com/gridpin/gridpin);\
     \ this\nrepository holds the extension crate only.\n"

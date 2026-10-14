@@ -14,7 +14,7 @@ extension:
   - asubbarao
 repo:
   github: axsaucedo/agent_data_duckdb
-  ref: ca2c0b85d1065aa58cea6211e6d1e982f340b3bf
+  ref: 54d875a303e3269bff3bba2aa86bc2b188bcf48e
 docs:
   hello_world: "-- How many conversations have I had with Claude?\nSELECT COUNT(DISTINCT\
     \ session_id) AS sessions,\n       COUNT(*) AS total_messages\n-- Calling the\

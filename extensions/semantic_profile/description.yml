@@ -1,0 +1,79 @@
+extension:
+  name: semantic_profile
+  description: "Profiles what the values in a table mean rather than what shape they\
+    \ are \u2014 semantic type per column, PII and format drift, and cross-column\
+    \ contradictions"
+  version: 0.2.0
+  language: Rust
+  build: cargo
+  license: MIT
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_mingw
+  requires_toolchains: rust;python3
+  maintainers:
+  - patricktrainer
+repo:
+  github: patricktrainer/duckdb-semantic-profile
+  ref: ff9a481e322c9c984ceb7d038bace8df9461f36c
+docs:
+  hello_world: "-- Judgments come from TypeSafe's System One model, so the extension\
+    \ needs an\n-- API key. It is read from TYPESAFE_API_KEY, or from a file -- never\
+    \ from\n-- SQL, which would put it in query logs and shell history.\nSELECT sem_config('api_key_file',\
+    \ '~/.typesafe-key');\n\nCREATE TABLE orders AS SELECT * FROM (VALUES\n  ('Acme\
+    \ Industrial', 'ops@acme.com',  'US', '94607',    '12 kg'),\n  ('Harborline Ltd',\
+    \  'post@hl.co.uk', 'GB', 'BS1 6QH',  '9 kg'),\n  ('Test Company',    'n/a', \
+    \          'US', 'SW1A 1AA', '26.4')\n) t(customer, email, country, postal_code,\
+    \ weight);\n\n-- SUMMARIZE finds nothing wrong here: every column is a VARCHAR,\
+    \ nothing is\n-- null, and the cardinalities are exactly what you would expect.\n\
+    SUMMARIZE orders;\n\n-- What each column actually holds, judged from the values\
+    \ rather than the name.\nSELECT column_name, semantic_type, unit_or_currency FROM\
+    \ sem_columns('orders');\n-- weight -> physical_measurement, unit_or_currency\
+    \ = 'mixed'\n--           ('12 kg' and a bare '26.4' in one column)\n\n-- A dry\
+    \ run first: no API calls, so you see the cost before spending it.\nSELECT total_requests,\
+    \ approx_input_tokens FROM sem_cost('orders', rows := 3);\n\n-- The findings,\
+    \ with the offending values attached. A cross-column finding\n-- names the field\
+    \ it blames and the one it conflicts with.\nSELECT column_name, probe_id, rows_flagged,\
+    \ examples\nFROM sem_report('orders', rows := 3);\n-- email        sentinel_used_as_value\
+    \     1  ['n/a']\n-- customer     placeholder_or_test_value  1  ['Test Company']\n\
+    -- postal_code  category_product_mismatch, geo_inconsistent, internally_contradictory\n\
+    --                                         1  ['postal_code=SW1A 1AA; country=US']\n"
+  extended_description: "`SUMMARIZE`, `pandas.describe()` and similar tools profile\
+    \ the *shape* of data:\ntypes, ranges, quantiles, null and distinct counts. They\
+    \ are structurally blind\nto what the values mean. This extension asks the other\
+    \ question, using\n[TypeSafe](https://docs.typesafe.ai)'s System One model (Jev),\
+    \ which returns\ncalibrated typed judgments rather than free text.\n\nIt finds\
+    \ defects that move no statistic: fake rows that read as ordinary data,\nvalues\
+    \ that are not what the column claims, unit and format drift within a\ncolumn,\
+    \ PII sitting in free text, and **contradictions between columns in the\nsame\
+    \ row** \u2014 which a column-at-a-time profiler cannot reach even in principle.\n\
+    \n### How it works\n\nFour steps. The second is what makes it adapt to a table\
+    \ rather than run a\nfixed checklist; the fourth is what makes a cross-column\
+    \ finding say what is\nwrong.\n\n1. **Discover** \u2014 one request per column.\
+    \ What does this column actually hold,\n   judged from its values, its neighbours\
+    \ and a few whole rows? The column name\n   is treated as a hint that may be lying.\n\
+    2. **Select** \u2014 one request per column. Code narrows a 20-probe catalog to\
+    \ those\n   that could apply to the discovered semantic type, then asks which\
+    \ are worth\n   running *here*. `sem_probes()` shows the result before you pay\
+    \ for it.\n3. **Execute** \u2014 one request per row. The state is the whole row\
+    \ and the\n   questions are every selected value probe plus every cross-column\
+    \ check, so\n   the coherence checks ride along in a request already being sent.\n\
+    4. **Attribute** \u2014 one small request per row a cross-column check suspects:\n\
+    \   which field is most responsible? Checks that back off when made to point\n\
+    \   at something are dropped, and the rest are grouped by field, so a defect\n\
+    \   repeated across rows usually reads as one finding.\n\nCost is `2 \xD7 columns\
+    \ + rows`, plus the attribution requests, not\n`columns \xD7 rows`. A 20-column\
+    \ table at 500 sampled rows is about 540\nrequests, plus one per suspect row.\
+    \ `sem_cost()` dry-runs without calling\nout.\n\n### Reading the output\n\nFindings\
+    \ carry calibrated probabilities, not booleans. `threshold` is an\nargument and\
+    \ re-slicing a report re-reads cached judgments, so it costs nothing.\n`sem_report`\
+    \ also reports `needs_review`: rows near 0.5, where the model is\ngenuinely uncertain\
+    \ rather than mildly suspicious. Every finding carries the\noffending values and\
+    \ the rows they came from.\n\n### Functions\n\n`sem_profile`, `sem_columns`, `sem_probes`,\
+    \ `sem_values`, `sem_report`,\n`sem_row_fields`, `sem_findings`, `sem_cost`, `sem_catalog`;\
+    \ the primitives `ts_ask`, `ts_noul`,\n`ts_choice`, `ts_score`; and `sem_config`,\
+    \ `sem_settings`, `sem_stats`,\n`sem_status`, `sem_sql`.\n\n### Notes\n\n- Needs\
+    \ a [TypeSafe](https://docs.typesafe.ai) API key, and sends sampled values\n \
+    \ to that API. `sem_cost()` says how much will go before any of it does.\n- Responses\
+    \ are cached to disk, content-addressed, so re-runs are free and\n  deterministic.\
+    \ That cache holds the sampled values in plaintext.\n- The macro layer installs\
+    \ automatically only on an in-memory database, where\n  nothing persists. Profile\
+    \ a database file by attaching it `READ_ONLY`.\n"

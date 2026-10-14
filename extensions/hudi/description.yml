@@ -1,0 +1,48 @@
+extension:
+  name: hudi
+  description: "Query Apache Hudi COW and MOR tables directly in DuckDB \u2014 full\
+    \ scans, time-travel (as_of), incremental windows, and table metadata \u2014 powered\
+    \ by the Rust hudi-rs kernel."
+  version: 0.2.1
+  language: Rust
+  build: cmake
+  license: MIT
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;linux_amd64_musl;windows_amd64_mingw;windows_amd64_rtools
+  requires_toolchains: rust
+  maintainers:
+  - alitrack
+repo:
+  github: alitrack/duckdb-hudi
+  ref: ea166bd3b7fc07bcaf3356880da73e864c5f05e9
+docs:
+  hello_world: '-- Read a Hudi COW table
+
+    LOAD hudi;
+
+    SELECT * FROM hudi_scan(''/path/to/hudi_table'')
+
+    WHERE dt = ''2026-01-01'';
+
+
+    -- Time-travel to a specific instant
+
+    SELECT * FROM hudi_scan(''/path/to/hudi_table'', as_of = ''20260101000000000'');
+
+
+    -- Incremental read of new records since the last checkpoint
+
+    SELECT * FROM hudi_scan(''/path/to/hudi_table'', incremental = true);
+
+    '
+  extended_description: "## duckdb-hudi\n\nDuckDB extension that reads [Apache Hudi](https://hudi.apache.org/)\
+    \ tables\n(COW and MOR) using the [hudi-rs](https://crates.io/crates/hudi) Rust\
+    \ kernel.\nSource: https://github.com/alitrack/duckdb-hudi\n\n### Install\n```sql\n\
+    INSTALL hudi FROM community;\nLOAD hudi;\n```\n\n### Features\n- Full scan of\
+    \ COW and MOR Hudi tables\n- Time-travel via `as_of` (query a table at a specific\
+    \ instant)\n- Incremental reads (new/changed records since a checkpoint)\n- Table\
+    \ schema + metadata queries\n- Parallel scanning\n\n### Build note\nThe extension\
+    \ is built from the DuckDB C-API Rust template and its `hudi`\ndependency pulls\
+    \ in the Lance crate, which runs `prost-build` at compile\ntime. Building therefore\
+    \ requires `protoc` to be available (this extension\ndeclares `requires_toolchains:\
+    \ rust`; the protobuf compiler is the one\ntoolchain not yet in the default community\
+    \ build environment \u2014 see the PR\ndescription for the resolution).\n"

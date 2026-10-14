@@ -11,7 +11,7 @@ extension:
   - oglego
 repo:
   github: oglego/duckdb_clamp
-  ref: f714928f05bd16e187c585d17fdcb3ea93f653dd
+  ref: 8e21b27a80a2ebfda2b786d06ca50a4123b3faa5
 docs:
   hello_world: '-- General clamp between min and max
 
@@ -91,6 +91,15 @@ docs:
 
     SELECT fract(10);            -- Returns 0.0
 
+
+    -- Step function (returns 0 if value < edge, otherwise 1)
+
+    SELECT step(0.5, 0.25);      -- Returns 0.0
+
+    SELECT step(0.5, 0.5);       -- Returns 1.0
+
+    SELECT step(5,6);            -- Returns 1
+
     '
   extended_description: "The Clamp extension provides functions for numerical restriction:\n\
     \n1. **clamp(value, min, max)**: Restricts a numeric value between `min` and `max`.\n\
@@ -101,6 +110,7 @@ docs:
     \ for `saturate(value)`.\n\n5. **wrap(value, min, max)**: Wrap a value x into\
     \ the range [min, max) using modular arithmetic.\n\n6. **pingpong(value, min,\
     \ max)**: Return a value that \"bounces\" back and forth between the min and max.\n\
-    \n7. **fract(value)**: Return the fractional part of a number.\n\nThis extension\
+    \n7. **fract(value)**: Return the fractional part of a number.\n\n8. **step(edge,\
+    \ value)**: Return 0 if `value < edge`, otherwise return 1.\n\nThis extension\
     \ ensures safe handling of edge cases including:\n- NaN values\n- NULLs\n- Floating-point\
     \ numbers\n- Large integers\n"
