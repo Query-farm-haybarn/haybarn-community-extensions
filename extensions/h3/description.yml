@@ -5,6 +5,11 @@ extension:
   language: C++
   build: cmake
   license: Apache-2.0
+  # Haybarn: wasm_threads excluded 2026-10-14. That leg has failed on Haybarn
+  # since v1.5.5 (emscripten 5 and 6), and one failing leg skips the whole
+  # deploy, so no platform was being published. Drop the exclusion once the
+  # wasm_threads link is fixed.
+  excluded_platforms: wasm_threads
   requires_toolchains: python3
   maintainers:
   - isaacbrodsky
