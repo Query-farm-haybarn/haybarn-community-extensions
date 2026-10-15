@@ -6,6 +6,11 @@ extension:
   language: C++
   build: cmake
   license: MIT
+  # Haybarn: disabled 2026-10-14. The pinned ref 70a86f0 no longer exists in
+  # shreeve/duckdb-harbor (history rewritten) and upstream community-extensions
+  # has dropped harbor from its catalog. Re-enable by pointing repo.ref at a
+  # live commit if the extension returns upstream.
+  excluded_platforms: linux_amd64;linux_arm64;linux_amd64_musl;linux_arm64_musl;osx_amd64;osx_arm64;windows_amd64;windows_arm64;windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
   maintainers:
   - shreeve
 repo:
