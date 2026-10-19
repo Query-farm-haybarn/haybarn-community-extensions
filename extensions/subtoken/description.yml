@@ -12,7 +12,8 @@ extension:
   - hughcameron
 repo:
   github: meridian-online/subtoken
-  ref: c453860544b53803bb9b830c4818e4f1ad2d4057
+  ref: 3bf95680e23ba6ad23951023bd65432f53877485
+  ref_next: 3bf95680e23ba6ad23951023bd65432f53877485
 docs:
   hello_world: "-- A vector for a string, from a model compiled into this binary.\
     \ No API\n-- key, no network call, no per-row bill.\nCREATE TABLE corpus (id INTEGER,\
@@ -204,23 +205,23 @@ docs:
     \ is\n`NULL`, matching `subtoken_embed(NULL)`, so it drops out of a `WHERE` clause\
     \ the same way.\n\n### What counts as the same string\n\nThe bundled tokenizer\
     \ lowercases, strips accents and ignores surrounding\nwhitespace, so you do not\
-    \ have to normalise a column before embedding it. Word\norder still matters, and\
-    \ different words still give different vectors.\n\n```sql\nSELECT subtoken_embed('Steel')\
-    \ = subtoken_embed('  steel  ')          AS case_and_space_fold,\n       subtoken_embed('caf\xE9\
-    ')  = subtoken_embed('cafe' || chr(769))   AS accents_fold;\n```\n\nThe cache\
-    \ keys on the exact input bytes rather than on the tokenizer's folded\nform, so\
-    \ those variants do occupy separate cache entries. That is deliberate:\nreproducing\
-    \ a dependency's normalisation in the cache would mean a tokenizer\nbump quietly\
-    \ changing which inputs share an entry, and the failure would be a\nvector returned\
-    \ for text nobody embedded.\n\n### Repeating a query does not re-embed, up to\
-    \ a stated number of distinct values\n\nVectors are cached against the exact input\
-    \ bytes and a digest of the bundled\nmodel's own files, so re-running a query\
-    \ re-embeds nothing \u2014 **for as many\ndistinct values as the cache holds**\
-    \ \u2014 and a future build with different\nweights cannot serve you the old ones.\n\
-    \n```sql\nSELECT subtoken_cache_clear();\nCREATE TABLE v AS SELECT subtoken_embed(description)\
-    \ FROM corpus;\nSELECT subtoken_cache_stats().encoded AS encoded_first_pass,\n\
-    \       subtoken_cache_stats().uncached AS turned_away;\n\nCREATE TABLE w AS SELECT\
-    \ subtoken_embed(description) FROM corpus;\nSELECT subtoken_cache_stats().encoded\
+    \ have to normalise a column before embedding it. The\nsame words in another order\
+    \ give the same vector, and different words still\ngive different vectors.\n\n\
+    ```sql\nSELECT subtoken_embed('Steel') = subtoken_embed('  steel  ')         \
+    \ AS case_and_space_fold,\n       subtoken_embed('caf\xE9')  = subtoken_embed('cafe'\
+    \ || chr(769))   AS accents_fold;\n```\n\nThe cache keys on the exact input bytes\
+    \ rather than on the tokenizer's folded\nform, so those variants do occupy separate\
+    \ cache entries. That is deliberate:\nreproducing a dependency's normalisation\
+    \ in the cache would mean a tokenizer\nbump quietly changing which inputs share\
+    \ an entry, and the failure would be a\nvector returned for text nobody embedded.\n\
+    \n### Repeating a query does not re-embed, up to a stated number of distinct values\n\
+    \nVectors are cached against the exact input bytes and a digest of the bundled\n\
+    model's own files, so re-running a query re-embeds nothing \u2014 **for as many\n\
+    distinct values as the cache holds** \u2014 and a future build with different\n\
+    weights cannot serve you the old ones.\n\n```sql\nSELECT subtoken_cache_clear();\n\
+    CREATE TABLE v AS SELECT subtoken_embed(description) FROM corpus;\nSELECT subtoken_cache_stats().encoded\
+    \ AS encoded_first_pass,\n       subtoken_cache_stats().uncached AS turned_away;\n\
+    \nCREATE TABLE w AS SELECT subtoken_embed(description) FROM corpus;\nSELECT subtoken_cache_stats().encoded\
     \ AS encoded_after_a_repeat;\n```\n\n**The bound.** The cache spends a fixed memory\
     \ budget \u2014 64 MiB \u2014 so it holds\n`capacity` vectors and no more. Once\
     \ it is full it **stops admitting new values\nrather than evicting old ones**,\
