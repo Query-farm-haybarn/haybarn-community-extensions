@@ -15,25 +15,14 @@ repo:
   github: alitrack/duckdb-hudi
   ref: ea166bd3b7fc07bcaf3356880da73e864c5f05e9
 docs:
-  hello_world: '-- Read a Hudi COW table
-
-    LOAD hudi;
-
-    SELECT * FROM hudi_scan(''/path/to/hudi_table'')
-
-    WHERE dt = ''2026-01-01'';
-
-
-    -- Time-travel to a specific instant
-
-    SELECT * FROM hudi_scan(''/path/to/hudi_table'', as_of = ''20260101000000000'');
-
-
-    -- Incremental read of new records since the last checkpoint
-
-    SELECT * FROM hudi_scan(''/path/to/hudi_table'', incremental = true);
-
-    '
+  hello_world: "-- Read a Hudi COW table\nINSTALL hudi FROM community;\nLOAD hudi;\n\
+    SELECT * FROM read_hudi('/path/to/hudi_table')\nWHERE dt = '2026-01-01';\n\n--\
+    \ Time-travel to the latest commit <= an instant\nSELECT * FROM read_hudi('/path/to/hudi_table',\
+    \ as_of => '20260101000000000');\n\n-- Incremental read of changes in (start,\
+    \ \"end\"]\n-- (\"end\" is a reserved word, so quote it as a named parameter)\n\
+    SELECT * FROM read_hudi('/path/to/hudi_table',\n    start => '20260101000000000',\
+    \ \"end\" => '20260102000000000');\n\n-- Table metadata: type, latest commit,\
+    \ file counts\nSELECT hudi_info('/path/to/hudi_table');\n"
   extended_description: "## duckdb-hudi\n\nDuckDB extension that reads [Apache Hudi](https://hudi.apache.org/)\
     \ tables\n(COW and MOR) using the [hudi-rs](https://crates.io/crates/hudi) Rust\
     \ kernel.\nSource: https://github.com/alitrack/duckdb-hudi\n\n### Install\n```sql\n\

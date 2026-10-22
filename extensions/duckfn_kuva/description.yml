@@ -13,6 +13,7 @@ extension:
 repo:
   github: shijianjs/duckfn-kuva
   ref: 229292db2882927cbaaa209687d44f6117ba1065
+  ref_next: 229292db2882927cbaaa209687d44f6117ba1065
 docs:
   hello_world: "-- One function: a JSON chart spec in, an SVG document out\nSELECT\
     \ kuva_render('{\"series\":[{\"type\":\"scatter\",\"data\":[{\"x\":1,\"y\":2},{\"\
