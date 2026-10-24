@@ -5,48 +5,30 @@ extension:
   language: C++
   build: cmake
   license: MIT
-  excluded_platforms: "windows_amd64_rtools;windows_amd64_mingw;windows_amd64;wasm_threads;wasm_eh;wasm_mvp;linux_amd64_musl;"
-  requires_toolchains: "vcpkg"
+  excluded_platforms: windows_amd64_rtools;windows_amd64_mingw;windows_amd64;wasm_threads;wasm_eh;wasm_mvp;linux_amd64_musl;
+  requires_toolchains: vcpkg
   maintainers:
-    - onnimonni
-  vcpkg_commit: 'dd3097e305afa53f7b4312371f62058d2e665320'
+  - onnimonni
+  vcpkg_commit: dd3097e305afa53f7b4312371f62058d2e665320
 repo:
   github: midwork-finds-jobs/duckdb-sshfs
-  andium: 5f2e422f964010d11a0bea040ab421c4d7f7fa41
   variegata: 34d3dddd08f29e7c40bda9a05d56a1b053f9ec7d
   ref: b7ca495c21ea7cec2c59c1e890129a95fdd4a7c3
-
 docs:
-  hello_world: |
-    -- Install & load the extension
-    INSTALL sshfs FROM community;
-    LOAD sshfs;
+  hello_world: "-- Install & load the extension\nINSTALL sshfs FROM community;\nLOAD\
+    \ sshfs;\n\n-- Authenticate with SSH key file\nCREATE SECRET my_hetzner_storagebox\
+    \ (\n    TYPE SSH,\n    USERNAME 'user',\n    KEY_PATH '/Users/' || getenv('USER')\
+    \ || '/.ssh/storagebox_key',\n    PORT 23\n    SCOPE 'sshfs://u123456.your-storagebox.de'\n\
+    );\n\n-- or with password\nCREATE SECRET my_server (\n  TYPE SSH,\n  USERNAME\
+    \ 'user',\n  PASSWORD 'password',\n  SCOPE 'sshfs://your-server.example.com'\n\
+    );\n\n-- Write data to remote server\nCOPY (SELECT * FROM large_table)\nTO 'sshfs://your-server.example.com/data.parquet';\n\
+    \n-- Read The uploaded parquet file using WebDAV\nSELECT * FROM 'sshfs://your-server.example.com/data.parquet';\n"
+  extended_description: 'DuckDB sshfs extension enables seamless integration with
+    servers through ssh, allowing users to read from and write to remote file systems
+    directly within DuckDB.
 
-    -- Authenticate with SSH key file
-    CREATE SECRET my_hetzner_storagebox (
-        TYPE SSH,
-        USERNAME 'user',
-        KEY_PATH '/Users/' || getenv('USER') || '/.ssh/storagebox_key',
-        PORT 23
-        SCOPE 'sshfs://u123456.your-storagebox.de'
-    );
 
-    -- or with password
-    CREATE SECRET my_server (
-      TYPE SSH,
-      USERNAME 'user',
-      PASSWORD 'password',
-      SCOPE 'sshfs://your-server.example.com'
-    );
+    See: https://github.com/midwork-finds-jobs/duckdb-sshfs/blob/main/README.md for
+    more examples and details.
 
-    -- Write data to remote server
-    COPY (SELECT * FROM large_table)
-    TO 'sshfs://your-server.example.com/data.parquet';
-    
-    -- Read The uploaded parquet file using WebDAV
-    SELECT * FROM 'sshfs://your-server.example.com/data.parquet';
-
-  extended_description: |
-    DuckDB sshfs extension enables seamless integration with servers through ssh, allowing users to read from and write to remote file systems directly within DuckDB.
-
-    See: https://github.com/midwork-finds-jobs/duckdb-sshfs/blob/main/README.md for more examples and details.
+    '

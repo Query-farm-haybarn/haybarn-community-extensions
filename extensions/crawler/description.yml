@@ -6,56 +6,32 @@ extension:
   build: cmake
   license: MIT
   maintainers:
-    - onnimonni
-
+  - onnimonni
   requires_toolchains: rust
-  excluded_platforms: "windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads"
-
+  excluded_platforms: windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
 repo:
   github: midwork-finds-jobs/duckdb-crawler
-  andium: f0aad857435a2ce138c567e8af11f9d4f8ae0c25
   variegata: ce2679bc70f65b0d3525262066ece014b8d8f1c9
   ref: d846ba2074e029a1747853e6bf5baa75e3a5e05c
-
 docs:
-  hello_world: |
-    SELECT url, jq(html.document, 'h1').text as title
-    FROM crawl(['https://example.com']);
-  extended_description: |
-    The crawler extension provides SQL-native web crawling capabilities for DuckDB.
+  hello_world: 'SELECT url, jq(html.document, ''h1'').text as title
 
-    Features:
-    - `crawl()` table function with automatic rate limiting and robots.txt compliance
-    - LATERAL join support: `FROM urls u, LATERAL crawl(u.url)`
-    - `sitemap()` for XML sitemap parsing
-    - `read_html()` for Google Sheets-style IMPORTHTML (tables, lists, JS variables)
-    - `jq()` and `htmlpath()` functions for CSS selector-based extraction
-    - `html.readability` for article extraction
-    - `html.schema` for JSON-LD/microdata parsing
-    - `CRAWLING MERGE INTO` syntax for upsert operations
+    FROM crawl([''https://example.com'']);
 
-    Example with read_html (like Google Sheets =IMPORTHTML):
-    ```sql
-    SELECT * FROM read_html('https://en.wikipedia.org/wiki/...', 'table.wikitable', 1);
-    SELECT * FROM read_html('https://example.com/page', 'js=jobs');
-    ```
-
-    Example with extraction:
-    ```sql
-    SELECT
-        url,
-        jq(html.document, '.price', 'data-amount') as price,
-        html.readability.title as article_title
-    FROM crawl(['https://example.com/products']);
-    ```
-
-    Example with MERGE:
-    ```sql
-    CRAWLING MERGE INTO pages
-    USING crawl(['https://example.com']) AS src
-    ON (src.url = pages.url)
-    WHEN MATCHED THEN UPDATE BY NAME
-    WHEN NOT MATCHED THEN INSERT BY NAME;
-    ```
-
-    For full documentation see: https://github.com/midwork-finds-jobs/duckdb-crawler
+    '
+  extended_description: "The crawler extension provides SQL-native web crawling capabilities\
+    \ for DuckDB.\n\nFeatures:\n- `crawl()` table function with automatic rate limiting\
+    \ and robots.txt compliance\n- LATERAL join support: `FROM urls u, LATERAL crawl(u.url)`\n\
+    - `sitemap()` for XML sitemap parsing\n- `read_html()` for Google Sheets-style\
+    \ IMPORTHTML (tables, lists, JS variables)\n- `jq()` and `htmlpath()` functions\
+    \ for CSS selector-based extraction\n- `html.readability` for article extraction\n\
+    - `html.schema` for JSON-LD/microdata parsing\n- `CRAWLING MERGE INTO` syntax\
+    \ for upsert operations\n\nExample with read_html (like Google Sheets =IMPORTHTML):\n\
+    ```sql\nSELECT * FROM read_html('https://en.wikipedia.org/wiki/...', 'table.wikitable',\
+    \ 1);\nSELECT * FROM read_html('https://example.com/page', 'js=jobs');\n```\n\n\
+    Example with extraction:\n```sql\nSELECT\n    url,\n    jq(html.document, '.price',\
+    \ 'data-amount') as price,\n    html.readability.title as article_title\nFROM\
+    \ crawl(['https://example.com/products']);\n```\n\nExample with MERGE:\n```sql\n\
+    CRAWLING MERGE INTO pages\nUSING crawl(['https://example.com']) AS src\nON (src.url\
+    \ = pages.url)\nWHEN MATCHED THEN UPDATE BY NAME\nWHEN NOT MATCHED THEN INSERT\
+    \ BY NAME;\n```\n\nFor full documentation see: https://github.com/midwork-finds-jobs/duckdb-crawler\n"

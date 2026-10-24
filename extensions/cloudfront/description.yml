@@ -5,11 +5,10 @@ extension:
   language: C++
   license: MIT
   maintainers:
-    - onnimonni
+  - onnimonni
   name: cloudfront
   version: '2026102301'
 repo:
   github: midwork-finds-jobs/duckdb-cloudfront
-  andium: 176b7ee77e2c12c8a7068fde233f04f93a729c39
   variegata: 5d5309e77ff5a59dad1dd09f94772729fb83cc5a
   ref: 48a48a0da1d4cf69ab6c2e09053b4ac648d89372

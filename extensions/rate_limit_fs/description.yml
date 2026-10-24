@@ -5,22 +5,28 @@ extension:
   language: C++
   build: cmake
   license: MIT
-  excluded_platforms: "wasm_mvp;wasm_eh;wasm_threads"
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads
   maintainers:
-    - dentiny
-
+  - dentiny
 repo:
   github: dentiny/duckdb-rate-limit-filesystem
-  andium: 2d70a9f86b5d31fd6104980d5bfd47db82fcd020
   ref: 54e1fc7eba7c02b026c749fc7f00586d5fc09ed3
-
 docs:
-  hello_world: |
-    SELECT rate_limit_fs_wrap('RateLimitFsFakeFileSystem');
-    SELECT rate_limit_fs_quota('RateLimitFileSystem - RateLimitFsFakeFileSystem', 'read', 1000000, 'blocking');
-  extended_description: |
-    This extension implements rate and burst limit for duckdb filesystems.
+  hello_world: 'SELECT rate_limit_fs_wrap(''RateLimitFsFakeFileSystem'');
+
+    SELECT rate_limit_fs_quota(''RateLimitFileSystem - RateLimitFsFakeFileSystem'',
+    ''read'', 1000000, ''blocking'');
+
+    '
+  extended_description: 'This extension implements rate and burst limit for duckdb
+    filesystems.
+
     It supports a few key features:
+
     - Support filesystem and operation based limit.
+
     - Support burst limit and GCRA-based rate limit.
-    - Supports wrap custom filesystems, so users don't need to change their query.
+
+    - Supports wrap custom filesystems, so users don''t need to change their query.
+
+    '

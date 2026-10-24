@@ -1,206 +1,107 @@
 extension:
   name: duck_block_utils
-  description: Build, transform, validate, and extract content from structured documents using the duck_block type
+  description: Build, transform, validate, and extract content from structured documents
+    using the duck_block type
   version: 3.5.1
   language: C++
   build: cmake
   license: MIT
   maintainers:
-    - teaguesterling
+  - teaguesterling
 repo:
   github: teaguesterling/duckdb_duck_block_utils
-  # andium (DuckDB v1.4.5 track) intentionally left at the v1.2.1 commit. The tree
-  # this release is built from targets DuckDB v1.5.5 and carries no v1.4.x support,
-  # so advancing this pin would point a v1.4.5 build at a tree that cannot build for
-  # it. v1.4.5 users should move to the v1.5.x track.
-  andium: 125662df9e5450105dc9b7957ad955cb53d7beec
   ref: 531b0596017773ec5d3eee1e71e25361a5d49525
-  # variegata pins the v1.5.6 track. scripts/build.py sends a v1.5.6 build here when
-  # present and to `ref` otherwise, and unlike ref_next it has no skip branch -- so
-  # once `ref` is 2.0-only a v1.5.6 build would fail rather than be skipped. Equal to
-  # `ref` while both lines build; advance only to a commit v1.5.6 can still build.
   variegata: 531b0596017773ec5d3eee1e71e25361a5d49525
   ref_next: 531b0596017773ec5d3eee1e71e25361a5d49525
 docs:
-  hello_world: |
-    -- Build a document programmatically
-    SELECT duck_blocks_assemble([
-        duck_block_heading(1, 'Hello World'),
-        duck_block_paragraph([
-            duck_block_text('This is '),
-            duck_block_bold('important'),
-            duck_block_text(' content.')
-        ]),
-        duck_block_code('sql', 'SELECT * FROM documents')
-    ]);
-
-    -- Render it as plain text
-    SELECT duck_blocks_to_text(duck_blocks_assemble([
-        duck_block_heading(1, 'Hello World'),
-        duck_block_paragraph('Some prose.')
-    ]));
-
-    -- Works with the markdown extension for reading and writing files
-    LOAD markdown;
-    LOAD duck_block_utils;
-
-    -- Table of contents from a markdown file
-    SELECT * FROM duck_blocks_toc_rows(
-        (SELECT list(b) FROM read_markdown_blocks('README.md') b)
-    );
-
-    -- Validate document structure
-    SELECT duck_blocks_validate(
-        (SELECT list(b) FROM read_markdown_blocks('doc.md') b)
-    );
-
-  extended_description: |
-    The Duck Block Utils extension provides tools for building, transforming, validating, and
-    extracting content from structured documents. All functions use the `duck_block` type - a
-    unified representation for document elements that works across formats.
-
-    **Documentation:** [duck-block-utils.readthedocs.io](https://duck-block-utils.readthedocs.io)
-
-    ## 2.0.0 is a breaking rename
-
-    Every `db_*` function was renamed to `duck_block_*` (builders) or `duck_blocks_*`
-    (operations on a list). 54 names present in 1.6.1 are gone and there is no alias
-    path, so 1.6.1 queries must be updated. The mapping is mechanical:
-
-    ```sql
-    db_heading(1, 'Title')      ->  duck_block_heading(1, 'Title')
-    db_assemble(blocks)         ->  duck_blocks_assemble(blocks)
-    db_blocks_to_text(blocks)   ->  duck_blocks_to_text(blocks)
-    db_page                     ->  page_break
-    ```
-
-    ## The duck_block Type
-
-    A unified struct for block-level, inline and metadata-value elements:
-
-    ```sql
-    STRUCT(
-        kind VARCHAR,                       -- 'block', 'inline' or 'value'
-        element_type VARCHAR,               -- 'heading', 'paragraph', 'bold', 'link', etc.
-        content VARCHAR,                    -- text, iff the element has a single text child
-        level INTEGER,                      -- depth in a depth-first ordering; top is 1 (0 is the
-                                            --   optional explicit document root)
-        encoding VARCHAR,                   -- 'text', 'json', 'yaml', 'html', 'xml',
-                                            --   'latex', 'markdown', 'toml'
-        attributes MAP(VARCHAR, VARCHAR),   -- element-specific metadata
-        element_order INTEGER               -- position in the document
-    )
-    ```
-
-    `level` is structural depth, never a heading rank - a heading's rank lives in
-    `attributes['heading_level']`. `content` is populated if and only if an element has
-    a single text child; a heading additionally keeps a flattened title alongside its
-    rich children.
-
-    ## Builders
-
-    All builder functions return `LIST(duck_block)` so they compose by nesting:
-
-    ```sql
-    SELECT duck_block_paragraph([
-        duck_block_text('Click '),
-        duck_block_link('https://example.com', 'here'),
-        duck_block_text(' for more.')
-    ]);
-    ```
-
-    | Function | Description |
-    |----------|-------------|
-    | `duck_block_heading(level, content)` | Heading (h1-h6) |
-    | `duck_block_paragraph(content)` | Paragraph |
-    | `duck_block_code(language, content)` | Fenced code block |
-    | `duck_block_blockquote(content)` | Block quote |
-    | `duck_block_list_block(ordered, items[])` | Ordered or unordered list |
-    | `duck_block_hr()` | Horizontal rule |
-    | `duck_block_image(src, alt, title)` | Image |
-    | `duck_block_metadata(content)` | Metadata blob (YAML frontmatter) |
-    | `duck_block_raw(format, content)` | Raw content block |
-    | `duck_block_text(content)` | Plain text |
-    | `duck_block_bold(content)` | Bold |
-    | `duck_block_italic(content)` | Italic |
-    | `duck_block_link(href, content)` | Hyperlink |
-    | `duck_block_inline_code(content)` | Inline code |
-    | `duck_block_math(content)` | Math |
-    | `duck_block_strikethrough(content)` | Strikethrough |
-    | `duck_block_superscript(content)` / `duck_block_subscript(content)` | Super/subscript |
-
-    ## Assembly
-
-    | Function | Description |
-    |----------|-------------|
-    | `duck_blocks_assemble(blocks[])` | Combine blocks into a document |
-    | `duck_blocks_document(blocks[])` | Alias for assemble |
-    | `duck_block_section(level, title, children[])` | Section with a heading |
-    | `duck_blocks_concat(a, b)` | Concatenate block lists |
-    | `duck_blocks_rebase_levels(blocks, offset)` | Shift heading levels |
-
-    ## Query and extraction
-
-    | Function | Description |
-    |----------|-------------|
-    | `duck_blocks_to_text(blocks)` | Plain text |
-    | `duck_blocks_headings(blocks)` | Heading hierarchy |
-    | `duck_blocks_toc_rows(blocks)` | Table of contents, one row per entry |
-    | `duck_blocks_get_section(blocks, pattern)` | One section by title or id |
-    | `duck_blocks_sections_like(blocks, term)` | Sections whose text matches |
-    | `duck_blocks_page_rows(blocks)` | Page boundaries, separate from the outline |
-    | `duck_blocks_get_pages(blocks, first, last)` | A page range |
-    | `duck_blocks_links(blocks)` | Every link |
-    | `duck_blocks_stats(blocks)` / `duck_blocks_structure(blocks)` | Document shape |
-    | `duck_blocks_diff(before, after)` | ADDED / REMOVED / MOVED between two versions |
-
-    ## Validation
-
-    | Function | Description |
-    |----------|-------------|
-    | `duck_blocks_validate(blocks)` | Spec conformance: valid, plus errors |
-    | `duck_blocks_repair(blocks)` | Deterministic fixes for the list-level rules: wrap orphans, rebase, renumber |
-    | `duck_block_implicit_parent(type, kind)` | The wrapper a fragment of that element gets, from the spec table |
-    | `duck_block_is_body(kind, element_type)` | Per-row half of the body rule: block or inline, and not the metadata blob |
-    | `duck_blocks_body(blocks)` | The body rows only: no value or metadata subtree, element_order kept |
-    | `duck_blocks_lint(blocks)` | Advisory conformance warnings |
-    | `duck_blocks_quality(blocks)` | Document quality, which is NOT conformance |
-    | `duck_block_spec_version()` | The spec version this build implements |
-
-    ## Rendering
-
-    | Function | Description |
-    |----------|-------------|
-    | `duck_blocks_render_ansi(blocks, width)` | Terminal rendering with themes |
-
-    ## Pandoc integration
-
-    Convert between Pandoc's JSON AST and `duck_block` without invoking Pandoc:
-
-    | Function | Description |
-    |----------|-------------|
-    | `pandoc_ast_to_blocks(json)` | Parse a Pandoc AST |
-    | `duck_blocks_to_pandoc_ast(blocks)` | Emit a full Pandoc document |
-    | `duck_blocks_to_pandoc_blocks(blocks)` | Emit just the block list |
-    | `read_pandoc_ast(path)` / `write_pandoc_ast(path, blocks)` | Read and write AST files |
-
-    ## Ecosystem
-
-    - **[duckdb_markdown](https://github.com/teaguesterling/duckdb_markdown)** - `read_markdown_blocks()`, and `COPY ... TO ... (FORMAT markdown, MARKDOWN_MODE duck_block)`
-    - **[duckdb_webbed](https://github.com/teaguesterling/duckdb_webbed)** - HTML parsing and generation
-
-    ```sql
-    -- Read markdown, append to it, write it back
-    LOAD markdown;
-    LOAD duck_block_utils;
-
-    COPY (
-        SELECT unnest(duck_blocks_concat(
-            (SELECT list(b) FROM read_markdown_blocks('doc.md') b),
-            duck_blocks_assemble([
-                duck_block_hr(),
-                duck_block_paragraph('Generated by DuckDB')
-            ])
-        )) AS block
-    ) TO 'output.md' (FORMAT markdown, MARKDOWN_MODE duck_block);
-    ```
+  hello_world: "-- Build a document programmatically\nSELECT duck_blocks_assemble([\n\
+    \    duck_block_heading(1, 'Hello World'),\n    duck_block_paragraph([\n     \
+    \   duck_block_text('This is '),\n        duck_block_bold('important'),\n    \
+    \    duck_block_text(' content.')\n    ]),\n    duck_block_code('sql', 'SELECT\
+    \ * FROM documents')\n]);\n\n-- Render it as plain text\nSELECT duck_blocks_to_text(duck_blocks_assemble([\n\
+    \    duck_block_heading(1, 'Hello World'),\n    duck_block_paragraph('Some prose.')\n\
+    ]));\n\n-- Works with the markdown extension for reading and writing files\nLOAD\
+    \ markdown;\nLOAD duck_block_utils;\n\n-- Table of contents from a markdown file\n\
+    SELECT * FROM duck_blocks_toc_rows(\n    (SELECT list(b) FROM read_markdown_blocks('README.md')\
+    \ b)\n);\n\n-- Validate document structure\nSELECT duck_blocks_validate(\n   \
+    \ (SELECT list(b) FROM read_markdown_blocks('doc.md') b)\n);\n"
+  extended_description: "The Duck Block Utils extension provides tools for building,\
+    \ transforming, validating, and\nextracting content from structured documents.\
+    \ All functions use the `duck_block` type - a\nunified representation for document\
+    \ elements that works across formats.\n\n**Documentation:** [duck-block-utils.readthedocs.io](https://duck-block-utils.readthedocs.io)\n\
+    \n## 2.0.0 is a breaking rename\n\nEvery `db_*` function was renamed to `duck_block_*`\
+    \ (builders) or `duck_blocks_*`\n(operations on a list). 54 names present in 1.6.1\
+    \ are gone and there is no alias\npath, so 1.6.1 queries must be updated. The\
+    \ mapping is mechanical:\n\n```sql\ndb_heading(1, 'Title')      ->  duck_block_heading(1,\
+    \ 'Title')\ndb_assemble(blocks)         ->  duck_blocks_assemble(blocks)\ndb_blocks_to_text(blocks)\
+    \   ->  duck_blocks_to_text(blocks)\ndb_page                     ->  page_break\n\
+    ```\n\n## The duck_block Type\n\nA unified struct for block-level, inline and\
+    \ metadata-value elements:\n\n```sql\nSTRUCT(\n    kind VARCHAR,             \
+    \          -- 'block', 'inline' or 'value'\n    element_type VARCHAR,        \
+    \       -- 'heading', 'paragraph', 'bold', 'link', etc.\n    content VARCHAR,\
+    \                    -- text, iff the element has a single text child\n    level\
+    \ INTEGER,                      -- depth in a depth-first ordering; top is 1 (0\
+    \ is the\n                                        --   optional explicit document\
+    \ root)\n    encoding VARCHAR,                   -- 'text', 'json', 'yaml', 'html',\
+    \ 'xml',\n                                        --   'latex', 'markdown', 'toml'\n\
+    \    attributes MAP(VARCHAR, VARCHAR),   -- element-specific metadata\n    element_order\
+    \ INTEGER               -- position in the document\n)\n```\n\n`level` is structural\
+    \ depth, never a heading rank - a heading's rank lives in\n`attributes['heading_level']`.\
+    \ `content` is populated if and only if an element has\na single text child; a\
+    \ heading additionally keeps a flattened title alongside its\nrich children.\n\
+    \n## Builders\n\nAll builder functions return `LIST(duck_block)` so they compose\
+    \ by nesting:\n\n```sql\nSELECT duck_block_paragraph([\n    duck_block_text('Click\
+    \ '),\n    duck_block_link('https://example.com', 'here'),\n    duck_block_text('\
+    \ for more.')\n]);\n```\n\n| Function | Description |\n|----------|-------------|\n\
+    | `duck_block_heading(level, content)` | Heading (h1-h6) |\n| `duck_block_paragraph(content)`\
+    \ | Paragraph |\n| `duck_block_code(language, content)` | Fenced code block |\n\
+    | `duck_block_blockquote(content)` | Block quote |\n| `duck_block_list_block(ordered,\
+    \ items[])` | Ordered or unordered list |\n| `duck_block_hr()` | Horizontal rule\
+    \ |\n| `duck_block_image(src, alt, title)` | Image |\n| `duck_block_metadata(content)`\
+    \ | Metadata blob (YAML frontmatter) |\n| `duck_block_raw(format, content)` |\
+    \ Raw content block |\n| `duck_block_text(content)` | Plain text |\n| `duck_block_bold(content)`\
+    \ | Bold |\n| `duck_block_italic(content)` | Italic |\n| `duck_block_link(href,\
+    \ content)` | Hyperlink |\n| `duck_block_inline_code(content)` | Inline code |\n\
+    | `duck_block_math(content)` | Math |\n| `duck_block_strikethrough(content)` |\
+    \ Strikethrough |\n| `duck_block_superscript(content)` / `duck_block_subscript(content)`\
+    \ | Super/subscript |\n\n## Assembly\n\n| Function | Description |\n|----------|-------------|\n\
+    | `duck_blocks_assemble(blocks[])` | Combine blocks into a document |\n| `duck_blocks_document(blocks[])`\
+    \ | Alias for assemble |\n| `duck_block_section(level, title, children[])` | Section\
+    \ with a heading |\n| `duck_blocks_concat(a, b)` | Concatenate block lists |\n\
+    | `duck_blocks_rebase_levels(blocks, offset)` | Shift heading levels |\n\n## Query\
+    \ and extraction\n\n| Function | Description |\n|----------|-------------|\n|\
+    \ `duck_blocks_to_text(blocks)` | Plain text |\n| `duck_blocks_headings(blocks)`\
+    \ | Heading hierarchy |\n| `duck_blocks_toc_rows(blocks)` | Table of contents,\
+    \ one row per entry |\n| `duck_blocks_get_section(blocks, pattern)` | One section\
+    \ by title or id |\n| `duck_blocks_sections_like(blocks, term)` | Sections whose\
+    \ text matches |\n| `duck_blocks_page_rows(blocks)` | Page boundaries, separate\
+    \ from the outline |\n| `duck_blocks_get_pages(blocks, first, last)` | A page\
+    \ range |\n| `duck_blocks_links(blocks)` | Every link |\n| `duck_blocks_stats(blocks)`\
+    \ / `duck_blocks_structure(blocks)` | Document shape |\n| `duck_blocks_diff(before,\
+    \ after)` | ADDED / REMOVED / MOVED between two versions |\n\n## Validation\n\n\
+    | Function | Description |\n|----------|-------------|\n| `duck_blocks_validate(blocks)`\
+    \ | Spec conformance: valid, plus errors |\n| `duck_blocks_repair(blocks)` | Deterministic\
+    \ fixes for the list-level rules: wrap orphans, rebase, renumber |\n| `duck_block_implicit_parent(type,\
+    \ kind)` | The wrapper a fragment of that element gets, from the spec table |\n\
+    | `duck_block_is_body(kind, element_type)` | Per-row half of the body rule: block\
+    \ or inline, and not the metadata blob |\n| `duck_blocks_body(blocks)` | The body\
+    \ rows only: no value or metadata subtree, element_order kept |\n| `duck_blocks_lint(blocks)`\
+    \ | Advisory conformance warnings |\n| `duck_blocks_quality(blocks)` | Document\
+    \ quality, which is NOT conformance |\n| `duck_block_spec_version()` | The spec\
+    \ version this build implements |\n\n## Rendering\n\n| Function | Description\
+    \ |\n|----------|-------------|\n| `duck_blocks_render_ansi(blocks, width)` |\
+    \ Terminal rendering with themes |\n\n## Pandoc integration\n\nConvert between\
+    \ Pandoc's JSON AST and `duck_block` without invoking Pandoc:\n\n| Function |\
+    \ Description |\n|----------|-------------|\n| `pandoc_ast_to_blocks(json)` |\
+    \ Parse a Pandoc AST |\n| `duck_blocks_to_pandoc_ast(blocks)` | Emit a full Pandoc\
+    \ document |\n| `duck_blocks_to_pandoc_blocks(blocks)` | Emit just the block list\
+    \ |\n| `read_pandoc_ast(path)` / `write_pandoc_ast(path, blocks)` | Read and write\
+    \ AST files |\n\n## Ecosystem\n\n- **[duckdb_markdown](https://github.com/teaguesterling/duckdb_markdown)**\
+    \ - `read_markdown_blocks()`, and `COPY ... TO ... (FORMAT markdown, MARKDOWN_MODE\
+    \ duck_block)`\n- **[duckdb_webbed](https://github.com/teaguesterling/duckdb_webbed)**\
+    \ - HTML parsing and generation\n\n```sql\n-- Read markdown, append to it, write\
+    \ it back\nLOAD markdown;\nLOAD duck_block_utils;\n\nCOPY (\n    SELECT unnest(duck_blocks_concat(\n\
+    \        (SELECT list(b) FROM read_markdown_blocks('doc.md') b),\n        duck_blocks_assemble([\n\
+    \            duck_block_hr(),\n            duck_block_paragraph('Generated by\
+    \ DuckDB')\n        ])\n    )) AS block\n) TO 'output.md' (FORMAT markdown, MARKDOWN_MODE\
+    \ duck_block);\n```\n"

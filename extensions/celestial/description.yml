@@ -6,15 +6,16 @@ extension:
   build: cmake
   license: Apache-2.0
   maintainers:
-    - teobouvard
-
+  - teobouvard
 repo:
   github: lisa-sgs/duckdb-celestial
   ref: 0f2e5ecdad056d2752ea34b20e5db34efe047130
-  andium: fcc3ab3615868d219ca4cff5c61e2db8a3c4beb0
-
 docs:
-  hello_world: |
-    SELECT angular_separation_deg(204.2538292, -29.8657611, 201.3650633, -43.0191125);
-  extended_description: |
-    The celestial extension provides functions for working with astronomical coordinates.
+  hello_world: 'SELECT angular_separation_deg(204.2538292, -29.8657611, 201.3650633,
+    -43.0191125);
+
+    '
+  extended_description: 'The celestial extension provides functions for working with
+    astronomical coordinates.
+
+    '

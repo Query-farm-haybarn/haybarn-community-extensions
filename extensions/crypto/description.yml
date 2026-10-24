@@ -12,8 +12,7 @@ extension:
   requires_toolchains: rust
   version: '2025120401'
 repo:
-  andium: 0840a76e0a50c4c6e27f5432221166c829c00413
   github: query-farm/crypto
   ref: cbcc152b6cbe53ae7876af24060c26df0488a2a6
-  haybarn_ref: bb061e174827a69b0099ef429e990cf1fd9e9b5e
   variegata: 2f9163474e3d0c22e2a69573fbb456d7e106dcf6
+  haybarn_ref: bb061e174827a69b0099ef429e990cf1fd9e9b5e

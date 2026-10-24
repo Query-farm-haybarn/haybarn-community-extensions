@@ -49,8 +49,7 @@ extension:
   name: http_client
   version: '2026082701'
 repo:
-  andium: e9730fc28af6757f663246f06956a8cab7ad9a55
   github: query-farm/httpclient
   ref: f8885ec49e233d0d246f3aad5406ca11fd148868
-  haybarn_ref: f05207bf00ce047108f273c4944b778d38df139a
   variegata: 9db208efbb157cd481d64b23b95b0fca1a86887f
+  haybarn_ref: f05207bf00ce047108f273c4944b778d38df139a

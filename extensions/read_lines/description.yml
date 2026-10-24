@@ -1,99 +1,148 @@
 extension:
   name: read_lines
-  description: Read line-based text files with line numbers and efficient subset extraction. Supports glob patterns, line selection with context, and GitHub-style '#L12-24' fragments so a line range can be attached to any path, including URIs served by other extensions.
+  description: Read line-based text files with line numbers and efficient subset extraction.
+    Supports glob patterns, line selection with context, and GitHub-style '#L12-24'
+    fragments so a line range can be attached to any path, including URIs served by
+    other extensions.
   version: 0.4.3
   language: C++
   build: cmake
   license: MIT
   maintainers:
-    - teaguesterling
+  - teaguesterling
 repo:
   github: teaguesterling/duckdb_read_lines
   ref: 63d27fec46a4c9baa98708cc1884329f20a597bf
-  # variegata pins the v1.5.6 track. scripts/build.py sends a v1.5.6 build here when
-  # present and to `ref` otherwise, and unlike ref_next it has no skip branch -- so
-  # once `ref` is 2.0-only a v1.5.6 build would fail rather than be skipped. Equal to
-  # `ref` while both lines build; advance only to a commit v1.5.6 can still build.
   variegata: 63d27fec46a4c9baa98708cc1884329f20a597bf
-  # ref_next == ref (deliberate): validate the shipped release on DuckDB
-  # v2.0-cyanoptera. v0.4.3 lands the family-C port (named_parameter ->
-  # FunctionSignature typed-kwargs shim, #18) — verified by a real cyanoptera CI
-  # leg that builds AND tests on v2.0 on this exact commit (the merge tip), plus a
-  # drift guard that keeps both lines in the workflow.
   ref_next: 63d27fec46a4c9baa98708cc1884329f20a597bf
-  # andium (DuckDB v1.4.5 track) intentionally left at its prior commit; ref is a
-  # v1.5.4 tree, so v0.4.0 ships on the v1.5.x track only.
-  andium: 8075509bc21b936c228879ada22c8a46657109aa
 docs:
-  hello_world: |
-    -- Read all lines from a file
-    SELECT * FROM read_lines('server.log');
+  hello_world: '-- Read all lines from a file
+
+    SELECT * FROM read_lines(''server.log'');
+
 
     -- Read specific lines (positional argument)
-    SELECT * FROM read_lines('server.log', '100-200');
+
+    SELECT * FROM read_lines(''server.log'', ''100-200'');
+
 
     -- Read lines with context around matches
-    SELECT * FROM read_lines('error.log', 42, context := 3);
+
+    SELECT * FROM read_lines(''error.log'', 42, context := 3);
+
 
     -- Path-embedded line selection
-    SELECT * FROM read_lines('error.log:42 +/-3');
+
+    SELECT * FROM read_lines(''error.log:42 +/-3'');
+
 
     -- Last 10 lines (from-end syntax)
-    SELECT * FROM read_lines('app.log', '+10-');
+
+    SELECT * FROM read_lines(''app.log'', ''+10-'');
+
 
     -- Glob pattern to read from multiple files
-    SELECT * FROM read_lines('logs/*.log')
-    WHERE content LIKE '%ERROR%';
+
+    SELECT * FROM read_lines(''logs/*.log'')
+
+    WHERE content LIKE ''%ERROR%'';
+
 
     -- Parse lines from a string
-    SELECT * FROM parse_lines('line1
-    line2
-    line3');
 
-  extended_description: |
-    The read_lines extension provides functions for reading line-based text files with
+    SELECT * FROM parse_lines(''line1
+
+    line2
+
+    line3'');
+
+    '
+  extended_description: 'The read_lines extension provides functions for reading line-based
+    text files with
+
     precise control over which lines to extract.
 
+
     **Functions:**
+
     - `read_lines(path)` - Read all lines from file(s) with glob support
+
     - `read_lines(path, lines[, trim])` - Read selected lines (positional arguments)
-    - `read_lines_lateral(path[, lines[, trim]])` - Lateral join variant for file paths from table columns
+
+    - `read_lines_lateral(path[, lines[, trim]])` - Lateral join variant for file
+    paths from table columns
+
     - `parse_lines(text, ...)` - Parse lines from a string
 
+
     Sources may be non-seekable (pipes/streams, e.g. shellfs commands), including
+
     per-row commands in a correlated lateral join.
 
+
     **Output Schema:**
+
     | Column | Type | Description |
+
     |--------|------|-------------|
+
     | line_number | BIGINT | 1-indexed line number |
+
     | content | VARCHAR | Line content (preserves original line endings) |
+
     | byte_offset | BIGINT | Byte position of line start |
+
     | file_path | VARCHAR | Source file path (read_lines only) |
 
-    **Trimming** (`trim` argument; transforms content only, never changes which rows appear):
-    - `NULL` / `false` / `'none'` - Preserve exactly (default)
-    - `true` / `'endings'` - Strip the line terminator only
-    - `'right'` - Strip terminator and trailing spaces/tabs
-    - `'left'` - Strip leading spaces/tabs, keep terminator
-    - `'both'` - Both sides
+
+    **Trimming** (`trim` argument; transforms content only, never changes which rows
+    appear):
+
+    - `NULL` / `false` / `''none''` - Preserve exactly (default)
+
+    - `true` / `''endings''` - Strip the line terminator only
+
+    - `''right''` - Strip terminator and trailing spaces/tabs
+
+    - `''left''` - Strip leading spaces/tabs, keep terminator
+
+    - `''both''` - Both sides
+
 
     **Line Selection:**
+
     - Single line: `42` or `lines := 42`
-    - Range: `'100-200'` (inclusive)
+
+    - Range: `''100-200''` (inclusive)
+
     - List: `[1, 5, 10]`
-    - With context: `'42 +/-3'`
-    - From end: `'+10-'` (last 10 lines), `'+5'` (5th from end)
-    - Path-embedded: `'file.py:42 +/-3'`
+
+    - With context: `''42 +/-3''`
+
+    - From end: `''+10-''` (last 10 lines), `''+5''` (5th from end)
+
+    - Path-embedded: `''file.py:42 +/-3''`
+
     - Struct: `{start: 100, stop: 200}` or `{line: 42, context: 3}`
 
+
     **Context Lines:**
+
     - `before := N` - Include N lines before each match
+
     - `after := N` - Include N lines after each match
+
     - `context := N` - Shorthand for both before and after
 
+
     **Use Cases:**
+
     - Extract specific lines from log files
+
     - Get error lines with surrounding context
+
     - Process multiple files with glob patterns
+
     - Parse multi-line string columns
+
+    '

@@ -1,157 +1,100 @@
 extension:
   name: func_apply
-  description: Dynamic function invocation - call any scalar function or macro by name at runtime
+  description: Dynamic function invocation - call any scalar function or macro by
+    name at runtime
   version: 0.4.0
   language: C++
   build: cmake
   license: MIT
   maintainers:
-    - teaguesterling
+  - teaguesterling
 repo:
   github: teaguesterling/duckdb_func_apply
   ref: 9f119877ef5c10ef84c8cc593ee98ee199be5302
-  # variegata pins the v1.5.6 track. scripts/build.py sends a v1.5.6 build here when
-  # present and to `ref` otherwise, and unlike ref_next it has no skip branch -- so
-  # once `ref` is 2.0-only a v1.5.6 build would fail rather than be skipped. Equal to
-  # `ref` while both lines build; advance only to a commit v1.5.6 can still build.
   variegata: 9f119877ef5c10ef84c8cc593ee98ee199be5302
-  # ref_next == ref (deliberate): validate the shipped release on DuckDB
-  # v2.0-cyanoptera instead of skipping it. A STALE ref_next is worse than none --
-  # it validates the PREVIOUS release and still reports green.
-  # v0.4.0 (tag v0.4.0) adds func_dispatch() and fixes a return-type bug in
-  # apply(). Verified on this exact commit by a real cyanoptera leg -- build AND
-  # test on v2.0, linux_amd64 and osx_arm64 -- plus all nine stable arches, the
-  # format/tidy checks and the DuckDB version-drift guard.
-  # The v2.0 leg earned this: an earlier commit of the same work compiled on both
-  # lines but DIVERGED at run time (a typed-NULL probe bound on v1.5.6 and raised
-  # a binder error on cyanoptera). Caught by that leg, fixed by removing the
-  # version-dependent path, and re-verified here.
   ref_next: 9f119877ef5c10ef84c8cc593ee98ee199be5302
-  # andium (DuckDB v1.4.5 track) intentionally left at the pre-v0.2.0 commit:
-  # v0.3.0, like v0.2.0 before it, is a DuckDB v1.5.4 tree and is not
-  # build-verified against v1.4.5. The v0.2.0 security fix
-  # (GHSA-55g5-vp25-phpg) is delivered on the v1.5.4 track via `ref`;
-  # v1.4.5 users should move to the v1.5.4 track.
-  andium: 2013ac345d6f19e61ee78cacae161eb272cf1837
 docs:
-  hello_world: |
-    -- Load the extension
+  hello_world: '-- Load the extension
+
     LOAD func_apply;
 
+
     -- Call scalar functions dynamically
-    SELECT apply('upper', 'hello world');
+
+    SELECT apply(''upper'', ''hello world'');
+
     -- Result: HELLO WORLD
 
-    SELECT apply('substr', 'hello world', 7, 5);
+
+    SELECT apply(''substr'', ''hello world'', 7, 5);
+
     -- Result: world
 
+
     -- Call table functions dynamically
-    SELECT * FROM apply_table('range', 5);
+
+    SELECT * FROM apply_table(''range'', 5);
+
     -- Returns: 0, 1, 2, 3, 4
 
-    SELECT * FROM apply_table('generate_series', 1, 10, 2);
+
+    SELECT * FROM apply_table(''generate_series'', 1, 10, 2);
+
     -- Returns: 1, 3, 5, 7, 9
 
+
     -- Check if a function exists before calling
-    SELECT function_exists('my_custom_func');
+
+    SELECT function_exists(''my_custom_func'');
+
     -- Result: true/false
 
-  extended_description: |
-    The FuncApply extension enables dynamic function invocation in DuckDB, allowing you to
-    call any scalar function or macro by name at runtime. This is useful for data-driven
-    transformations, dynamic SQL generation, and building flexible data pipelines.
-
-    ## Functions
-
-    | Function | Description |
-    |----------|-------------|
-    | `apply(func_name, ...args)` | Call a function by name with arguments |
-    | `apply_with(func_name, args, kwargs)` | Call a function with arguments as a list |
-    | `apply_table(func_name, ...args)` | Call a table function by name with arguments |
-    | `apply_table_with(func_name, args, kwargs)` | Call a table function with arguments as a list |
-    | `func_dispatch(routes, key, ...args)` | Dispatch to the function named by `routes[key]`, with real return types |
-    | `function_exists(name)` | Check if a function exists |
-
-    ## Use Cases
-
-    ### Data-Driven Transformations
-
-    ```sql
-    -- Store transformation rules in a table
-    CREATE TABLE transforms (column_name VARCHAR, func_name VARCHAR);
-    INSERT INTO transforms VALUES ('name', 'upper'), ('email', 'lower');
-
-    -- Apply transformations dynamically
-    SELECT apply(t.func_name, d.value) as result
-    FROM data d JOIN transforms t ON d.column = t.column_name;
-    ```
-
-    ### Routing With func_dispatch
-
-    ```sql
-    CREATE MACRO clean_git(p)   AS regexp_replace(p, '^git://', '');
-    CREATE MACRO clean_http(p)  AS regexp_replace(p, '^https?://', '');
-    CREATE MACRO clean_other(p) AS p;
-
-    SELECT func_dispatch(MAP{'git':   'clean_git',
-                             'https': 'clean_http',
-                             '*':     'clean_other'},
-                         split_part(url, ':', 1),
-                         url) AS cleaned
-    FROM urls;
-    ```
-
-    The `'*'` entry catches any key the map does not name. Unlike `apply()` with a
-    function name that is not a constant, `func_dispatch` binds every candidate in a
-    constant routing map at plan time, so the result keeps its real type instead of
-    collapsing to `VARCHAR`:
-
-    ```sql
-    CREATE MACRO pair(x) AS [x, x];
-    SELECT typeof(func_dispatch(MAP{'a': 'pair'}, 'a', 7));  -- INTEGER[]
-    ```
-
-    All routes in a constant map must accept the forwarded arguments, and the
-    session security policy applies to every route including `'*'`.
-
-    ### Dynamic Function Selection
-
-    ```sql
-    -- Choose function based on data type
-    SELECT apply(
-        CASE typeof(value)
-            WHEN 'VARCHAR' THEN 'upper'
-            WHEN 'INTEGER' THEN 'abs'
-        END,
-        value
-    ) FROM my_table;
-    ```
-
-    ## Supported Function Types
-
-    - Scalar functions (e.g., `upper`, `abs`, `substr`)
-    - Macros (e.g., `list_sum`, `list_reverse`)
-
-    Aggregate and table functions are not supported.
-
-    ## Security Model
-
-    `apply` and `apply_table` run on the **caller's own context** — they add no
-    privilege beyond the SQL the caller could already execute directly. They are
-    a dynamic-dispatch convenience, **not a sandbox**.
-
-    For scenarios that embed func_apply and want to restrict which functions can
-    be invoked (e.g. accepting a function name from less-trusted input), an
-    optional, opt-in policy is available. It is **per session** and defaults to
-    `none` (no restriction):
-
-    | Function | Description |
-    |----------|-------------|
-    | `func_apply_set_security_mode(mode)` | `'none'`, `'blacklist'`, `'whitelist'`, or `'validator'` |
-    | `func_apply_set_whitelist([...])` / `func_apply_set_blacklist([...])` | Set the allowed/denied function names |
-    | `func_apply_lock_security()` | Irreversibly lock the current session's policy |
-
-    The policy lives on the session's `ClientContext` and does not leak across
-    connections. Versions before 0.2.0 stored it process-globally and could
-    quote-escape injected identifiers — see security advisory
-    GHSA-55g5-vp25-phpg; upgrade to 0.2.0 (DuckDB v1.5.4 track).
+    '
+  extended_description: "The FuncApply extension enables dynamic function invocation\
+    \ in DuckDB, allowing you to\ncall any scalar function or macro by name at runtime.\
+    \ This is useful for data-driven\ntransformations, dynamic SQL generation, and\
+    \ building flexible data pipelines.\n\n## Functions\n\n| Function | Description\
+    \ |\n|----------|-------------|\n| `apply(func_name, ...args)` | Call a function\
+    \ by name with arguments |\n| `apply_with(func_name, args, kwargs)` | Call a function\
+    \ with arguments as a list |\n| `apply_table(func_name, ...args)` | Call a table\
+    \ function by name with arguments |\n| `apply_table_with(func_name, args, kwargs)`\
+    \ | Call a table function with arguments as a list |\n| `func_dispatch(routes,\
+    \ key, ...args)` | Dispatch to the function named by `routes[key]`, with real\
+    \ return types |\n| `function_exists(name)` | Check if a function exists |\n\n\
+    ## Use Cases\n\n### Data-Driven Transformations\n\n```sql\n-- Store transformation\
+    \ rules in a table\nCREATE TABLE transforms (column_name VARCHAR, func_name VARCHAR);\n\
+    INSERT INTO transforms VALUES ('name', 'upper'), ('email', 'lower');\n\n-- Apply\
+    \ transformations dynamically\nSELECT apply(t.func_name, d.value) as result\n\
+    FROM data d JOIN transforms t ON d.column = t.column_name;\n```\n\n### Routing\
+    \ With func_dispatch\n\n```sql\nCREATE MACRO clean_git(p)   AS regexp_replace(p,\
+    \ '^git://', '');\nCREATE MACRO clean_http(p)  AS regexp_replace(p, '^https?://',\
+    \ '');\nCREATE MACRO clean_other(p) AS p;\n\nSELECT func_dispatch(MAP{'git': \
+    \  'clean_git',\n                         'https': 'clean_http',\n           \
+    \              '*':     'clean_other'},\n                     split_part(url,\
+    \ ':', 1),\n                     url) AS cleaned\nFROM urls;\n```\n\nThe `'*'`\
+    \ entry catches any key the map does not name. Unlike `apply()` with a\nfunction\
+    \ name that is not a constant, `func_dispatch` binds every candidate in a\nconstant\
+    \ routing map at plan time, so the result keeps its real type instead of\ncollapsing\
+    \ to `VARCHAR`:\n\n```sql\nCREATE MACRO pair(x) AS [x, x];\nSELECT typeof(func_dispatch(MAP{'a':\
+    \ 'pair'}, 'a', 7));  -- INTEGER[]\n```\n\nAll routes in a constant map must accept\
+    \ the forwarded arguments, and the\nsession security policy applies to every route\
+    \ including `'*'`.\n\n### Dynamic Function Selection\n\n```sql\n-- Choose function\
+    \ based on data type\nSELECT apply(\n    CASE typeof(value)\n        WHEN 'VARCHAR'\
+    \ THEN 'upper'\n        WHEN 'INTEGER' THEN 'abs'\n    END,\n    value\n) FROM\
+    \ my_table;\n```\n\n## Supported Function Types\n\n- Scalar functions (e.g., `upper`,\
+    \ `abs`, `substr`)\n- Macros (e.g., `list_sum`, `list_reverse`)\n\nAggregate and\
+    \ table functions are not supported.\n\n## Security Model\n\n`apply` and `apply_table`\
+    \ run on the **caller's own context** \u2014 they add no\nprivilege beyond the\
+    \ SQL the caller could already execute directly. They are\na dynamic-dispatch\
+    \ convenience, **not a sandbox**.\n\nFor scenarios that embed func_apply and want\
+    \ to restrict which functions can\nbe invoked (e.g. accepting a function name\
+    \ from less-trusted input), an\noptional, opt-in policy is available. It is **per\
+    \ session** and defaults to\n`none` (no restriction):\n\n| Function | Description\
+    \ |\n|----------|-------------|\n| `func_apply_set_security_mode(mode)` | `'none'`,\
+    \ `'blacklist'`, `'whitelist'`, or `'validator'` |\n| `func_apply_set_whitelist([...])`\
+    \ / `func_apply_set_blacklist([...])` | Set the allowed/denied function names\
+    \ |\n| `func_apply_lock_security()` | Irreversibly lock the current session's\
+    \ policy |\n\nThe policy lives on the session's `ClientContext` and does not leak\
+    \ across\nconnections. Versions before 0.2.0 stored it process-globally and could\n\
+    quote-escape injected identifiers \u2014 see security advisory\nGHSA-55g5-vp25-phpg;\
+    \ upgrade to 0.2.0 (DuckDB v1.5.4 track).\n"
