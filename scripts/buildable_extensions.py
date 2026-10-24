@@ -34,11 +34,15 @@ import yaml
 
 # The full build matrix. An extension whose excluded_platforms is a superset of
 # this set builds nothing, so we consider it disabled.
+#
+# Haybarn 2.0 never builds wasm_mvp, osx_amd64 or windows_arm64 (build.yml
+# prepends them to exclude_archs), so they are not part of the set: an
+# extension that excludes every *other* platform builds nothing on 2.0.
 ALL_PLATFORMS = frozenset({
     "linux_amd64", "linux_arm64", "linux_amd64_musl", "linux_arm64_musl",
-    "osx_amd64", "osx_arm64",
-    "windows_amd64", "windows_arm64", "windows_amd64_mingw",
-    "wasm_mvp", "wasm_eh", "wasm_threads",
+    "osx_arm64",
+    "windows_amd64", "windows_amd64_mingw",
+    "wasm_eh", "wasm_threads",
 })
 
 

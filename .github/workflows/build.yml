@@ -19,6 +19,8 @@
 #      path (`community/v2.0.0/<arch>/…`) and to `h2-0-0` for npm names.
 #   3. scripts/build.py picks the descriptor ref the way upstream does
 #      (`ref` for 2.0, `variegata` for 1.5.6), after normalizing the tag.
+#   4. 2.0 platform drops: wasm_mvp, osx_amd64 and windows_arm64 are never
+#      built; they are prepended to every exclude_archs.
 name: Community Extension Build
 
 # The run title carries the extension name and engine tag, e.g.
@@ -195,7 +197,9 @@ jobs:
       # an owner/repo slug for actions/checkout.
       override_duckdb_repository: 'https://github.com/Query-farm-haybarn/haybarn'
       override_ci_tools_repository: 'Query-farm-haybarn/haybarn-extension-ci-tools'
-      exclude_archs: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_EXCLUDE_PLATFORMS }}
+      # 2.0 drops: no wasm_mvp, osx_amd64 or windows_arm64 (Haybarn 2.0 ships
+      # none of them). Prepended to the descriptor's own exclusions.
+      exclude_archs: wasm_mvp;osx_amd64;windows_arm64;${{ needs.prepare.outputs.COMMUNITY_EXTENSION_EXCLUDE_PLATFORMS }}
       opt_in_archs: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_OPT_IN_PLATFORMS }}
       test_config: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_TEST_CONFIG }}
       extension_canonical: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_CANONICAL_NAME }}
@@ -248,7 +252,7 @@ jobs:
       duckdb_version: ${{ inputs.duckdb_version || 'haybarn-v2.0.0-rc5' }}
       duckdb_tag: ${{ inputs.duckdb_tag || '' }}
       ci_tools_version: ${{ inputs.ci_tools_version || 'haybarn-2.0' }}
-      exclude_archs: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_EXCLUDE_PLATFORMS }}
+      exclude_archs: wasm_mvp;osx_amd64;windows_arm64;${{ needs.prepare.outputs.COMMUNITY_EXTENSION_EXCLUDE_PLATFORMS }}
       opt_in_archs: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_OPT_IN_PLATFORMS }}
       extension_name: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_NAME }}
       extension_license: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_LICENSE }}
