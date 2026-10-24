@@ -10,9 +10,20 @@ https://haybarn-extensions.query.farm/community/<duckdb_version>/<platform>/<nam
 
 A `haybarn` CLI on a supported platform can `INSTALL <name> FROM community; LOAD <name>;` and the engine fetches from that URL automatically.
 
-## Status
+## Branches
 
-🚧 **Bootstrapping** — the pipeline exists, the bucket is being provisioned, and the catalog is otherwise empty bar the `quack` smoke-test descriptor.
+| Branch | Engine line | Builds with | Deploys to |
+|---|---|---|---|
+| `main` | Haybarn 1.5 (`haybarn-v1.5.6-*`) | ci-tools `haybarn` | `community/v1.5.6/` |
+| `haybarn-2.0` | Haybarn 2.0 (`haybarn-v2.0.0-rc5`) | ci-tools `haybarn-2.0` | `community/v2.0.0/` (npm `@haybarn/ext-<name>-h2-0-0`) |
+
+`haybarn-2.0` is upstream `duckdb/community-extensions` main plus the Haybarn commits on top. It follows upstream's descriptor scheme: `repo.ref` is the 2.0 build and `repo.variegata` the 1.5.6 build; `scripts/build.py` picks one from the engine version. On `haybarn-2.0`:
+
+- builds run only on `workflow_dispatch` / `workflow_call` (no push or pull_request triggers);
+- the deploy job runs only with `deploy: 'true'` on `haybarn-2.0` itself (the input defaults to `'false'`);
+- wasm_mvp, osx_amd64 and windows_arm64 are never built.
+
+A dry sweep: `make dispatch DEPLOY=false PUBLISH=false MAX_INFLIGHT=10`.
 
 ## How to add an extension
 
@@ -40,12 +51,13 @@ repo:
   github: owner/repo                   # upstream extension's repo
   ref: <commit-sha>                    # pinned commit
 
+  # variegata: <commit-sha>            # upstream: the build for 1.5.6
+
   # OPTIONAL Haybarn escape hatches (use only if the upstream code doesn't
-  # build against Haybarn's curated patch stack):
-  # haybarn_fork: Query-farm-haybarn/your-fork
-  # haybarn_ref:  <commit-sha>
-  # When haybarn_fork + haybarn_ref are both set, the build uses them
-  # instead of repo.github + repo.ref.
+  # build against Haybarn's curated patch stack). The sync keeps them.
+  # haybarn_fork:      Query-farm-haybarn/your-fork   # replaces repo.github
+  # haybarn_ref:       <commit-sha>                   # replaces repo.ref (2.0)
+  # haybarn_variegata: <commit-sha>                   # replaces repo.variegata (1.5)
 
 docs:
   hello_world: |
@@ -54,13 +66,13 @@ docs:
     Markdown description shown in the catalog.
 ```
 
-On PR merge, `.github/workflows/build.yml` parses the descriptor, kicks off the [`haybarn-extension-ci-tools`](https://github.com/Query-farm-haybarn/haybarn-extension-ci-tools) reusable workflow to build for all 12 supported platforms, signs each artifact with the Haybarn key, and uploads to the R2 bucket.
+`.github/workflows/build.yml` parses the descriptor, runs the [`haybarn-extension-ci-tools`](https://github.com/Query-farm-haybarn/haybarn-extension-ci-tools) reusable workflow to build for every supported platform, and (when deploying) signs each artifact with the Haybarn key and uploads it to the R2 bucket.
 
 ## Where descriptors come from
 
-- **Most** descriptors: auto-imported from upstream by [`sync_from_upstream.yml`](.github/workflows/sync_from_upstream.yml) (weekly cron + on-demand). The bot opens a PR; a human reviews and merges.
+- **Most** descriptors: mirrored from upstream by `scripts/sync_from_upstream.py`, driven by the `haybarn-community-extensions-sync` bot.
 - **Haybarn-only descriptors**: if we maintain a descriptor with no upstream counterpart (e.g. a Haybarn-specific extension) it stays in `extensions/` and the sync script leaves it alone.
-- The `repo.andium` field (DuckDB v1.4.4 escape hatch) is silently stripped on import — Haybarn is tagged off DuckDB v1.5.2 and v1.4 doesn't apply.
+- The `repo.andium` field (the DuckDB v1.4 build) is stripped on import: Haybarn has no 1.4 line.
 
 ## Signing and trust
 
@@ -79,6 +91,10 @@ Org-level secrets on `Query-farm-haybarn`, all reused from the existing core-ext
 | `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` / `R2_ENDPOINT` | R2 access for both `haybarn-extensions` and `haybarn-community-extensions` buckets (one key, two buckets — granted via the Cloudflare dashboard). Same names as `haybarn-extensions.yml`. |
 
 No CDN-purge token is needed: every artifact lives at a unique URL (version + git-sha in the path), so new deploys land at new URLs rather than overwriting cached ones. Cloudflare's edge holds onto the old binaries until they age out — there's nothing left referencing them.
+
+## Trademarks
+
+Haybarn is an independent project of Query Farm LLC. It is a derived distribution of DuckDB ("Haybarn, powered by DuckDB") and is not affiliated with or endorsed by the DuckDB Foundation. DuckDB is a trademark of the DuckDB Foundation.
 
 ## License
 

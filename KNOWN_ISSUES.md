@@ -18,6 +18,8 @@ last_checked: YYYY-MM-DD    # last time we verified the failure mode hasn't chan
 
 ## Entries
 
+The entries below were observed on the 1.5 line (`main`). 2.0 (`haybarn-2.0`) builds use upstream's 2.0 refs, so re-check an entry before applying it to 2.0.
+
 ```yaml
 - extension: prql
   status: failing

@@ -84,9 +84,10 @@ def merge_for_haybarn(upstream: dict, current: dict | None) -> tuple[dict, bool]
 
     Haybarn-specific fields preserved from `current`:
 
-      repo.haybarn_fork / haybarn_ref
-          Patch-pinning override — points the build at our fork instead
-          of upstream's repo+ref.
+      repo.haybarn_fork / haybarn_ref / haybarn_variegata
+          Patch-pinning override — points the build at our fork or a
+          Haybarn-side commit instead of upstream's github / ref (2.0) /
+          variegata (1.5.6). scripts/build.py applies them.
 
       extension.excluded_platforms / opt_in_platforms
           When we've decided an upstream extension just doesn't build
@@ -117,7 +118,7 @@ def merge_for_haybarn(upstream: dict, current: dict | None) -> tuple[dict, bool]
         return new, True
 
     current_repo = current.get('repo') or {}
-    for key in ('haybarn_fork', 'haybarn_ref'):
+    for key in ('haybarn_fork', 'haybarn_ref', 'haybarn_variegata'):
         if key in current_repo:
             new.setdefault('repo', {})[key] = current_repo[key]
 
