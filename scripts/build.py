@@ -4,17 +4,28 @@
 # emits env.sh with COMMUNITY_EXTENSION_* values that .github/workflows/build.yml
 # picks up as job outputs.
 #
-# Mirrors upstream's scripts/build.py with two Haybarn-specific changes:
-#   1. The `repo.andium` field is silently ignored. Upstream uses it as a
-#      DuckDB v1.4.4 escape hatch (codename "Andium"). Haybarn is tagged off
-#      DuckDB v1.5.2 — that escape hatch never applies here.
-#   2. The `ref_next` field is still honored: when DUCKDB_VERSION points at a
-#      pre-release that hasn't become DUCKDB_LATEST_STABLE yet (e.g. building
-#      against a `haybarn-v1.6-betaN` ahead of the Haybarn v1.6 cut),
-#      `ref_next` is used to pick a forward-compatible extension commit. In
-#      steady state both vars are `v1.5.2` and `ref` is used.
+# Ref selection follows upstream's scripts/build.py exactly (one descriptor
+# set, one field per engine line):
+#   * `repo.ref`       — the build for DUCKDB_LATEST_STABLE (v2.0.0)
+#   * `repo.variegata` — the build for v1.5.6, when the descriptor has one
+#   * `repo.andium`    — the build for v1.4.5 (never used by Haybarn)
+#   * `repo.ref_next`  — any other (pre-release) engine; with
+#     COMMUNITY_EXTENSION_REQUIRE_REF_NEXT=true a descriptor without one is
+#     skipped (no COMMUNITY_EXTENSION_REF is written, build.yml skips the build)
+#
+# Haybarn differences:
+#   1. DUCKDB_VERSION may be a Haybarn engine tag (`haybarn-v2.0.0-rc5`); it
+#      is normalized to the plain semver (`v2.0.0`) before the comparison, so
+#      the same tag-shaped inputs that pick the engine also pick the ref.
+#   2. `repo.haybarn_fork` / `repo.haybarn_ref` override `github` / `ref`
+#      (the latest-stable build), and `repo.haybarn_variegata` overrides
+#      `variegata`. The sync keeps these Haybarn-only fields, so a Haybarn
+#      patch or a Haybarn-side ref survives later upstream syncs.
+#   3. Extra outputs for the Haybarn deploy (license, description, source
+#      repo), `haybarn_skip_tests`, and toolchain normalization.
 
 import os
+import re
 import sys
 
 import yaml
@@ -59,23 +70,35 @@ if dir_name != extension_name:
     )
 
 with open('env.sh', 'w+') as hdl:
-    hdl.write(f"COMMUNITY_EXTENSION_GITHUB={desc['repo']['github']}\n")
-    if 'canonical_name' in desc.get('repo', {}):
-        hdl.write(f"COMMUNITY_EXTENSION_CANONICAL_NAME={desc['repo']['canonical_name']}\n")
+    repo = desc['repo']
+    # Haybarn: `haybarn_fork` builds a Haybarn-patched copy of the source.
+    hdl.write(f"COMMUNITY_EXTENSION_GITHUB={repo.get('haybarn_fork') or repo['github']}\n")
+    if 'canonical_name' in repo:
+        hdl.write(f"COMMUNITY_EXTENSION_CANONICAL_NAME={repo['canonical_name']}\n")
 
-    extension_ref = desc['repo']['ref']
-    # Haybarn: `andium` (DuckDB v1.4.4 escape hatch) is intentionally not
-    # consulted — see module docstring. We only honor `ref_next` for the
-    # pre-release case.
-    duckdb_version = os.environ.get('DUCKDB_VERSION', 'v1.5.2')
-    duckdb_latest_stable = os.environ.get('DUCKDB_LATEST_STABLE', 'v1.5.2')
-    if duckdb_version != duckdb_latest_stable:
-        if 'ref_next' in desc['repo']:
-            extension_ref = desc['repo']['ref_next']
-            print(f"Using ref_next={extension_ref} (DUCKDB_VERSION={duckdb_version}, "
-                  f"latest stable={duckdb_latest_stable})")
+    # Haybarn: compare the plain engine semver, not the Haybarn tag.
+    duckdb_version = re.sub(r'^haybarn-(v\d+\.\d+\.\d+).*$', r'\1', os.environ['DUCKDB_VERSION'])
+    duckdb_latest_stable = re.sub(r'^haybarn-(v\d+\.\d+\.\d+).*$', r'\1', os.environ['DUCKDB_LATEST_STABLE'])
 
-    hdl.write(f"COMMUNITY_EXTENSION_REF={extension_ref}\n")
+    # Upstream's selection, verbatim apart from the Haybarn overrides.
+    extension_ref = repo.get('haybarn_ref') or repo['ref']
+    if duckdb_version == 'v1.4.5':
+        if 'andium' in repo:
+            extension_ref = repo['andium']
+    elif duckdb_version == 'v1.5.6':
+        if 'haybarn_variegata' in repo:
+            extension_ref = repo['haybarn_variegata']
+        elif 'variegata' in repo:
+            extension_ref = repo['variegata']
+    elif duckdb_version != duckdb_latest_stable:
+        if repo.get('ref_next'):
+            extension_ref = repo['ref_next']
+        elif os.environ.get('COMMUNITY_EXTENSION_REQUIRE_REF_NEXT') == 'true':
+            print("Skipping prerelease validation: repo.ref_next is not defined")
+            extension_ref = None
+    print(f"DUCKDB_VERSION={duckdb_version} (latest stable {duckdb_latest_stable}) -> ref {extension_ref}")
+    if extension_ref:
+        hdl.write(f"COMMUNITY_EXTENSION_REF={extension_ref}\n")
     hdl.write(f"COMMUNITY_EXTENSION_NAME={desc['extension']['name']}\n")
     # Haybarn: pass the upstream extension's license through to the deploy
     # workflow so the published npm package.json / PyPI metadata reflects

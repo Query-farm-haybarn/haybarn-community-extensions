@@ -13,9 +13,10 @@
 #
 # R2 layout written (under the shared core bucket, `community/` prefix). The
 # <version> segment is the engine semver vX.Y.Z: we pass duckdb_version as the
-# engine git tag (haybarn-v1.5.3-rc7), and publish_extensions.py normalizes it
-# to v1.5.3 for the path (and to 1.5.3 for the npm version) — that's the segment
-# the engine INSTALLs from. See normalize_engine_version() in that script.
+# engine git tag (haybarn-v2.0.0-rc5), and publish_extensions.py normalizes it
+# to v2.0.0 for the path (and to 2.0.0 for the npm version, so npm names are
+# @haybarn/ext-<name>-h2-0-0[-<os>-<arch>]) — that's the segment the engine
+# INSTALLs from. See normalize_engine_version() in that script.
 #
 #   mutable "latest" (engine INSTALL fetches this; --write-latest):
 #     s3://<bucket>/community/<version>/<arch>/<name>.duckdb_extension.gz
@@ -202,13 +203,13 @@ jobs:
           fetch-depth: 1
 
       # ci-tools checkout (under ci-tools/) supplies publish_extensions.py and
-      # the shared publish helpers from scripts/publish/. Tracks the `haybarn`
-      # branch tip — single source of truth shared with the engine repo's
-      # haybarn-extensions-publish.yml.
+      # the shared publish helpers from scripts/publish/. Tracks the
+      # `haybarn-2.0` branch tip, the same ci-tools line build.yml builds with
+      # (keep in lockstep with build.yml's HAYBARN_CI_TOOLS_REF).
       - uses: actions/checkout@v4
         with:
           repository: 'Query-farm-haybarn/haybarn-extension-ci-tools'
-          ref: haybarn
+          ref: haybarn-2.0
           path: ci-tools
 
       - name: Capture extension source commit + timestamp
@@ -455,9 +456,9 @@ jobs:
   # projects" rate-limit bounce) is supported by calling the upstream
   # workflow directly:
   #   gh workflow run "_extension_registry_publish.yml" \
-  #     -R Query-farm-haybarn/haybarn-extension-ci-tools --ref haybarn \
+  #     -R Query-farm-haybarn/haybarn-extension-ci-tools --ref haybarn-2.0 \
   #     -f artifact_shape=per-extension -f extension_name=<name> \
-  #     -f source_run_id=<this-run-id> -f duckdb_version=v1.5.2 \
+  #     -f source_run_id=<this-run-id> -f duckdb_version=haybarn-v2.0.0-rc5 \
   #     -f version=<calver> -f ext_commit=<sha> -f extension_version_label=
   # ------------------------------------------------------------------
   call_publish_registries:
@@ -468,7 +469,7 @@ jobs:
     # excluded on every platform the deploy job is a clean no-op (nothing
     # staged), so there are no npm leaves to publish — skip this job too.
     if: ${{ always() && needs.deploy.result != 'cancelled' && needs.deploy.outputs.has_artifacts == 'true' && inputs.publish_registries && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') }}
-    uses: Query-farm-haybarn/haybarn-extension-ci-tools/.github/workflows/_extension_registry_publish.yml@haybarn
+    uses: Query-farm-haybarn/haybarn-extension-ci-tools/.github/workflows/_extension_registry_publish.yml@haybarn-2.0
     permissions:
       contents: read
       actions:  read
@@ -478,7 +479,7 @@ jobs:
       artifact_shape:          per-extension
       # MUST match the ref in the `uses:` line above — the called workflow
       # uses this to checkout its own scripts/publish/.
-      ci_tools_ref:            haybarn
+      ci_tools_ref:            haybarn-2.0
       extension_name:          ${{ inputs.extension_name }}
       duckdb_version:          ${{ inputs.duckdb_version }}
       version:                 ${{ needs.deploy.outputs.version }}

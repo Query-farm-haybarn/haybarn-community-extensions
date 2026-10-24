@@ -34,7 +34,7 @@ on:
         type: string
         required: true
       duckdb_version:
-        description: "Engine version / URL segment. Empty → v1.5.3."
+        description: "Engine version / URL segment. Empty → haybarn-v2.0.0-rc5."
         type: string
         required: false
         default: ''
@@ -63,8 +63,8 @@ jobs:
       COMMUNITY_EXTENSION_DESCRIPTION: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_DESCRIPTION }}
       COMMUNITY_EXTENSION_SOURCE_REPO: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_SOURCE_REPO }}
     env:
-      DUCKDB_LATEST_STABLE: 'v1.5.3'
-      DUCKDB_VERSION: ${{ inputs.duckdb_version || 'v1.5.3' }}
+      DUCKDB_LATEST_STABLE: 'v2.0.0'
+      DUCKDB_VERSION: ${{ inputs.duckdb_version || 'haybarn-v2.0.0-rc5' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -97,9 +97,9 @@ jobs:
       publish_registries: true
       deploy_latest: false
       source_run_id: ${{ inputs.source_run_id }}
-      duckdb_version: ${{ inputs.duckdb_version || 'v1.5.3' }}
+      duckdb_version: ${{ inputs.duckdb_version || 'haybarn-v2.0.0-rc5' }}
       version_suffix: ${{ inputs.version_suffix }}
-      ci_tools_version: haybarn
+      ci_tools_version: haybarn-2.0
       extension_name: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_NAME }}
       extension_license: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_LICENSE }}
       extension_description: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_DESCRIPTION }}
