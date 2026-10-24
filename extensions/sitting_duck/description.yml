@@ -1,121 +1,314 @@
 extension:
   name: sitting_duck
-  description: Parse and analyze source code ASTs from 27 programming languages with
-    tree-sitter grammars, pattern matching, and structural search
-  version: 1.15.4
+  description: Parse and analyze source code ASTs from 28 programming languages with tree-sitter grammars, pattern matching, and structural search
+  version: 1.16.0
   language: C++
   build: cmake
   license: Apache-2.0
   maintainers:
-  - teaguesterling
-  excluded_platforms: linux_amd64;linux_arm64;linux_amd64_musl;linux_arm64_musl;osx_amd64;osx_arm64;windows_amd64;windows_arm64;windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
+    - teaguesterling
 repo:
   github: teaguesterling/sitting_duck
-  ref: 803b35b5e4b8cec4b464169d4135648ce8a74875
-  ref_next: 803b35b5e4b8cec4b464169d4135648ce8a74875
+  # THREE REFS, ONE COMMIT, AND THE KEYS NOW MEAN DIFFERENT THINGS THAN THEY DID
+  # WHEN THIS PR WAS OPENED. duckdb/community-extensions#3079 ("2.0 Release
+  # Prep") merged 2026-10-15T15:42Z and changed build.yml's default
+  # duckdb_version from the v1.5.6 tag to a pinned DuckDB commit,
+  # b15358c371daf10dad799a43b6167f6ccdce84d8 (duckdb/duckdb, 2026-10-09). Per
+  # scripts/build.py:42-54 the keys are now selected like this:
+  #
+  #   ref        -> the DEFAULT build, i.e. the 2.0 line today and v2.0.0 once
+  #                 it is tagged (DUCKDB_LATEST_STABLE is set to the same commit
+  #                 as the default, so the ref_next branch does not fire for it)
+  #   variegata  -> DuckDB v1.5.6 builds; absent, v1.5.6 silently falls back to
+  #                 `ref`, which is why it is stated explicitly here rather than
+  #                 left to the fallback
+  #   ref_next   -> a prerelease version that is neither v1.4.5, v1.5.6, nor the
+  #                 latest stable. build_next.yml's test_against_latest is
+  #                 currently `if: false`, so this is dormant; it is set so that
+  #                 prerelease validation builds+tests this release instead of
+  #                 printing "Skipping prerelease validation" when the job is
+  #                 re-enabled.
+  #
+  # All three are the same commit deliberately: v1.16.0 builds from ONE source
+  # tree against both DuckDB lines. The v2.0 removal of
+  # TableFunction::named_parameters goes through named_parameter_compat.hpp,
+  # which declares via GetSignature().WithTypedKwargs() on v2.0 and the flat map
+  # on v1.5. `variegata` is read by build.py:47 but no extension in the registry
+  # uses it yet (the migration is hours old); `andium`, the identical mechanism
+  # for the v1.4.5 track, is in use and is the proven precedent.
+  ref: b49238e625ec6c8be1d4c4dca92f9af86964a5b0
+  variegata: b49238e625ec6c8be1d4c4dca92f9af86964a5b0
+  #
+  # v1.16.0 is a FEATURE release with OUTPUT CHANGES. New: ast_unparse_exact()
+  # reconstructs a file's original bytes from its AST rows, byte-identically for
+  # 27 of 27 tree-sitter languages (it refuses rather than normalising); a native
+  # COPY ... TO (FORMAT ast) writer; and YAML as a 28th language -- hence the
+  # description going 27 -> 28 above.
+  #
+  # READ THIS IF YOU PIN semantic_type VALUES. A family of classification bugs is
+  # fixed, and the raw semantic_type byte moves for specific node types: anonymous
+  # keyword tokens no longer inherit their construct's classification (one grammar
+  # type string can name two symbols), TypeScript type keywords are TYPE_PRIMITIVE
+  # rather than LITERAL_*, and keyword operators are classified against the
+  # convention spec/taxonomy/taxonomy.yaml already implied -- typeof is a type
+  # query, for-of's `of` is a loop keyword, a cast `as` is not a comparison.
+  # Structural counts (descendant_count / children_count / depth) also no longer
+  # wrap: they were stored through uint16/uint16/uint8 mirrors, so the O(1) subtree
+  # idiom returned 34 465 of 100 001 rows with no error above 65 536 nodes.
+  # Separately, `[semantic=X]` selectors now match the same nodes as the class
+  # `.X` -- they previously also returned syntax-only keyword tokens.
+  #
+  # One new DuckDB API call, checked against the stable line: #244 registers the
+  # SEMANTIC_TYPE logical type via ExtensionLoader::RegisterType, which exists on
+  # v1.5.6 (it was already using RegisterCastFunction on the same loader). Without
+  # it `ORDER BY semantic_type` raised a Catalog Error, because the full-sort path
+  # resolves the type alias by name and only the casts had been registered.
+  #
+  # EVIDENCE AT THIS REF, ON BOTH LINES. One CI run of this exact commit
+  # (teaguesterling/sitting_duck run 38566432103) builds it twice, once per line,
+  # and all 9 platforms are green on each:
+  #
+  #   v1.5.6 (ci-tools @v1.5-variegata)      linux_amd64, linux_arm64, osx_amd64,
+  #     -- TESTS RUN                         osx_arm64, windows_amd64,
+  #                                          windows_amd64_mingw, wasm_mvp,
+  #                                          wasm_eh, wasm_threads
+  #   v2.0-cyanoptera (ci-tools @main)       the same 9
+  #     -- TESTS SKIPPED, see below
+  #
+  # On the v1.5.6 line: builds 0 errors against the pinned v1.5.6 submodule
+  # (069cc9f9b5b), full suite 9027 assertions / 156 cases / 0 failures and ZERO
+  # skips with SITTING_DUCK_TEST_GRAMMAR_DIR set, conformance kit at its recorded
+  # baseline (ok=189 FAIL=3 dirty=1 void=13 UNDECL=5 n/a=13 over 28 languages,
+  # all 8 negative controls firing), and the byte-exact sweep reporting
+  # files=29 not_byte_exact=0 with its planted-fault control firing (29 = the
+  # 27-language corpus plus two fixtures that make byte-exactness non-trivial:
+  # CRLF with multi-byte UTF-8, and multi-byte UTF-8 with LF). The kit's 3 FAILs
+  # are pre-existing and documented (sitting_duck#220); they have since been
+  # fixed on main -- the kit now reads ok=192 FAIL=0 -- but that is AFTER this
+  # ref and is not what ships here.
+  #
+  # WHAT THE v2.0 GREEN DOES AND DOES NOT MEAN -- this replaces an earlier,
+  # now-wrong caveat in this file. sitting_duck's v2.0 leg passes
+  # skip_tests: true, and in ci-tools @main that input is honoured inside
+  # scripts/ci_phase.py:795 rather than by an `if:` on the step -- so the step
+  # named "Test" RUNS, prints "Tests skipped by workflow input.", and reports
+  # SUCCESS having executed nothing. A green Test on that leg is therefore
+  # COMPILE-compat evidence only. Tests are skipped because ast_select blows the
+  # batch timeout on the 2.0 line via an upstream planner regression
+  # (duckdb/duckdb#26036, reported by us, reproduces on duckdb main too);
+  # sitting_duck tracks the measurement as bugs/040.
+  #
+  # HOW BAD, measured against THIS registry's default commit
+  # (b15358c371daf...) rather than against cyanoptera's tip -- one variable,
+  # same sitting_duck source, same machine, three runs each:
+  #
+  #                             v1.5.6      2.0 line      ratio
+  #   ast_select_from, mean     0.468 s     11.273 s      ~24x
+  #   EXPLAIN (plan only)       0.581 s     72.211 s     ~124x
+  #
+  # CPU-bound in both, and the cost is PLANNING, independent of input size and
+  # selector complexity. So on the 2.0 default this extension builds, loads and
+  # answers correctly, and its headline feature -- the CSS-like selector engine
+  # -- is ~24x slower per call. That is worth knowing before 2.0 becomes the
+  # default build target; it is an upstream planner regression, not a defect
+  # here, and it is why `variegata` above keeps a v1.5.6 artifact available.
+  #
+  # There IS now real test evidence on the 2.0 line, just not at this ref:
+  # sitting_duck's own repo added a non-shipping coverage leg on
+  # `duckdb_version: v2.0-cyanoptera` (branch form, no duckdb_tag), which runs
+  # the suite and reports 154 passed / 0 failed / 5 skipped. It found three
+  # genuine 2.0 breaks on its first run -- the deprecated lambda arrow (`->`),
+  # a warning on v1.5.6 and a hard Binder Error on 2.0. All three were in TEST
+  # files; the shipped SQL macros and the embedded header at this ref carry zero
+  # lambda-arrow uses, verified, so nothing a user executes is affected.
+  #
+  # The earlier version of this note said a failure on the next-line leg was
+  # "deploy:false either way -- it cannot affect the shipped v1.5.6 artifact".
+  # After #3079 that is no longer true: the 2.0 line is the DEFAULT build, not a
+  # prerelease canary, so `ref` is what gets built against it. v1.5.6 is the one
+  # now reached through an override, which is exactly why `variegata` is set.
+  ref_next: b49238e625ec6c8be1d4c4dca92f9af86964a5b0
 docs:
-  hello_world: "-- Parse Python code and find function definitions\nSELECT name, start_line,\
-    \ peek\nFROM parse_ast('\ndef hello():\n    return \"hello world\"\ndef greet(name):\n\
-    \    print(f\"Hello, {name}!\")\n    return name\n', 'python')\nWHERE is_function_definition(semantic_type);\n\
-    \n-- Pattern matching: find eval() calls and capture arguments\nSELECT captures['X'].peek\
-    \ as dangerous_input, file_path, start_line\nFROM ast_match('code', 'eval(__X__)',\
-    \ 'python');\n\n-- Pattern matching with variadic wildcards\nSELECT captures['F'].name\
-    \ as func_name, captures['Y'].peek as return_value\nFROM ast_match('code',\n \
-    \   'def __F__(__):\n    %__<BODY*>__%\n    return __Y__', 'python');\n\n-- Security\
-    \ audit: find dangerous function calls\nSELECT * FROM ast_security_audit('code')\n\
-    WHERE risk_level = 'high';\n\n-- Function complexity metrics\nSELECT name, cyclomatic,\
-    \ max_depth, lines\nFROM ast_function_metrics('code')\nWHERE cyclomatic > 10;\n\
-    \n-- Cross-language analysis with semantic types\nSELECT language, COUNT(*) as\
-    \ functions\nFROM read_ast(['src/**/*.py', 'src/**/*.js', 'src/**/*.go'])\nWHERE\
-    \ is_function_definition(semantic_type)\nGROUP BY language;\n"
-  extended_description: "Sitting Duck is a DuckDB extension for parsing source code\
-    \ into Abstract Syntax Trees (ASTs)\nusing tree-sitter grammars. It provides a\
-    \ powerful SQL interface to analyze, search, and\nunderstand code structure across\
-    \ 25+ programming languages.\n\n**Documentation:** https://sitting-duck.readthedocs.io/\n\
-    \n## Core Features\n\n**Pattern Matching:**\nFind code structures using pattern-by-example\
-    \ matching with wildcards:\n```sql\n-- Recursive wildcards for deep matching\n\
-    SELECT * FROM ast_match('code', 'class __C__: %__<**>__% def __M__(self): %__<BODY*>__%',\
-    \ 'python');\n\n-- Optional and negation wildcards\nSELECT * FROM ast_match('code',\
-    \ 'def __F__(__<?ARGS>__): %__<BODY*>__%', 'python');\n```\nSee: https://sitting-duck.readthedocs.io/en/latest/guide/pattern-matching/\n\
-    \n**CSS Selector Queries (v1.6.0, enhanced in v1.7.0+):**\nQuery AST nodes using\
-    \ CSS selector syntax \u2014 bootstrapped with sitting duck's own CSS grammar:\n\
-    ```sql\nSELECT name FROM ast_select('src/*.py', '.func:has(.call#execute):not(:has(try_statement))');\n\
-    \n-- v1.7.0: :match (current-node) vs :contains (subtree) structural patterns\n\
-    SELECT name FROM ast_select('src/*.py', '.func:contains(\"db.execute()\")');\n\
-    SELECT name FROM ast_select('src/*.py', 'call:match(\"db.execute()\")');\n\n--\
-    \ v1.7.2: parse once, query many \u2014 orders of magnitude faster for interactive\
-    \ use\nCREATE TABLE my_ast AS SELECT * FROM read_ast('src/**/*.py');\nSELECT *\
-    \ FROM ast_select_from('my_ast', '.class:named');\nSELECT * FROM ast_select_from('my_ast',\
-    \ '.func:has(return_statement)');\n```\nSupports type selectors, `#name`, `.semantic`\
-    \ (~80 aliases), combinators, `:has()`, `:not()`,\n`:match()` / `:contains()`\
-    \ structural patterns, scope/call-graph pseudo-classes, and pseudo-element navigation.\n\
-    Bare type matching: `if` matches `if` + `if_statement` + `if_clause`.\n\nv1.10.0\
-    \ adds runtime-loadable tree-sitter grammars (`register_language()`, off by\n\
-    default behind `sitting_duck_enable_runtime_grammars`), `ast_to_blocks` (render\
-    \ code\nstructure as duck_blocks documents), and `ast_patch`/`ast_replace` (AST-anchored\n\
-    source patching and selector-driven rewriting in SQL).\n\nv1.9.0 hardens the selector\
-    \ engine: no more silent-empty results (selectors the engine\ncan't honor now\
-    \ raise a clear error instead of returning 0 rows), `#name` on call nodes\nbinds\
-    \ uniformly across all 27 grammars, and NULL columns no longer over- or under-match.\n\
-    \n**Parse-time filtering (v1.8.0):**\n`max_depth :=` and `prune :=` shrink the\
-    \ AST at parse time, with automatic tree healing:\n```sql\nSELECT * FROM read_ast('file.py',\
-    \ max_depth := 2);\nSELECT * FROM read_ast('src/**/*.py', prune := ['syntax',\
-    \ 'comments', 'punctuation']);\n```\nPrune policies: `syntax`, `comments`, `literals`,\
-    \ `imports`, `types`, `punctuation`,\n`unnamed`, `leaves`, `internal`.\n\n**Call-graph\
-    \ macros (v1.8.0):**\n- `ast_get_calls(source)` - calls with caller attribution\
-    \ and type classification\n- `ast_call_graph(source)` - aggregated caller\u2192\
-    callee graph with call counts\n- `ast_find_references(source, name)` - scope-chain-aware\
-    \ symbol reference resolution\n\n**Table Functions:**\n- `read_ast(file_pattern,\
-    \ language := NULL)` - Parse source files into AST rows (parallel)\n- `parse_ast(content,\
-    \ language)` - Parse source code strings (table function)\n- `parse_ast_list(content,\
-    \ language)` - Parse source code strings (scalar, returns LIST<STRUCT>; v1.7.0)\n\
-    - `ast_match(source, pattern, lang)` - Pattern matching for code search\n- `ast_select(source,\
-    \ css_selector)` - CSS selector queries\n- `ast_select_from(table_name, selector)`\
-    \ - CSS selectors on pre-parsed tables (v1.7.2)\n- `ast_type_map(language)` -\
-    \ Node type discovery across languages\n\n**v1.7.0 extraction suffix:**\nAny extraction\
-    \ parameter (`context`, `source`, `structure`, `peek`) can take a `+schema`\n\
-    suffix that keeps the full column set in the output schema as NULLs without computing\
-    \ them:\n```sql\n-- Keep peek column in schema but skip its computation\nSELECT\
-    \ name, peek FROM read_ast('file.py', peek := 'none+schema');\n```\nEnables SQL\
-    \ macros to declare stable schemas regardless of which columns they populate.\n\
-    \n**Relational Predicates (v1.5.0):**\n- `ast_has(source, parent_type, child_type)`\
-    \ - Check containment relationships\n- `ast_inside(source, child_type, parent_type,\
-    \ parent_name)` - Find nodes inside specific parents\n- `ast_precedes(source,\
-    \ before_type, after_type)` - Ordering predicates\n- `ast_follows(source, after_type,\
-    \ before_type)` - Ordering predicates\n- `ast_not_has(source, parent_type, child_type)`\
-    \ - Negated containment\n\n**Analysis Macros (file-path based):**\n- `ast_definitions(source)`\
-    \ - All named definitions with categories\n- `ast_function_metrics(source)` -\
-    \ Cyclomatic complexity, nesting depth, line counts\n- `ast_security_audit(source)`\
-    \ - Detect dangerous function call patterns\n- `ast_dead_code(source)` - Find\
-    \ potentially unused functions/classes\n- `ast_nesting_analysis(source)` - Identify\
-    \ deeply nested code\n- `ast_definition_parent(table)` - Resolve nearest definition\
-    \ ancestor per node\n\n**Tree Navigation:**\n- `ast_descendants(table, node_id)`\
-    \ - Get subtree (O(1) using descendant_count)\n- `ast_ancestors(table, node_id)`\
-    \ - Path from node to root\n- `ast_children(table, node_id)` - Immediate children\n\
-    - `ast_function_scope(table, node_id)` - Function body excluding nested functions\n\
-    \n**Semantic Predicates:**\nCross-language filtering with normalized types:\n\
-    - `is_function_definition(st)`, `is_class_definition(st)`, `is_variable_definition(st)`\n\
-    - `is_function_call(st)`, `is_literal(st)`, `is_conditional(st)`, `is_loop(st)`\n\
-    \n## Supported Languages (27)\n\n| Category | Languages |\n|----------|-----------|\n\
-    | **Web** | JavaScript, TypeScript, HTML, CSS |\n| **Systems** | C, C++, Go, Rust,\
-    \ Zig |\n| **Scripting** | Python, Ruby, PHP, Lua, R, Bash |\n| **Enterprise**\
-    \ | Java, C#, Kotlin, Swift |\n| **Mobile** | Dart |\n| **Data** | SQL, JSON,\
-    \ TOML, GraphQL, HCL |\n| **Documentation** | Markdown |\n\n## AST Schema\n\n\
-    Each parsed node includes:\n- `type`, `name` - Node type and extracted identifier\n\
-    - `semantic_type` - Normalized type for cross-language queries\n- `file_path`,\
-    \ `language` - Source location\n- `start_line`, `end_line`, `depth` - Position\
-    \ and nesting\n- `descendant_count` - For O(1) subtree queries\n- `peek` - Configurable\
-    \ source preview\n- `qualified_name` - Scope-based path unique within a file (`C[User]\
-    \ F[__init__]` format; v1.7.0)\n- `signature_type`, `parameters`, `modifiers`,\
-    \ `annotations` - Native extraction\n  (v1.8.0: `modifiers[]` populated across\
-    \ Python, JS, TS, Rust, Kotlin, Swift, Dart, C#;\n  `IS_EXPORTED` flag for file-level\
-    \ visibility)\n- `scope` - STRUCT<current, function, class, module, stack> (v1.7.4);\
-    \ replaces\n  the v1.7.2 `scope_id` / `scope_stack` columns. `scope.function`\
-    \ lets you\n  answer \"what function is this in?\" as a single column read.\n\n\
-    Full schema: https://sitting-duck.readthedocs.io/en/latest/api/output-schema/\n\
-    \n## Use Cases\n\n- **Security auditing** - Find dangerous patterns (eval, exec,\
-    \ SQL injection)\n- **Code quality** - Complexity metrics, dead code detection,\
-    \ nesting analysis\n- **Refactoring** - Pattern-based code search across large\
-    \ codebases\n- **Documentation** - Extract function signatures and structure\n\
-    - **AI workflows** - Structured code understanding for LLM tools\n\n**GitHub:**\
-    \ https://github.com/teaguesterling/sitting_duck\n"
+  hello_world: |
+    -- Parse Python code and find function definitions
+    SELECT name, start_line, peek
+    FROM parse_ast('
+    def hello():
+        return "hello world"
+    def greet(name):
+        print(f"Hello, {name}!")
+        return name
+    ', 'python')
+    WHERE is_function_definition(semantic_type);
+
+    -- Pattern matching: find eval() calls and capture arguments
+    SELECT captures['X'].peek as dangerous_input, file_path, start_line
+    FROM ast_match('code', 'eval(__X__)', 'python');
+
+    -- Pattern matching with variadic wildcards
+    SELECT captures['F'].name as func_name, captures['Y'].peek as return_value
+    FROM ast_match('code',
+        'def __F__(__):
+        %__<BODY*>__%
+        return __Y__', 'python');
+
+    -- Security audit: find dangerous function calls
+    SELECT * FROM ast_security_audit('code')
+    WHERE risk_level = 'high';
+
+    -- Function complexity metrics
+    SELECT name, cyclomatic, max_depth, lines
+    FROM ast_function_metrics('code')
+    WHERE cyclomatic > 10;
+
+    -- Cross-language analysis with semantic types
+    SELECT language, COUNT(*) as functions
+    FROM read_ast(['src/**/*.py', 'src/**/*.js', 'src/**/*.go'])
+    WHERE is_function_definition(semantic_type)
+    GROUP BY language;
+
+  extended_description: |
+    Sitting Duck is a DuckDB extension for parsing source code into Abstract Syntax Trees (ASTs)
+    using tree-sitter grammars. It provides a powerful SQL interface to analyze, search, and
+    understand code structure across 25+ programming languages.
+
+    **Documentation:** https://sitting-duck.readthedocs.io/
+
+    ## Core Features
+
+    **Pattern Matching:**
+    Find code structures using pattern-by-example matching with wildcards:
+    ```sql
+    -- Recursive wildcards for deep matching
+    SELECT * FROM ast_match('code', 'class __C__: %__<**>__% def __M__(self): %__<BODY*>__%', 'python');
+
+    -- Optional and negation wildcards
+    SELECT * FROM ast_match('code', 'def __F__(__<?ARGS>__): %__<BODY*>__%', 'python');
+    ```
+    See: https://sitting-duck.readthedocs.io/en/latest/guide/pattern-matching/
+
+    **CSS Selector Queries (v1.6.0, enhanced in v1.7.0+):**
+    Query AST nodes using CSS selector syntax — bootstrapped with sitting duck's own CSS grammar:
+    ```sql
+    SELECT name FROM ast_select('src/*.py', '.func:has(.call#execute):not(:has(try_statement))');
+
+    -- v1.7.0: :match (current-node) vs :contains (subtree) structural patterns
+    SELECT name FROM ast_select('src/*.py', '.func:contains("db.execute()")');
+    SELECT name FROM ast_select('src/*.py', 'call:match("db.execute()")');
+
+    -- v1.7.2: parse once, query many — orders of magnitude faster for interactive use
+    CREATE TABLE my_ast AS SELECT * FROM read_ast('src/**/*.py');
+    SELECT * FROM ast_select_from('my_ast', '.class:named');
+    SELECT * FROM ast_select_from('my_ast', '.func:has(return_statement)');
+    ```
+    Supports type selectors, `#name`, `.semantic` (~80 aliases), combinators, `:has()`, `:not()`,
+    `:match()` / `:contains()` structural patterns, scope/call-graph pseudo-classes, and pseudo-element navigation.
+    Bare type matching: `if` matches `if` + `if_statement` + `if_clause`.
+
+    v1.10.0 adds runtime-loadable tree-sitter grammars (`register_language()`, off by
+    default behind `sitting_duck_enable_runtime_grammars`), `ast_to_blocks` (render code
+    structure as duck_blocks documents), and `ast_patch`/`ast_replace` (AST-anchored
+    source patching and selector-driven rewriting in SQL).
+
+    v1.9.0 hardens the selector engine: no more silent-empty results (selectors the engine
+    can't honor now raise a clear error instead of returning 0 rows), `#name` on call nodes
+    binds uniformly across all 27 grammars, and NULL columns no longer over- or under-match.
+
+    **Parse-time filtering (v1.8.0):**
+    `max_depth :=` and `prune :=` shrink the AST at parse time, with automatic tree healing:
+    ```sql
+    SELECT * FROM read_ast('file.py', max_depth := 2);
+    SELECT * FROM read_ast('src/**/*.py', prune := ['syntax', 'comments', 'punctuation']);
+    ```
+    Prune policies: `syntax`, `comments`, `literals`, `imports`, `types`, `punctuation`,
+    `unnamed`, `leaves`, `internal`.
+
+    **Call-graph macros (v1.8.0):**
+    - `ast_get_calls(source)` - calls with caller attribution and type classification
+    - `ast_call_graph(source)` - aggregated caller→callee graph with call counts
+    - `ast_find_references(source, name)` - scope-chain-aware symbol reference resolution
+
+    **Table Functions:**
+    - `read_ast(file_pattern, language := NULL)` - Parse source files into AST rows (parallel)
+    - `parse_ast(content, language)` - Parse source code strings (table function)
+    - `parse_ast_list(content, language)` - Parse source code strings (scalar, returns LIST<STRUCT>; v1.7.0)
+    - `ast_match(source, pattern, lang)` - Pattern matching for code search
+    - `ast_select(source, css_selector)` - CSS selector queries
+    - `ast_select_from(table_name, selector)` - CSS selectors on pre-parsed tables (v1.7.2)
+    - `ast_type_map(language)` - Node type discovery across languages
+
+    **v1.7.0 extraction suffix:**
+    Any extraction parameter (`context`, `source`, `structure`, `peek`) can take a `+schema`
+    suffix that keeps the full column set in the output schema as NULLs without computing them:
+    ```sql
+    -- Keep peek column in schema but skip its computation
+    SELECT name, peek FROM read_ast('file.py', peek := 'none+schema');
+    ```
+    Enables SQL macros to declare stable schemas regardless of which columns they populate.
+
+    **Relational Predicates (v1.5.0):**
+    - `ast_has(source, parent_type, child_type)` - Check containment relationships
+    - `ast_inside(source, child_type, parent_type, parent_name)` - Find nodes inside specific parents
+    - `ast_precedes(source, before_type, after_type)` - Ordering predicates
+    - `ast_follows(source, after_type, before_type)` - Ordering predicates
+    - `ast_not_has(source, parent_type, child_type)` - Negated containment
+
+    **Analysis Macros (file-path based):**
+    - `ast_definitions(source)` - All named definitions with categories
+    - `ast_function_metrics(source)` - Cyclomatic complexity, nesting depth, line counts
+    - `ast_security_audit(source)` - Detect dangerous function call patterns
+    - `ast_dead_code(source)` - Find potentially unused functions/classes
+    - `ast_nesting_analysis(source)` - Identify deeply nested code
+    - `ast_definition_parent(table)` - Resolve nearest definition ancestor per node
+
+    **Tree Navigation:**
+    - `ast_descendants(table, node_id)` - Get subtree (O(1) using descendant_count)
+    - `ast_ancestors(table, node_id)` - Path from node to root
+    - `ast_children(table, node_id)` - Immediate children
+    - `ast_function_scope(table, node_id)` - Function body excluding nested functions
+
+    **Semantic Predicates:**
+    Cross-language filtering with normalized types:
+    - `is_function_definition(st)`, `is_class_definition(st)`, `is_variable_definition(st)`
+    - `is_function_call(st)`, `is_literal(st)`, `is_conditional(st)`, `is_loop(st)`
+
+    ## Supported Languages (27)
+
+    | Category | Languages |
+    |----------|-----------|
+    | **Web** | JavaScript, TypeScript, HTML, CSS |
+    | **Systems** | C, C++, Go, Rust, Zig |
+    | **Scripting** | Python, Ruby, PHP, Lua, R, Bash |
+    | **Enterprise** | Java, C#, Kotlin, Swift |
+    | **Mobile** | Dart |
+    | **Data** | SQL, JSON, TOML, GraphQL, HCL |
+    | **Documentation** | Markdown |
+
+    ## AST Schema
+
+    Each parsed node includes:
+    - `type`, `name` - Node type and extracted identifier
+    - `semantic_type` - Normalized type for cross-language queries
+    - `file_path`, `language` - Source location
+    - `start_line`, `end_line`, `depth` - Position and nesting
+    - `descendant_count` - For O(1) subtree queries
+    - `peek` - Configurable source preview
+    - `qualified_name` - Scope-based path unique within a file (`C[User] F[__init__]` format; v1.7.0)
+    - `signature_type`, `parameters`, `modifiers`, `annotations` - Native extraction
+      (v1.8.0: `modifiers[]` populated across Python, JS, TS, Rust, Kotlin, Swift, Dart, C#;
+      `IS_EXPORTED` flag for file-level visibility)
+    - `scope` - STRUCT<current, function, class, module, stack> (v1.7.4); replaces
+      the v1.7.2 `scope_id` / `scope_stack` columns. `scope.function` lets you
+      answer "what function is this in?" as a single column read.
+
+    Full schema: https://sitting-duck.readthedocs.io/en/latest/api/output-schema/
+
+    ## Use Cases
+
+    - **Security auditing** - Find dangerous patterns (eval, exec, SQL injection)
+    - **Code quality** - Complexity metrics, dead code detection, nesting analysis
+    - **Refactoring** - Pattern-based code search across large codebases
+    - **Documentation** - Extract function signatures and structure
+    - **AI workflows** - Structured code understanding for LLM tools
+
+    **GitHub:** https://github.com/teaguesterling/sitting_duck
