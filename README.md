@@ -23,7 +23,7 @@ A `haybarn` CLI on a supported platform can `INSTALL <name> FROM community; LOAD
 - the deploy job runs only with `deploy: 'true'` on `haybarn-2.0` itself (the input defaults to `'false'`);
 - wasm_mvp, osx_amd64 and windows_arm64 are never built.
 
-A dry sweep: `make dispatch DEPLOY=false PUBLISH=false MAX_INFLIGHT=10`.
+A dry sweep: `make dispatch DEPLOY=false PUBLISH=false PAR=2 MAX_INFLIGHT=2` (2 extensions at a time, yielding to queued runs in the engine, client and ci-tools repos).
 
 ## How to add an extension
 

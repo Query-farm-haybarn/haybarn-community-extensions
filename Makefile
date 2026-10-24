@@ -33,12 +33,17 @@ DEPLOY  ?= false
 PUBLISH ?= false
 # max concurrent gh API calls (stay under GH secondary rate limits)
 PAR     ?= 6
-# Pacing for big sweeps, so other repos in the org still get runners. With
-# MAX_INFLIGHT set, dispatch waits (polling every POLL seconds) until fewer
-# than MAX_INFLIGHT '🐤' runs on REF are queued/in progress before firing the
-# next PAR. Empty = fire everything at once (the old behaviour).
+# Pacing for big sweeps, so other repos in the org still get runners (the org
+# runs ~20 jobs at once and one extension run fans out to ~7 legs). With
+# MAX_INFLIGHT set, before each batch of PAR dispatches the loop waits
+# (polling every POLL seconds) until
+#   - at most MAX_INFLIGHT-PAR '🐤' runs on REF are queued/in progress, and
+#   - none of YIELD_REPOS has a queued run (their CI goes first).
+# Empty MAX_INFLIGHT = fire everything at once (the old behaviour).
+# Sweep: make dispatch DEPLOY=false PUBLISH=false PAR=2 MAX_INFLIGHT=2
 MAX_INFLIGHT ?=
 POLL    ?= 300
+YIELD_REPOS ?= Query-farm-haybarn/haybarn Query-farm-haybarn/haybarn-python Query-farm-haybarn/haybarn-extension-ci-tools Query-farm-haybarn/haybarn-ci Query-farm-haybarn/haybarn-wasm Query-farm-haybarn/haybarn-httpfs Query-farm-haybarn/haybarn-delta Query-farm-haybarn/haybarn-iceberg Query-farm-haybarn/haybarn-ducklake
 # `make republish` window: only consider build.yml runs created after this UTC
 # timestamp. Default = today 00:00:00Z (matches scripts/republish_npm.sh).
 SINCE   ?= $(shell date -u +%Y-%m-%dT00:00:00Z)
@@ -87,7 +92,7 @@ help:
 	@echo "  make list-disabled  Print the fully-disabled extensions that dispatch skips."
 	@echo
 	@echo "Overridable vars: REPO REF DEPLOY PUBLISH PAR MAX_INFLIGHT POLL SINCE DUCKDB_VERSION VERSION_SUFFIX"
-	@echo "  e.g.  make dispatch DEPLOY=false PUBLISH=false MAX_INFLIGHT=20   # paced dry sweep"
+	@echo "  e.g.  make dispatch DEPLOY=false PUBLISH=false PAR=2 MAX_INFLIGHT=2   # paced dry sweep"
 	@echo "  e.g.  make resubmit DEPLOY=true PUBLISH=false PAR=8"
 	@echo "  e.g.  make republish SINCE=2026-05-27T00:00:00Z DUCKDB_VERSION=haybarn-v1.5.3-rc10"
 	@echo "  e.g.  make republish DUCKDB_VERSION=haybarn-v1.5.3-rc10 VERSION_SUFFIX=2  # force npm republish (bump patch)"
@@ -113,15 +118,22 @@ dispatch:
 	      inflight=$$(gh run list --repo "$(REPO)" --workflow build.yml --branch "$(REF)" -L 200 \
 	        --json status,displayTitle \
 	        --jq '[.[]|select((.status=="queued" or .status=="in_progress" or .status=="waiting" or .status=="pending") and (.displayTitle|startswith("🐤")))]|length' 2>/dev/null || echo 999); \
-	      [ "$$inflight" -lt "$(MAX_INFLIGHT)" ] && break; \
-	      echo "  $$(date -u +%H:%M:%SZ) $$inflight in flight on $(REF) (max $(MAX_INFLIGHT)); dispatched $$n so far, waiting $(POLL)s"; \
+	      busy=""; \
+	      if [ "$$inflight" -le $$(( $(MAX_INFLIGHT) - $(PAR) )) ]; then \
+	        for yr in $(YIELD_REPOS); do \
+	          q=$$(gh run list --repo "$$yr" --status queued -L 5 --json databaseId --jq length 2>/dev/null || echo 1); \
+	          [ "$$q" != "0" ] && busy="$$busy $$yr($$q)"; \
+	        done; \
+	        [ -z "$$busy" ] && break; \
+	      fi; \
+	      echo "  $$(date -u +%H:%M:%SZ) $$inflight in flight on $(REF) (max $(MAX_INFLIGHT)), queued elsewhere:$${busy:- n/a}; dispatched $$n so far, waiting $(POLL)s"; \
 	      sleep $(POLL); \
 	    done; \
 	  fi; \
 	  ( gh workflow run build.yml --repo "$(REPO)" --ref "$(REF)" \
 	      -f extension_name="$$ext" -f deploy=$(DEPLOY) -f publish_registries=$(PUBLISH) \
 	      >/dev/null 2>&1 && echo "OK" || echo "FAIL $$ext" ) >>"$$tmp" & \
-	  n=$$((n+1)); [ $$((n % $(PAR))) -eq 0 ] && wait; \
+	  n=$$((n+1)); if [ $$((n % $(PAR))) -eq 0 ]; then wait; [ -n "$(MAX_INFLIGHT)" ] && sleep 60; fi; \
 	done; \
 	wait; \
 	echo "  ok=$$(grep -c '^OK' "$$tmp" || true)  fail=$$(grep -c '^FAIL' "$$tmp" || true)"; \
