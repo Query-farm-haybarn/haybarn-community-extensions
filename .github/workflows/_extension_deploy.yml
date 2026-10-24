@@ -1,63 +1,75 @@
+# Reusable workflow that deploys a built extension to the Haybarn
+# community R2 bucket and optionally publishes npm leaf packages when the
+# extension's descriptor opts in via `publish_registries: true`. (PyPI is
+# temporarily disabled while it's rate-limited — see CHANNELS in the deploy
+# job and the downstream publish_pypi `if:`.)
 #
-# Reusable workflow that deploys the artifacts produced by .github/workflows/_extension_distribution.yml
+# A SINGLE deploy job handles every architecture: it downloads all the
+# per-arch build artifacts, then runs the shared
+# ci-tools/scripts/publish/publish_extensions.py (the same generic publisher
+# core uses) which signs + compresses each arch in parallel and ships the
+# whole R2 tree with a few `aws s3 sync` calls. This replaced a per-arch
+# matrix whose every leg re-ran the checkouts / pip install / GPG import.
 #
-# Note: this workflow can be used to deploy an extension from a GH artifact. It is intended for Out-of-tree
-#       extensions that live the duckdb GitHub organisation (only repo's within the same organisation can share secrets
-#       through reusable workflows)
-
+# R2 layout written (under the shared core bucket, `community/` prefix). The
+# <version> segment is the engine semver vX.Y.Z: we pass duckdb_version as the
+# engine git tag (haybarn-v1.5.3-rc7), and publish_extensions.py normalizes it
+# to v1.5.3 for the path (and to 1.5.3 for the npm version) — that's the segment
+# the engine INSTALLs from. See normalize_engine_version() in that script.
+#
+#   mutable "latest" (engine INSTALL fetches this; --write-latest):
+#     s3://<bucket>/community/<version>/<arch>/<name>.duckdb_extension.gz
+#
+#   per-commit immutable:
+#     s3://<bucket>/community/<version>/<arch>/<name>/<ext_commit_short>/
+#         <name>.duckdb_extension.gz       ← binary
+#         manifest.json                    ← signed per-build metadata
+#         manifest.json.asc
+#
+#   mutable pointer:
+#     s3://<bucket>/community/<version>/<arch>/<name>/
+#         current.json                     ← signed pointer to latest commit
+#         current.json.asc
+#
+# See ideas/extension-version-pinning.md for the full design.
 
 name: Extension Deployment
 on:
   workflow_call:
     inputs:
-      # The name of the extension
       extension_name:
         required: true
         type: string
-      # DuckDB version to build against
       duckdb_version:
         required: true
         type: string
-      # Override the duckdb tag for deployment (e.g., for releases)
       duckdb_tag:
         required: false
         type: string
         default: ""
-      # Exact DuckDB commit to use when duckdb_version is not a real tag (e.g. untagged pre-releases)
-      duckdb_commit:
-        required: false
-        type: string
-        default: ""
-      # Extension CI tools version to use
       ci_tools_version:
         required: true
         type: string
-      # ';' separated list of architectures to exclude, for example: 'linux_amd64;osx_arm64'
       exclude_archs:
         required: false
         type: string
         default: ""
-      # ';' separated list of architectures to opt into, for example: 'windows_arm64;linux_arm64_musl'
       opt_in_archs:
         required: false
         type: string
         default: ""
-      # Whether to upload this deployment as the latest. This may overwrite a previous deployment.
       deploy_latest:
         required: false
         type: boolean
         default: false
-      # Whether to upload this deployment under a versioned path. These will not be deleted automatically
       deploy_versioned:
         required: false
         type: boolean
         default: false
-      # Postfix added to artifact names. Can be used to guarantee unique names when this workflow is called multiple times
       artifact_postfix:
         required: false
         type: string
         default: ""
-      # Override the default deploy script with a custom script
       deploy_script:
         required: false
         type: string
@@ -70,95 +82,417 @@ on:
         required: false
         type: string
         default: ""
-      # auto/enabled/disabled: when enabled (or enabled through auto) will skip redundant architectures to reduce CI load
       reduced_ci_mode:
         required: false
         type: string
         default: 'auto'
+      # Per-extension opt-in to PyPI + npm publishing. Gated this way so
+      # we can prove the round-trip with waddle before flipping it for
+      # the rest of the community catalog.
+      publish_registries:
+        required: false
+        type: boolean
+        default: false
+      # Extension's own semver from the descriptor (extension.version).
+      # Used as the pip/npm version field when non-empty; otherwise the
+      # deploy job falls back to CalVer derived from the commit timestamp.
+      extension_version_label:
+        required: false
+        type: string
+        default: ""
+      # Optional NUMERIC suffix appended to the PATCH (last) component of the
+      # computed version, e.g. "2" turns 202605.17.122351 into
+      # 202605.17.1223512. The result sorts HIGHER than the un-suffixed
+      # version (it's a larger patch integer), so npm accepts it and it becomes
+      # the real `latest`. Used to force a republish of an engine-only rebuild
+      # whose extension-source CalVer (commit-time derived) is unchanged and
+      # would otherwise collide with the already-published version. Empty → no
+      # suffix (the default build→deploy path).
+      version_suffix:
+        required: false
+        type: string
+        default: ""
+      # SPDX license string from the descriptor's `extension.license`.
+      # Passed to npm_build_leaf.py / npm_build_meta.py via the LICENSE
+      # env var so the published package.json carries the upstream
+      # extension's actual license rather than the engine's default MIT.
+      # Empty string keeps the default MIT (matches engine + core
+      # extensions, which is what was hardcoded before).
+      extension_license:
+        required: false
+        type: string
+        default: ""
+      # One-line description from descriptor's `extension.description`
+      # — used by npm_build_meta.py / npm_build_leaf.py to render the
+      # generated README.md and package.json `description` field.
+      extension_description:
+        required: false
+        type: string
+        default: ""
+      # Upstream extension source repo URL (https://github.com/<o>/<r>),
+      # derived from descriptor's `repo.github`. Shown as a link in the
+      # generated README.md.
+      extension_source_repo:
+        required: false
+        type: string
+        default: ""
+      # Build run whose per-arch artifacts to deploy. Empty → current run
+      # (the normal build→deploy chain). Non-empty → cross-run download from
+      # that build's `<ext>-<dv>-extension-*` artifacts. Used by
+      # republish_npm.yml to publish npm leaves from an ALREADY-built run
+      # without rebuilding (the artifacts are still retained on the run).
+      source_run_id:
+        required: false
+        type: string
+        default: ""
+      # npm-only republish mode. When true: build npm leaves ONLY (CHANNELS=npm,
+      # no pypi/r2) and run publish_extensions.py in dry-run (--deploy false, no
+      # --write-latest) so R2 is NOT re-touched — the binaries are already on R2
+      # from the original build's deploy. The leaf tarballs are still staged +
+      # uploaded as the npm-leaf artifact for the downstream publish job.
+      republish_npm_only:
+        required: false
+        type: boolean
+        default: false
+
 jobs:
-  generate_matrix:
-    name: Generate matrix
-    runs-on: ubuntu-latest
-    outputs:
-      deploy_matrix: ${{ steps.parse-matrices.outputs.deploy_matrix }}
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          repository: 'duckdb/extension-ci-tools'
-          ref: ${{ inputs.ci_tools_version }}
-          path: extension-ci-tools
-
-      - id: parse-matrices
-        run: |
-          python3 ./extension-ci-tools/scripts/modify_distribution_matrix.py --input ./extension-ci-tools/config/distribution_matrix.json --deploy_matrix --output deploy_matrix.json --exclude "${{ inputs.exclude_archs }}" --opt_in "${{ inputs.opt_in_archs }}" --pretty --reduced_ci_mode ${{ inputs.reduced_ci_mode }}
-          deploy_matrix="`cat deploy_matrix.json`"
-          echo deploy_matrix=$deploy_matrix >> $GITHUB_OUTPUT
-          echo `cat $GITHUB_OUTPUT`
-
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    needs: generate_matrix
-    if: ${{ needs.generate_matrix.outputs.deploy_matrix != '{}' && needs.generate_matrix.outputs.deploy_matrix != '' }}
-    strategy:
-      matrix: ${{fromJson(needs.generate_matrix.outputs.deploy_matrix)}}
+    # One job for ALL architectures. The old design fanned a matrix leg per
+    # arch — each leg re-ran 3 checkouts (incl. a full-depth engine clone),
+    # `pip install awscli`, a GPG import, and ~5 `aws s3 cp` calls, to do a
+    # few seconds of real work, and a separate generate_matrix job computed the
+    # arch list. We now do that setup ONCE, derive the arch list from the
+    # downloaded build artifacts (the build already produced exactly the
+    # arches we deploy — same exclude/opt_in filter), sign + compress every
+    # arch in parallel (in memory, via the shared publish_extensions.py used
+    # by core), and ship the whole R2 tree with a handful of `aws s3 sync`
+    # calls.
+    concurrency:
+      # Serialize runs for the same (extension, version) so two pushes don't
+      # race the mutable current.json pointer. (A matrix job couldn't carry a
+      # concurrency group keyed on the arch; a single job can.)
+      group: deploy-${{ inputs.extension_name }}-${{ inputs.duckdb_version }}
+      cancel-in-progress: false
+    outputs:
+      version: ${{ steps.calver.outputs.version }}
+      ext_commit: ${{ steps.extsrc.outputs.ext_commit }}
+      # 'true' when at least one per-arch artifact was assembled; 'false' when
+      # the extension is disabled on every platform (no artifacts to publish).
+      # Gates the downstream publish steps + call_publish_registries job.
+      has_artifacts: ${{ steps.assemble.outputs.has_artifacts }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repository }}
           ref: ${{ inputs.ref }}
           submodules: 'false'
 
-      - uses: actions/checkout@v3
+      # Engine checkout (SHALLOW) — only to read the engine commit SHA stamped
+      # into each manifest's haybarn-engine-commit. duckdb_version is an explicit
+      # input now, so we no longer derive it from tags and depth-1 is enough.
+      # (The old per-arch deploy did a full-depth clone here, once per leg.)
+      - uses: actions/checkout@v4
         with:
-          repository: 'duckdb/duckdb'
-          ref: ${{ inputs.duckdb_commit || inputs.duckdb_version }}
+          repository: 'Query-farm-haybarn/haybarn'
+          ref: ${{ inputs.duckdb_version }}
           path: duckdb
-          fetch-depth: 0
+          fetch-depth: 1
 
-      - uses: actions/download-artifact@v4
+      # ci-tools checkout (under ci-tools/) supplies publish_extensions.py and
+      # the shared publish helpers from scripts/publish/. Tracks the `haybarn`
+      # branch tip — single source of truth shared with the engine repo's
+      # haybarn-extensions-publish.yml.
+      - uses: actions/checkout@v4
         with:
-          name: ${{ inputs.extension_name }}-${{ inputs.duckdb_version }}-extension-${{matrix.duckdb_arch}}${{inputs.artifact_postfix}}${{startsWith(matrix.duckdb, 'wasm') && '.wasm' || ''}}
-          path: |
-            /tmp/extension
+          repository: 'Query-farm-haybarn/haybarn-extension-ci-tools'
+          ref: haybarn
+          path: ci-tools
 
-      - name: Deploy
+      - name: Capture extension source commit + timestamp
+        id: extsrc
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config --global --add safe.directory '*'
+          {
+            echo "ext_commit=$(git log -1 --format=%H)"
+            echo "ext_commit_ts=$(git log -1 --format=%ct)"
+            echo "ext_commit_short=$(git log -1 --format=%h)"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Capture haybarn engine commit
+        id: engine
+        shell: bash
+        run: echo "engine_commit=$(git -C duckdb rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Compute pip/npm version (semver if descriptor has one, else CalVer)
+        id: calver
+        shell: bash
+        # Templated values via env (see publish step) so a descriptor-supplied
+        # version label can't break quoting or inject into this script.
+        env:
+          EXT_VERSION_LABEL: ${{ inputs.extension_version_label }}
+          EXT_COMMIT_TS:     ${{ steps.extsrc.outputs.ext_commit_ts }}
+          VERSION_SUFFIX:    ${{ inputs.version_suffix }}
+        run: |
+          set -euo pipefail
+          if [[ -n "$EXT_VERSION_LABEL" ]]; then
+            VERSION=$(python3 ci-tools/scripts/publish/compute_calver.py --semver "$EXT_VERSION_LABEL")
+          else
+            VERSION=$(python3 ci-tools/scripts/publish/compute_calver.py --commit-ts "$EXT_COMMIT_TS")
+          fi
+          # Optional numeric suffix: append to the PATCH (last dotted) component
+          # so the version sorts HIGHER and npm accepts a republish whose
+          # extension-source CalVer is otherwise unchanged. Concatenating onto
+          # the full string lands on the patch field, since patch is last.
+          if [[ -n "$VERSION_SUFFIX" ]]; then
+            if [[ ! "$VERSION_SUFFIX" =~ ^[0-9]+$ ]]; then
+              echo "::error::version_suffix must be numeric (got '$VERSION_SUFFIX')"; exit 1
+            fi
+            patch="${VERSION##*.}"
+            # Reject a result with a leading zero (invalid semver/PEP440) — only
+            # possible when the patch component is exactly 0 (commit at 00:00:00).
+            if [[ "$patch" == "0" ]]; then
+              echo "::error::cannot suffix a zero patch component ($VERSION); would create a leading-zero patch"; exit 1
+            fi
+            VERSION="${VERSION}${VERSION_SUFFIX}"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "::notice::pip/npm version: $VERSION"
+
+      - name: Download all built extension artifacts
+        uses: actions/download-artifact@v4
+        with:
+          # One artifact per arch: <ext>-<dv>-extension-<arch>[<postfix>][.wasm].
+          # No merge-multiple → each lands in its own dl/<artifact-name>/ subdir.
+          pattern: ${{ inputs.extension_name }}-${{ inputs.duckdb_version }}-extension-*
+          path: dl
+          # source_run_id set → pull artifacts from that build run (npm
+          # republish path); empty → current run (normal build→deploy chain).
+          # github-token is required for cross-run download (needs actions:read).
+          run-id: ${{ inputs.source_run_id != '' && inputs.source_run_id || github.run_id }}
+          github-token: ${{ github.token }}
+
+      - name: Assemble repo tree for publish_extensions.py
+        id: assemble
         shell: bash
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.DUCKDB_COMMUNITY_EXTENSION_S3_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.DUCKDB_COMMUNITY_EXTENSION_S3_SECRET }}
-          AWS_ENDPOINT_URL: ${{ secrets.DUCKDB_COMMUNITY_EXTENSION_S3_ENDPOINT }}
-          BUCKET_NAME: duckdb-community-extensions
-          DUCKDB_EXTENSION_SIGNING_PK: ${{ secrets.S3_DUCKDB_ORG_COMMUNITY_SIGNING_PK }}
-          DUCKDB_DEPLOY_SCRIPT_MODE: for_real
-          PIP_BREAK_SYSTEM_PACKAGES: 1
+          EXT: ${{ inputs.extension_name }}
+          DV: ${{ inputs.duckdb_version }}
+          POSTFIX: ${{ inputs.artifact_postfix }}
         run: |
-          pwd
-          python3 -m pip install awscli
-          if [ -n "${{ inputs.duckdb_tag }}" ]; then
-            export DUCKDB_VERSION="${{ inputs.duckdb_tag }}"
-          elif [ -n "${{ inputs.duckdb_commit }}" ]; then
-            export DUCKDB_VERSION="${{ inputs.duckdb_version }}"
-          else
-            git config --global --add safe.directory '*'
-            cd duckdb
-            git fetch --tags
-            export DUCKDB_VERSION=`git tag --points-at HEAD`
-            export DUCKDB_VERSION=${DUCKDB_VERSION:=`git log -1 --format=%h`}
-            cd ..
+          set -euo pipefail
+          shopt -s nullglob
+          mkdir -p repo
+          # Each downloaded artifact dir is dl/<ext>-<dv>-extension-<arch>[<postfix>]
+          # and holds one <ext>.duckdb_extension (.wasm for wasm). Derive the arch
+          # from the dir name and lay the binary out as <dv>/<arch>/<bin> — the
+          # tree shape publish_extensions.py iterates. No generate_matrix job
+          # needed: the build produced exactly the arches we deploy.
+          PREFIX="${EXT}-${DV}-extension-"
+          n=0
+          for adir in dl/*/; do
+            adir="${adir%/}"
+            name="$(basename "$adir")"
+            arch="${name#"$PREFIX"}"
+            arch="${arch%"$POSTFIX"}"
+            if [[ -f "$adir/${EXT}.duckdb_extension.wasm" ]]; then
+              bin="${EXT}.duckdb_extension.wasm"
+            elif [[ -f "$adir/${EXT}.duckdb_extension" ]]; then
+              bin="${EXT}.duckdb_extension"
+            else
+              echo "::error::no extension binary in $adir"; ls -la "$adir" 2>/dev/null || true; exit 1
+            fi
+            mkdir -p "repo/${DV}/${arch}"
+            cp "$adir/$bin" "repo/${DV}/${arch}/${bin}"
+            n=$((n+1))
+          done
+          echo "::notice::assembled $n arch(es)"
+          # Zero artifacts after a SUCCESSFUL build means the extension is
+          # disabled on every platform (its descriptor excludes the entire
+          # platform set), so every build matrix leg was skipped and produced
+          # nothing. That's the only way to reach a successful deploy with no
+          # artifacts: a leg that ran and failed would fail the `build` job,
+          # whose result gates this deploy job's `needs:` and skips it. So
+          # treat it as "nothing to deploy" and exit cleanly instead of
+          # red-failing the whole run. The downstream publish steps + the
+          # call_publish_registries job key off has_artifacts to no-op too.
+          if [[ "$n" -eq 0 ]]; then
+            echo "has_artifacts=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::no built artifacts — extension is disabled on all platforms; skipping deploy"
+            exit 0
           fi
-          export EXT_VERSION="unversioned"
-          "${{ inputs.deploy_script }}" "${{ inputs.extension_name }}" "$EXT_VERSION" "$DUCKDB_VERSION" "${{ matrix.duckdb_arch }}" "$BUCKET_NAME" "${{inputs.deploy_latest || 'true' && 'false'}}" "${{inputs.deploy_versioned || 'true' && 'false'}}"
+          echo "has_artifacts=true" >> "$GITHUB_OUTPUT"
+          find repo -type f | sort
 
-  clean_cache:
+      - name: Sign, compress, and publish to R2 (+ stage npm leaves)
+        if: ${{ steps.assemble.outputs.has_artifacts == 'true' }}
+        shell: bash
+        # Same R2_* org-secret credentials used by haybarn-extensions-publish.yml.
+        # Community shares the core bucket under a top-level `community/` prefix
+        # (--r2-prefix community). The engine fetches INSTALL binaries from
+        # https://haybarn-extensions.query.farm/community/<dv>/<arch>/<name>.duckdb_extension.gz
+        # — the mutable "latest" path that --write-latest produces.
+        env:
+          AWS_ACCESS_KEY_ID:     ${{ secrets.R2_ACCESS_KEY_ID }}
+          # The org secret is named R2_SECRET_KEY_ID (not R2_SECRET_ACCESS_KEY).
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_KEY_ID }}
+          AWS_ENDPOINT_URL:      ${{ secrets.R2_ENDPOINT }}
+          AWS_DEFAULT_REGION:    auto
+          # Cloudflare R2 rejects the new sigv4 checksum headers added in
+          # awscli ≥ 1.36 / v2 ≥ 2.23 (AccessDenied on PutObject). Pin to
+          # pre-2024 checksum behavior.
+          AWS_REQUEST_CHECKSUM_CALCULATION:  when_required
+          AWS_RESPONSE_CHECKSUM_VALIDATION:  when_required
+          # SAME signing key Haybarn uses for core extensions (RSA binary sig).
+          DUCKDB_EXTENSION_SIGNING_PK: ${{ secrets.HAYBARN_EXTENSION_SIGNING_PK }}
+          # GPG key for the manifest / current.json detached signatures.
+          HAYBARN_GPG_PRIVATE_KEY: ${{ secrets.HAYBARN_GPG_PRIVATE_KEY }}
+          HAYBARN_GPG_PASSPHRASE:  ${{ secrets.HAYBARN_GPG_PASSPHRASE }}
+          PIP_BREAK_SYSTEM_PACKAGES: 1
+          DV: ${{ inputs.duckdb_version }}
+          # Pass every templated value through env rather than interpolating it
+          # into the script below. Descriptor-derived fields (description,
+          # license, source repo) are free-form text that regularly contain
+          # apostrophes, parentheses, etc.; splicing them into a quoted shell
+          # arg breaks the quoting (and would let a crafted description.yml
+          # inject commands into this credentialed/signing job). Referenced as
+          # "$VAR", a value is never re-parsed as shell.
+          ENGINE_COMMIT:         ${{ steps.engine.outputs.engine_commit }}
+          EXT_COMMIT:            ${{ steps.extsrc.outputs.ext_commit }}
+          EXT_COMMIT_TS:         ${{ steps.extsrc.outputs.ext_commit_ts }}
+          EXT_VERSION_LABEL:     ${{ inputs.extension_version_label }}
+          CALVER_VERSION:        ${{ steps.calver.outputs.version }}
+          R2_BUCKET:             ${{ secrets.R2_BUCKET }}
+          EXTENSION_LICENSE:     ${{ inputs.extension_license }}
+          EXTENSION_DESCRIPTION: ${{ inputs.extension_description }}
+          EXTENSION_SOURCE_REPO: ${{ inputs.extension_source_repo }}
+          REPUBLISH_NPM_ONLY:    ${{ inputs.republish_npm_only }}
+          PUBLISH_REGISTRIES:    ${{ inputs.publish_registries }}
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet awscli cryptography tqdm
+          command -v brotli >/dev/null || sudo apt-get install -y --no-install-recommends brotli
+          # Channels gate which registry artifacts get built. PyPI is
+          # temporarily disabled (rate-limited; the downstream publish_pypi job
+          # is also `if: false`), so we build npm leaves only. Re-enable by
+          # adding 'pypi' back here AND flipping that downstream `if:`.
+          #
+          # republish_npm_only: npm leaves ONLY, and run in dry-run so R2 is
+          # NOT re-touched (binaries are already on R2 from the original build's
+          # deploy). publish_extensions.py still STAGES dist/npm/ in dry-run —
+          # only the aws s3 sync uploads + the previous-pointer read are gated
+          # off — so the leaf tarballs are produced for the downstream npm job.
+          DEPLOY_ARGS=( --write-latest --deploy true )
+          if [[ "$REPUBLISH_NPM_ONLY" == 'true' ]]; then
+            CHANNELS='npm'
+            DEPLOY_ARGS=( --deploy false )   # dry-run: no R2 writes, no --write-latest
+          elif [[ "$PUBLISH_REGISTRIES" == 'true' ]]; then
+            CHANNELS='r2-community,npm'
+          else
+            CHANNELS='r2-community'
+          fi
+          python3 ci-tools/scripts/publish/publish_extensions.py \
+            --repo-dir          repo \
+            --engine-commit     "$ENGINE_COMMIT" \
+            --ext-commit        "$EXT_COMMIT" \
+            --ext-commit-ts     "$EXT_COMMIT_TS" \
+            --ext-version-label "$EXT_VERSION_LABEL" \
+            --version           "$CALVER_VERSION" \
+            --haybarn-version   "$DV" \
+            --duckdb-version    "$DV" \
+            --r2-bucket         "$R2_BUCKET" \
+            --r2-prefix         community \
+            --license           ce/LICENSE \
+            --license-str       "$EXTENSION_LICENSE" \
+            --description       "$EXTENSION_DESCRIPTION" \
+            --source-repo       "$EXTENSION_SOURCE_REPO" \
+            --dist-dir          dist \
+            --signed-by         haybarn-extension-signing-2026 \
+            --channels          "$CHANNELS" \
+            --artifact-shape    per-extension \
+            "${DEPLOY_ARGS[@]}"
+
+      - name: Upload npm leaf artifact (for publish_npm job)
+        if: ${{ inputs.publish_registries && steps.assemble.outputs.has_artifacts == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          # Single combined artifact: dist/npm/ holds one <leaf>.tar.gz per
+          # publishable arch. The downstream per-extension publish_npm job
+          # globs `npm-leaf-<ext>-<dv>-*` and extracts every tarball it finds.
+          name: npm-leaf-${{ inputs.extension_name }}-${{ inputs.duckdb_version }}-all
+          path: dist/npm/
+          if-no-files-found: error
+          # Intra-run handoff to publish_npm; expire fast — these dominate
+          # Actions storage at scale.
+          retention-days: 2
+
+      # PyPI wheel upload — DISABLED while PyPI is rate-limited (the wheels
+      # aren't even built: 'pypi' is omitted from CHANNELS above, and the
+      # downstream publish_pypi job is `if: false`). Left here so re-enabling
+      # is a one-line flip (set `if: ${{ inputs.publish_registries }}` and add
+      # 'pypi' back to CHANNELS).
+      - name: Upload pip wheel artifact (for publish_pypi job)
+        if: ${{ false }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: pypi-wheel-${{ inputs.extension_name }}-all
+          path: dist/pypi/
+          if-no-files-found: error
+          retention-days: 2
+
+  # ------------------------------------------------------------------
+  # Registry publish (PyPI + npm) is the consolidated reusable workflow
+  # in ci-tools — same workflow the engine repo's haybarn-extensions.yml
+  # calls for core extensions. We pass artifact_shape=per-extension so
+  # it downloads pypi-wheel-<ext>-* / npm-leaf-<ext>-<dv>-* (matrix
+  # artifacts), as opposed to the bundled core-{pypi,npm}-* shape.
+  #
+  # Independent dispatch (e.g. for retry after a PyPI "429 Too many new
+  # projects" rate-limit bounce) is supported by calling the upstream
+  # workflow directly:
+  #   gh workflow run "_extension_registry_publish.yml" \
+  #     -R Query-farm-haybarn/haybarn-extension-ci-tools --ref haybarn \
+  #     -f artifact_shape=per-extension -f extension_name=<name> \
+  #     -f source_run_id=<this-run-id> -f duckdb_version=v1.5.2 \
+  #     -f version=<calver> -f ext_commit=<sha> -f extension_version_label=
+  # ------------------------------------------------------------------
+  call_publish_registries:
+    name: Publish PyPI + npm
     needs:
       - deploy
-      - generate_matrix
-    if: ${{ needs.generate_matrix.outputs.deploy_matrix != '{}' && needs.generate_matrix.outputs.deploy_matrix != '' }}
-    strategy:
-      matrix: ${{fromJson(needs.generate_matrix.outputs.deploy_matrix)}}
-    uses: ./.github/workflows/clean_caches.yml
+    # has_artifacts guards the "fully disabled" case: when the extension is
+    # excluded on every platform the deploy job is a clean no-op (nothing
+    # staged), so there are no npm leaves to publish — skip this job too.
+    if: ${{ always() && needs.deploy.result != 'cancelled' && needs.deploy.outputs.has_artifacts == 'true' && inputs.publish_registries && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch') }}
+    uses: Query-farm-haybarn/haybarn-extension-ci-tools/.github/workflows/_extension_registry_publish.yml@haybarn
+    permissions:
+      contents: read
+      actions:  read
+      id-token: write
     secrets: inherit
     with:
-      pattern: '*/${{ matrix.duckdb_arch }}/${{ inputs.extension_name }}.duckdb_extension.*'
+      artifact_shape:          per-extension
+      # MUST match the ref in the `uses:` line above — the called workflow
+      # uses this to checkout its own scripts/publish/.
+      ci_tools_ref:            haybarn
+      extension_name:          ${{ inputs.extension_name }}
+      duckdb_version:          ${{ inputs.duckdb_version }}
+      version:                 ${{ needs.deploy.outputs.version }}
+      ext_commit:              ${{ needs.deploy.outputs.ext_commit }}
+      extension_version_label: ${{ inputs.extension_version_label }}
+      extension_license:       ${{ inputs.extension_license }}
+      extension_description:   ${{ inputs.extension_description }}
+      extension_source_repo:   ${{ inputs.extension_source_repo }}
+      # Empty source_run_id → publish from the current run's artifacts.
+      source_run_id: ''
+
+# NOTE: upstream has a `clean_cache` job here that purges the Cloudflare CDN
+# for the just-replaced extension's path. We don't need it: every deployed
+# artifact lives at a unique URL (version segment + git-sha segment), so
+# old paths are never re-served — Cloudflare's edge happily holds onto the
+# old binary forever and nothing requests it again. New deploys land at
+# new URLs, no purge required.

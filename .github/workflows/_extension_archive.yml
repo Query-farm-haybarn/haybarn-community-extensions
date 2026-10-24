@@ -1,11 +1,16 @@
+# Reusable workflow that archives an extension's source at the descriptor's
+# pinned ref into the unified Haybarn R2 bucket. Useful for reproducibility
+# if an upstream extension's repo ever vanishes — we keep a zipped snapshot
+# of the exact commit we built from.
 #
-# Reusable workflow that deploys the extensions source code
+# Bucket layout: s3://${R2_BUCKET}/archived_sources/<name>/repo_sources_<sha>.zip
+# (The previously-separate haybarn-community-extensions bucket has been
+#  retired; everything now lives under the unified bucket.)
 
-name: Extension Archieve Sources
+name: Extension Archive Sources
 on:
   workflow_call:
     inputs:
-      # The name of the extension
       extension_name:
         required: true
         type: string
@@ -22,28 +27,48 @@ jobs:
     name: Fetch repo and save
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repository }}
           ref: ${{ inputs.ref }}
-          submodules: 'true'
+          # Don't recurse submodules — the archive is meant to be the source
+          # snapshot of the extension itself, NOT its build dependencies.
+          # We used to `rm -rf repo/duckdb` after a recursive clone but git's
+          # tmp_pack files were racing with the zip, causing "file size changed
+          # while zipping" + exit 18 (run 25964378414).
+          submodules: false
           path: ./repo
 
       - name: Compress the repository sources
         run: |
+          # Defensively remove any nested duckdb/ in case the extension's
+          # repo ships it pre-populated (rare, but happens). With
+          # submodules:false above, there's usually nothing to remove here.
           rm -rf repo/duckdb
           zip -9 -r compressed.zip repo
 
-      - name: Deploy the submodule
+      - name: Upload to Haybarn R2 bucket
         shell: bash
+        # Same R2_* org-secret credentials used by everything else now.
+        # Targets the unified bucket under archived_sources/. R2-specific
+        # env vars (region=auto, checksum=when_required) mirror what
+        # _extension_deploy.yml uses — needed for the SDK to play nicely
+        # with Cloudflare R2.
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.DUCKDB_COMMUNITY_EXTENSION_S3_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.DUCKDB_COMMUNITY_EXTENSION_S3_SECRET }}
-          AWS_ENDPOINT_URL: ${{ secrets.DUCKDB_COMMUNITY_EXTENSION_S3_ENDPOINT }}
-          BUCKET_NAME: duckdb-community-extensions
+          AWS_ACCESS_KEY_ID:                ${{ secrets.R2_ACCESS_KEY_ID }}
+          # See _extension_deploy.yml for why this is R2_SECRET_KEY_ID
+          # (not R2_SECRET_ACCESS_KEY).
+          AWS_SECRET_ACCESS_KEY:            ${{ secrets.R2_SECRET_KEY_ID }}
+          AWS_ENDPOINT_URL:                 ${{ secrets.R2_ENDPOINT }}
+          AWS_DEFAULT_REGION:               auto
+          AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+          AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+          BUCKET_NAME:                      ${{ secrets.R2_BUCKET }}
           PIP_BREAK_SYSTEM_PACKAGES: 1
         run: |
           python3 -m pip install awscli
-          if [ "${AWS_SECRET_ACCESS_KEY}" ]; then
-             aws s3 cp compressed.zip s3://${BUCKET_NAME}/archived_extension_sources/${{ inputs.extension_name }}/repo_sources_${{ inputs.ref }}.zip
+          if [ -n "${AWS_SECRET_ACCESS_KEY}" ]; then
+            aws s3 cp compressed.zip "s3://${BUCKET_NAME}/archived_sources/${{ inputs.extension_name }}/repo_sources_${{ inputs.ref }}.zip"
+          else
+            echo "No R2 secrets configured — skipping archive upload."
           fi

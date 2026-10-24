@@ -1,0 +1,53 @@
+# R2 PutObject diagnostic. Probes the unified haybarn-extensions bucket
+# (the only one we use now) across the prefixes _extension_deploy.yml
+# would write to. No fail-fast, so we get a (prefix → result) matrix
+# in one run.
+#
+# Trigger:  gh workflow run r2-smoke.yml --ref main
+
+name: R2 smoke test
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    env:
+      AWS_ACCESS_KEY_ID:                 ${{ secrets.R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY:             ${{ secrets.R2_SECRET_KEY_ID }}
+      AWS_ENDPOINT_URL:                  ${{ secrets.R2_ENDPOINT }}
+      AWS_DEFAULT_REGION:                auto
+      AWS_REQUEST_CHECKSUM_CALCULATION:  when_required
+      AWS_RESPONSE_CHECKSUM_VALIDATION:  when_required
+      BUCKET:                            ${{ secrets.R2_BUCKET }}
+    steps:
+      - name: Install awscli
+        run: |
+          python3 -m pip install --user --break-system-packages awscli >/dev/null
+          aws --version
+
+      - name: Probe write across the prefixes deploy/archive use
+        run: |
+          set +e
+          echo "smoke probe $(date -u +%Y-%m-%dT%H:%M:%SZ)" > probe.txt
+          TAG="${{ github.run_id }}-${{ github.run_attempt }}"
+          for KEY in \
+              "_smoke/${TAG}.txt" \
+              "core/_smoke/${TAG}.txt" \
+              "community/_smoke/${TAG}.txt" \
+              "archived_sources/_smoke/${TAG}.txt"
+          do
+            echo "::group::PUT s3://<bucket>/${KEY}"
+            aws s3 cp probe.txt "s3://${BUCKET}/${KEY}" 2>&1
+            rc=$?
+            if [[ $rc -eq 0 ]]; then
+              echo ">>> PUT OK"
+              aws s3 rm "s3://${BUCKET}/${KEY}" >/dev/null 2>&1
+            else
+              echo ">>> PUT FAILED (exit ${rc})"
+            fi
+            echo "::endgroup::"
+          done
