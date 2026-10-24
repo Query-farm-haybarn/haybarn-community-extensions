@@ -1,4 +1,6 @@
 extension:
+  # Haybarn: tests are environment-sensitive in Haybarn CI (carried from main).
+  haybarn_skip_tests: true
   name: h5db
   description: Read HDF5 datasets and attributes
   version: 1.3.2

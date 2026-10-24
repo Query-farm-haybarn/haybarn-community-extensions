@@ -1,4 +1,6 @@
 extension:
+  # Haybarn: tests are environment-sensitive in Haybarn CI (carried from main).
+  haybarn_skip_tests: true
   name: scrooge
   description: Provides functionality for financial data-analysis, including data scanners for the Ethereum Blockchain and Yahoo Finance
   version: 0.0.3

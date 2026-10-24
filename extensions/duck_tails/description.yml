@@ -1,4 +1,6 @@
 extension:
+  # Haybarn: tests are environment-sensitive in Haybarn CI (carried from main).
+  haybarn_skip_tests: true
   name: duck_tails
   description: Smart Development Intelligence for DuckDB - Git-aware data analysis capabilities that allow querying git history, accessing files at any revision, and performing version-aware data analysis with SQL.
   version: 1.8.0

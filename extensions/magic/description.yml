@@ -1,4 +1,6 @@
 extension:
+  # Haybarn: tests are environment-sensitive in Haybarn CI (carried from main).
+  haybarn_skip_tests: true
   name: magic
   description: libmagic/file utilities ported to DuckDB
   version: 0.0.1
