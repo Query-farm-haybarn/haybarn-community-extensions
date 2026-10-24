@@ -69,6 +69,7 @@ docs:
 extension:
   build: cmake
   description: Load DuckDB Macros from the web
+  excluded_platforms: windows_amd64_mingw;
   language: C++
   license: MIT
   maintainers:
@@ -80,4 +81,5 @@ repo:
   andium: 43a4ba8fcc13219be487d0ac12d68d66ac1d8268
   github: quackscience/duckdb-extension-webmacro
   ref: a9694a967c289aa62f2fadf4e3c82d9d2391dca9
+  haybarn_ref: aba49f18a9b362e0ba897dcf54c786bcaa75faf8
   variegata: 2d725bd8f730f1556dc230e3cf984fec4c17a95d

@@ -15,4 +15,5 @@ repo:
   andium: 74630cc8548a8ee6b32129abdc8bd70e1cf2bf87
   github: query-farm/fuzzycomplete
   ref: b632926cf27221b3afbbdd7b7f2dcc3e55f21601
+  haybarn_ref: cba8b3090ea8caaedb0e3bda62cb3b605913b82d
   variegata: 040136c2f5148f1dcd4f4ac60921ed2c40c615bb
