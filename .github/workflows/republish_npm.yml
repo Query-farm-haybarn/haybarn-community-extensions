@@ -82,7 +82,8 @@ jobs:
 
   deploy:
     needs: prepare
-    if: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_NAME != '' }}
+    # Publishes npm packages: only from haybarn-2.0 itself, never a scratch branch.
+    if: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_NAME != '' && github.ref == 'refs/heads/haybarn-2.0' }}
     uses: ./.github/workflows/_extension_deploy.yml
     permissions:
       contents: read

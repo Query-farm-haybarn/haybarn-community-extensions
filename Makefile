@@ -20,16 +20,25 @@ SHELL := /bin/bash
 .SHELLFLAGS := -o pipefail -c
 
 REPO    ?= Query-farm-haybarn/haybarn-community-extensions
-REF     ?= main
+# This branch is the 2.0 line; main is 1.5.
+REF     ?= haybarn-2.0
 # Keep inline comments OFF the value lines: trailing whitespace before a `#`
 # is part of the variable's value in make, and would leak into `gh -f deploy=...`
 # and into `$(PAR)` arithmetic.
-# deploy=true → publish each extension to R2 under /<duckdb_version>/
-DEPLOY  ?= true
+# deploy=true → publish each extension to R2 under community/<duckdb_version>/.
+# Default false on haybarn-2.0: a deploy must be asked for (DEPLOY=true), and
+# build.yml also refuses to deploy unless the run is on haybarn-2.0 itself.
+DEPLOY  ?= false
 # publish_registries (npm/PyPI); R2 deploy is a separate concern
 PUBLISH ?= false
 # max concurrent gh API calls (stay under GH secondary rate limits)
 PAR     ?= 6
+# Pacing for big sweeps, so other repos in the org still get runners. With
+# MAX_INFLIGHT set, dispatch waits (polling every POLL seconds) until fewer
+# than MAX_INFLIGHT '🐤' runs on REF are queued/in progress before firing the
+# next PAR. Empty = fire everything at once (the old behaviour).
+MAX_INFLIGHT ?=
+POLL    ?= 300
 # `make republish` window: only consider build.yml runs created after this UTC
 # timestamp. Default = today 00:00:00Z (matches scripts/republish_npm.sh).
 SINCE   ?= $(shell date -u +%Y-%m-%dT00:00:00Z)
@@ -77,7 +86,8 @@ help:
 	@echo "  make list-all   Print every extension dir (including disabled)."
 	@echo "  make list-disabled  Print the fully-disabled extensions that dispatch skips."
 	@echo
-	@echo "Overridable vars: REPO REF DEPLOY PUBLISH PAR SINCE DUCKDB_VERSION VERSION_SUFFIX"
+	@echo "Overridable vars: REPO REF DEPLOY PUBLISH PAR MAX_INFLIGHT POLL SINCE DUCKDB_VERSION VERSION_SUFFIX"
+	@echo "  e.g.  make dispatch DEPLOY=false PUBLISH=false MAX_INFLIGHT=20   # paced dry sweep"
 	@echo "  e.g.  make resubmit DEPLOY=true PUBLISH=false PAR=8"
 	@echo "  e.g.  make republish SINCE=2026-05-27T00:00:00Z DUCKDB_VERSION=haybarn-v1.5.3-rc10"
 	@echo "  e.g.  make republish DUCKDB_VERSION=haybarn-v1.5.3-rc10 VERSION_SUFFIX=2  # force npm republish (bump patch)"
@@ -98,6 +108,16 @@ dispatch:
 	@tmp=$$(mktemp); \
 	n=0; \
 	for ext in $(EXTS); do \
+	  if [ -n "$(MAX_INFLIGHT)" ] && [ $$((n % $(PAR))) -eq 0 ]; then \
+	    while :; do \
+	      inflight=$$(gh run list --repo "$(REPO)" --workflow build.yml --branch "$(REF)" -L 200 \
+	        --json status,displayTitle \
+	        --jq '[.[]|select((.status=="queued" or .status=="in_progress" or .status=="waiting" or .status=="pending") and (.displayTitle|startswith("🐤")))]|length' 2>/dev/null || echo 999); \
+	      [ "$$inflight" -lt "$(MAX_INFLIGHT)" ] && break; \
+	      echo "  $$(date -u +%H:%M:%SZ) $$inflight in flight on $(REF) (max $(MAX_INFLIGHT)); dispatched $$n so far, waiting $(POLL)s"; \
+	      sleep $(POLL); \
+	    done; \
+	  fi; \
 	  ( gh workflow run build.yml --repo "$(REPO)" --ref "$(REF)" \
 	      -f extension_name="$$ext" -f deploy=$(DEPLOY) -f publish_registries=$(PUBLISH) \
 	      >/dev/null 2>&1 && echo "OK" || echo "FAIL $$ext" ) >>"$$tmp" & \
@@ -108,10 +128,11 @@ dispatch:
 	grep '^FAIL' "$$tmp" || true; \
 	rm -f "$$tmp"
 
-# Cancel every queued/in_progress per-extension run (titles starting with 🐤).
+# Cancel every queued/in_progress per-extension run (titles starting with 🐤)
+# on REF only, so a 2.0 cancel never touches 1.5 (main) runs and vice versa.
 cancel:
 	@echo "Collecting in-flight '🐤' runs in $(REPO)…"
-	@ids=$$(gh run list --repo "$(REPO)" --workflow build.yml --event workflow_dispatch -L 400 \
+	@ids=$$(gh run list --repo "$(REPO)" --workflow build.yml --branch "$(REF)" --event workflow_dispatch -L 400 \
 	         --json databaseId,status,displayTitle \
 	         --jq '.[]|select((.status=="queued" or .status=="in_progress") and (.displayTitle|startswith("🐤")))|.databaseId'); \
 	n=$$(printf '%s\n' "$$ids" | grep -c . || true); \
@@ -130,7 +151,7 @@ resubmit:
 	@$(MAKE) --no-print-directory dispatch
 
 status:
-	@gh run list --repo "$(REPO)" --workflow build.yml --event workflow_dispatch -L 400 \
+	@gh run list --repo "$(REPO)" --workflow build.yml --branch "$(REF)" --event workflow_dispatch -L 400 \
 	  --json status,conclusion,displayTitle \
 	  --jq '[.[]|select(.displayTitle|startswith("🐤"))] | "🐤 runs (recent window): \(length)", (group_by(.status)[] | "  \(.[0].status): \(length)")'
 
@@ -141,7 +162,7 @@ status:
 republish:
 	@echo "Resolving successful build.yml runs in $(REPO) since $(SINCE)…"
 	@tmp=$$(mktemp); \
-	rows=$$(gh run list --repo "$(REPO)" --workflow build.yml --event workflow_dispatch -L 400 \
+	rows=$$(gh run list --repo "$(REPO)" --workflow build.yml --branch "$(REF)" --event workflow_dispatch -L 400 \
 	         --json databaseId,conclusion,displayTitle,createdAt \
 	         --jq "[.[]|select(.createdAt > \"$(SINCE)\" and .conclusion==\"success\")] | group_by(.displayTitle) | map(max_by(.createdAt)) | .[] | \"\(.displayTitle|sub(\"^🐤 \";\"\")) \(.databaseId)\""); \
 	n=$$(printf '%s\n' "$$rows" | grep -c . || true); \

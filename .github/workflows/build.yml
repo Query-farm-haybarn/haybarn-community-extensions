@@ -21,6 +21,8 @@
 #      (`ref` for 2.0, `variegata` for 1.5.6), after normalizing the tag.
 #   4. 2.0 platform drops: wasm_mvp, osx_amd64 and windows_arm64 are never
 #      built; they are prepended to every exclude_archs.
+#   5. No push / pull_request triggers, and the deploy needs an explicit
+#      `deploy: 'true'` on this branch. See "Triggers" below.
 name: Community Extension Build
 
 # The run title carries the extension name and engine tag, e.g.
@@ -32,19 +34,14 @@ run-name: >-
   ${{ inputs.extension_name && format('🐤 {0} ({1})', inputs.extension_name, inputs.duckdb_version || 'haybarn-v2.0.0-rc5') ||
       format('push: {0}', github.event.head_commit.message || github.ref_name) }}
 
+# Triggers: workflow_dispatch (make dispatch, the sync bot) and workflow_call
+# (build_all.yml, republish) only. Upstream also builds on push / pull_request
+# for changed descriptors; those stay off on haybarn-2.0 until the owner turns
+# them on. To restore them as build-only, add upstream's `pull_request:` and
+# `push:` blocks (paths-ignore '**' except scripts/build.py, this file and
+# extensions/*/description.yml): the deploy job below still needs
+# `inputs.deploy == 'true'`, which a push or PR event never sets.
 on:
-  pull_request:
-    paths-ignore:
-      - '**'
-      - '!scripts/build.py'
-      - '!.github/workflows/build.yml'
-      - '!extensions/*/description.yml'
-  push:
-    paths-ignore:
-      - '**'
-      - '!scripts/build.py'
-      - '!.github/workflows/build.yml'
-      - '!extensions/*/description.yml'
   workflow_dispatch:
     inputs:
       extension_name:
@@ -61,7 +58,9 @@ on:
       duckdb_commit:
         type: string
       deploy:
+        description: "'true' signs + deploys to R2 (community/v2.0.0). Anything else is a dry build."
         type: string
+        default: 'false'
       more_excluded:
         type: string
       more_opt_in:
@@ -70,12 +69,12 @@ on:
         required: false
         type: boolean
         default: false
-      # Publish npm leaf packages alongside the R2 deploy. R2 is the source of
-      # truth; bulk rebuilds pass false and publish to registries afterward.
+      # npm leaf packages alongside the R2 deploy. Only used when deploy is
+      # 'true'. R2 is the source of truth; registry publish is a decoupled step.
       publish_registries:
         required: false
         type: boolean
-        default: true
+        default: false
   workflow_call:
     inputs:
       extension_name:
@@ -92,6 +91,7 @@ on:
         type: string
       deploy:
         type: string
+        default: 'false'
       more_excluded:
         type: string
       more_opt_in:
@@ -107,7 +107,7 @@ on:
       publish_registries:
         required: false
         type: boolean
-        default: true
+        default: false
 
 concurrency:
   group: build-${{ github.workflow }}-${{ github.ref }}-${{ github.head_ref || '' }}-${{ github.base_ref || '' }}-${{ inputs.extension_name || '' }}-${{ inputs.duckdb_version || '' }}
@@ -236,7 +236,13 @@ jobs:
       - prepare
       - build
     uses: ./.github/workflows/_extension_deploy.yml
-    if: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_DEPLOY != '' && inputs.deploy != 'false' }}
+    # Deploys ONLY when all of these hold:
+    #   - the caller passed deploy: 'true' explicitly (the input defaults to
+    #     'false'; push/PR events carry no inputs, so they can never deploy)
+    #   - the run is on haybarn-2.0 itself (scratch branches never deploy;
+    #     upstream's equivalent is `github.ref_name == 'main'`)
+    #   - build.py marked the descriptor deployable (not the waddle fallback)
+    if: ${{ inputs.deploy == 'true' && github.ref == 'refs/heads/haybarn-2.0' && needs.prepare.outputs.COMMUNITY_EXTENSION_DEPLOY != '' }}
     # Reusable-workflow permissions are granted by the caller, and a nested
     # reusable workflow may only request a subset:
     #   contents: read   → checkout the extension source repo
@@ -258,6 +264,6 @@ jobs:
       extension_license: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_LICENSE }}
       extension_description: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_DESCRIPTION }}
       extension_source_repo: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_SOURCE_REPO }}
-      publish_registries: ${{ github.event_name == 'push' || inputs.publish_registries }}
+      publish_registries: ${{ inputs.publish_registries == true }}
       repository: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_GITHUB }}
       ref: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_REF }}
