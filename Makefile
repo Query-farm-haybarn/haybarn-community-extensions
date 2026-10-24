@@ -71,7 +71,17 @@ VERSION_SUFFIX ?=
 # Requires python3 + pyyaml (same as the build's parse step). Use ALL_EXTS /
 # `make list-all` for the unfiltered set, or `make list-disabled` to see what
 # was skipped and why.
-EXTS     := $(shell python3 scripts/buildable_extensions.py)
+# An explicit list overrides the full set, in the given order:
+#   make dispatch EXTS="a5 raquet"            (space-separated), or
+#   make dispatch EXTS_FILE=path/to/list.txt  (one name per line; '#' comments
+#                                              and blank lines ignored)
+# Names are dispatched as given (disabled ones are not filtered out).
+EXTS_FILE ?=
+ifneq ($(strip $(EXTS_FILE)),)
+EXTS     := $(shell sed -e 's/\#.*//' -e '/^[[:space:]]*$$/d' $(EXTS_FILE))
+else
+EXTS     ?= $(shell python3 scripts/buildable_extensions.py)
+endif
 ALL_EXTS := $(notdir $(patsubst %/,%,$(wildcard extensions/*/)))
 
 .PHONY: help list list-all list-disabled dispatch cancel resubmit status republish
@@ -91,7 +101,7 @@ help:
 	@echo "  make list-all   Print every extension dir (including disabled)."
 	@echo "  make list-disabled  Print the fully-disabled extensions that dispatch skips."
 	@echo
-	@echo "Overridable vars: REPO REF DEPLOY PUBLISH PAR MAX_INFLIGHT POLL SINCE DUCKDB_VERSION VERSION_SUFFIX"
+	@echo "Overridable vars: REPO REF DEPLOY PUBLISH PAR MAX_INFLIGHT POLL EXTS EXTS_FILE SINCE DUCKDB_VERSION VERSION_SUFFIX"
 	@echo "  e.g.  make dispatch DEPLOY=false PUBLISH=false PAR=2 MAX_INFLIGHT=2   # paced dry sweep"
 	@echo "  e.g.  make resubmit DEPLOY=true PUBLISH=false PAR=8"
 	@echo "  e.g.  make republish SINCE=2026-05-27T00:00:00Z DUCKDB_VERSION=haybarn-v1.5.3-rc10"
