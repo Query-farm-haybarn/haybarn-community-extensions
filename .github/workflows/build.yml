@@ -143,6 +143,8 @@ jobs:
       COMMUNITY_EXTENSION_SKIP_TESTS: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_SKIP_TESTS }}
       # `haybarn_job_timeout_minutes: <n>` in the descriptor (long cold builds).
       COMMUNITY_EXTENSION_JOB_TIMEOUT_MINUTES: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_JOB_TIMEOUT_MINUTES }}
+      # `haybarn_wasm_cmake_flags` in the descriptor (extra CMake flags, wasm legs only).
+      COMMUNITY_EXTENSION_WASM_CMAKE_FLAGS: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_WASM_CMAKE_FLAGS }}
       COMMUNITY_EXTENSION_VCPKG_URL: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_VCPKG_URL == '' && 'https://github.com/microsoft/vcpkg.git' || steps.parse.outputs.COMMUNITY_EXTENSION_VCPKG_URL }}
       # Upstream: release 2025.12.12 (84bab45d) for v1.5.6, else 2026.06.24
       # (cd61e1e2). This branch only builds 2.0 (the ci-tools `uses:` is the
@@ -215,6 +217,7 @@ jobs:
       # readwrite HTTP cache with the bearer token from vcpkg_token.
       skip_tests: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_SKIP_TESTS == 'true' || inputs.skip_tests || false }}
       job_timeout_minutes: ${{ fromJSON(needs.prepare.outputs.COMMUNITY_EXTENSION_JOB_TIMEOUT_MINUTES || '45') }}
+      wasm_extra_cmake_flags: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_WASM_CMAKE_FLAGS }}
       save_cache: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_NAME == 'quack' && github.event_name != 'pull_request' }}
 
   # Upstream's doc_test job (generate_docs.yml) is not carried: the docs

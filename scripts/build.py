@@ -138,6 +138,12 @@ with open('env.sh', 'w+') as hdl:
     job_timeout = desc['extension'].get('haybarn_job_timeout_minutes')
     if isinstance(job_timeout, int) and not isinstance(job_timeout, bool) and job_timeout > 0:
         hdl.write(f"COMMUNITY_EXTENSION_JOB_TIMEOUT_MINUTES={job_timeout}\n")
+    # Haybarn-specific: `haybarn_wasm_cmake_flags: "<flags>"` passes extra CMake
+    # flags to the wasm legs only (e.g. to drop an extension's pin of Rust 1.86,
+    # which it keeps for upstream's older emscripten).
+    wasm_cmake_flags = desc['extension'].get('haybarn_wasm_cmake_flags')
+    if isinstance(wasm_cmake_flags, str) and wasm_cmake_flags.strip():
+        hdl.write(f"COMMUNITY_EXTENSION_WASM_CMAKE_FLAGS={' '.join(wasm_cmake_flags.split())}\n")
     excluded_platforms     = desc['extension'].get('excluded_platforms')
     opt_in_platforms       = desc['extension'].get('opt_in_platforms')
     requires_toolchains    = desc['extension'].get('requires_toolchains')

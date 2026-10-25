@@ -1,5 +1,8 @@
 extension:
   name: miint
+  # Haybarn: its CMake pins the Rust glue's wasm build to 1.86.0 (upstream's emscripten 3.1.71 needs it, Haybarn's 6.0.13 does not);
+  # build with ci-tools' nightly so std is rebuilt for wasm_threads atomics and native wasm EH.
+  haybarn_wasm_cmake_flags: "-DMIINT_WASM_RUST_TOOLCHAIN=nightly-2026-05-20"
   description: Bioinformatics extension for microbiome research - read/write FASTQ, SAM/BAM, BIOM, GFF, Newick trees, query NCBI, and more.
   version: '1.0.1'
   language: C++
