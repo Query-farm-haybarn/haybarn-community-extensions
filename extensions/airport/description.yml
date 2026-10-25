@@ -10,6 +10,8 @@ extension:
   maintainers:
   - rustyconover
   name: airport
+  # Haybarn: cold build (grpc / arrow / google-cloud from vcpkg source) runs past the 45-minute default.
+  haybarn_job_timeout_minutes: 150
   requires_toolchains: parser_tools
   test_config: "{\"test_env_variables\":\n  {\n    \"AIRPORT_TEST_SERVER\": \"grpc+tls://airport-ci.query.farm\"\
     \n  }\n}\n"

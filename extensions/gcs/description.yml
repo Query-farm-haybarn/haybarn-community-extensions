@@ -1,5 +1,7 @@
 extension:
   name: gcs
+  # Haybarn: cold build (grpc / arrow / google-cloud from vcpkg source) runs past the 45-minute default.
+  haybarn_job_timeout_minutes: 150
   description: DuckDB GCS Extension
   extended_description: A native GCS extension with support for standard Google auth methods
   version: 0.0.9

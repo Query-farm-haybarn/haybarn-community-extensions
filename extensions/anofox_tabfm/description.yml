@@ -1,5 +1,7 @@
 extension:
   name: anofox_tabfm
+  # Haybarn: cold build (grpc / arrow / google-cloud from vcpkg source) runs past the 45-minute default.
+  haybarn_job_timeout_minutes: 150
   description: Zero-shot tabular machine learning inside DuckDB — classification, regression, synthetic-data generation and imputation with real tabular foundation models (Mitra, TabDPT, TabPFN v2/2.5/2.6/3, TabICL, Orion-BiX/MSP, TabFM) on ONNX Runtime, no training loop
   version: '2026.09.30'
   language: C++

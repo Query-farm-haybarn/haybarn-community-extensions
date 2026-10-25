@@ -1,5 +1,7 @@
 extension:
   name: bigquery
+  # Haybarn: cold build (grpc / arrow / google-cloud from vcpkg source) runs past the 45-minute default.
+  haybarn_job_timeout_minutes: 150
   description: Integrates DuckDB with Google BigQuery, allowing direct querying and
     management of BigQuery datasets
   version: 0.13.0

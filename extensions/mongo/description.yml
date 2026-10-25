@@ -1,5 +1,7 @@
 extension:
   name: mongo
+  # Haybarn: cold build (grpc / arrow / google-cloud from vcpkg source) runs past the 45-minute default.
+  haybarn_job_timeout_minutes: 150
   description: Integrates DuckDB with MongoDB, enabling direct SQL queries and writes over MongoDB collections without ETL
   version: 0.4.0
   language: C++

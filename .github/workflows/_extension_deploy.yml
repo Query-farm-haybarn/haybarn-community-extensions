@@ -13,7 +13,7 @@
 #
 # R2 layout written (under the shared core bucket, `community/` prefix). The
 # <version> segment is the engine semver vX.Y.Z: we pass duckdb_version as the
-# engine git tag (haybarn-v2.0.0-rc5), and publish_extensions.py normalizes it
+# engine git tag (haybarn-v2.0.0-rc6), and publish_extensions.py normalizes it
 # to v2.0.0 for the path (and to 2.0.0 for the npm version, so npm names are
 # @haybarn/ext-<name>-h2-0-0[-<os>-<arch>]) — that's the segment the engine
 # INSTALLs from. See normalize_engine_version() in that script.
@@ -458,7 +458,7 @@ jobs:
   #   gh workflow run "_extension_registry_publish.yml" \
   #     -R Query-farm-haybarn/haybarn-extension-ci-tools --ref haybarn-2.0 \
   #     -f artifact_shape=per-extension -f extension_name=<name> \
-  #     -f source_run_id=<this-run-id> -f duckdb_version=haybarn-v2.0.0-rc5 \
+  #     -f source_run_id=<this-run-id> -f duckdb_version=haybarn-v2.0.0-rc6 \
   #     -f version=<calver> -f ext_commit=<sha> -f extension_version_label=
   # ------------------------------------------------------------------
   call_publish_registries:

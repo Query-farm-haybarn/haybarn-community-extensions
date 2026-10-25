@@ -14,7 +14,7 @@
 #     skipped (no COMMUNITY_EXTENSION_REF is written, build.yml skips the build)
 #
 # Haybarn differences:
-#   1. DUCKDB_VERSION may be a Haybarn engine tag (`haybarn-v2.0.0-rc5`); it
+#   1. DUCKDB_VERSION may be a Haybarn engine tag (`haybarn-v2.0.0-rc6`); it
 #      is normalized to the plain semver (`v2.0.0`) before the comparison, so
 #      the same tag-shaped inputs that pick the engine also pick the ref.
 #   2. `repo.haybarn_fork` / `repo.haybarn_ref` override `github` / `ref`
@@ -132,6 +132,12 @@ with open('env.sh', 'w+') as hdl:
     # binary; only the test step is bypassed.
     if desc['extension'].get('haybarn_skip_tests') is True:
         hdl.write("COMMUNITY_EXTENSION_SKIP_TESTS=true\n")
+    # Haybarn-specific: `haybarn_job_timeout_minutes: <n>` raises ci-tools'
+    # 45-minute per-platform job limit for extensions whose cold build is
+    # longer (grpc, arrow and google-cloud from vcpkg source).
+    job_timeout = desc['extension'].get('haybarn_job_timeout_minutes')
+    if isinstance(job_timeout, int) and not isinstance(job_timeout, bool) and job_timeout > 0:
+        hdl.write(f"COMMUNITY_EXTENSION_JOB_TIMEOUT_MINUTES={job_timeout}\n")
     excluded_platforms     = desc['extension'].get('excluded_platforms')
     opt_in_platforms       = desc['extension'].get('opt_in_platforms')
     requires_toolchains    = desc['extension'].get('requires_toolchains')

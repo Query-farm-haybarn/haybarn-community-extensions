@@ -105,6 +105,10 @@ def merge_for_haybarn(upstream: dict, current: dict | None) -> tuple[dict, bool]
           extensions whose binaries build cleanly but whose tests fail
           in our environment for non-extension-author reasons.
 
+      extension.haybarn_job_timeout_minutes
+          Haybarn-only: a longer per-platform job limit than ci-tools'
+          45-minute default, for extensions with long cold builds.
+
     NOTE on the comment block: yaml.dump (used downstream by the
     caller) doesn't preserve comments — that's a separate concern. The
     `excluded_platforms` field carries the actual semantic; the comment
@@ -123,7 +127,7 @@ def merge_for_haybarn(upstream: dict, current: dict | None) -> tuple[dict, bool]
             new.setdefault('repo', {})[key] = current_repo[key]
 
     current_ext = current.get('extension') or {}
-    for key in ('excluded_platforms', 'opt_in_platforms', 'haybarn_skip_tests'):
+    for key in ('excluded_platforms', 'opt_in_platforms', 'haybarn_skip_tests', 'haybarn_job_timeout_minutes'):
         if key in current_ext:
             new.setdefault('extension', {})[key] = current_ext[key]
 

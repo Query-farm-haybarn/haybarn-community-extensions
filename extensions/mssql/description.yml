@@ -1,5 +1,7 @@
 extension:
   name: mssql
+  # Haybarn: cold build (grpc / arrow / google-cloud from vcpkg source) runs past the 45-minute default.
+  haybarn_job_timeout_minutes: 150
   description: "Connect DuckDB to Microsoft SQL Server via native TDS (including TLS)."
   version: "0.3.0"
   language: "C++"
