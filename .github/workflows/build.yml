@@ -12,7 +12,7 @@
 #      the wasm build image (haybarn-wasm-{base,rust}) are pinned by that
 #      ci-tools branch; nothing here selects them.
 #   2. `duckdb_version` carries the Haybarn engine *git tag*
-#      (`haybarn-v2.0.0-rc6` = Query-farm-haybarn/haybarn 5ab8a76db1). ci-tools
+#      (`haybarn-v2.0.0-rc7` = Query-farm-haybarn/haybarn 74a0e80988). ci-tools
 #      checks that tag out, links the staged Haybarn static libs for it, and
 #      stamps the extension with the plain `v2.0.0` (ci_phase sets
 #      DUCKDB_VERSION). The deploy normalizes the tag to `v2.0.0` for the R2
@@ -26,12 +26,12 @@
 name: Community Extension Build
 
 # The run title carries the extension name and engine tag, e.g.
-# "🐤 h3 (haybarn-v2.0.0-rc6)". The haybarn-status page and the Makefile parse
+# "🐤 h3 (haybarn-v2.0.0-rc7)". The haybarn-status page and the Makefile parse
 # `🐤 <name>` and `haybarn-v<X.Y.Z>` out of it, so 1.5 (main) and 2.0
 # (haybarn-2.0) runs of the same extension stay apart. Keep the
-# `|| 'haybarn-v2.0.0-rc6'` default in lockstep with HAYBARN_ENGINE_TAG below.
+# `|| 'haybarn-v2.0.0-rc7'` default in lockstep with HAYBARN_ENGINE_TAG below.
 run-name: >-
-  ${{ inputs.extension_name && format('🐤 {0} ({1})', inputs.extension_name, inputs.duckdb_version || 'haybarn-v2.0.0-rc6') ||
+  ${{ inputs.extension_name && format('🐤 {0} ({1})', inputs.extension_name, inputs.duckdb_version || 'haybarn-v2.0.0-rc7') ||
       format('push: {0}', github.event.head_commit.message || github.ref_name) }}
 
 # Triggers: workflow_dispatch (make dispatch, the sync bot) and workflow_call
@@ -47,7 +47,7 @@ on:
       extension_name:
         type: string
       duckdb_version:
-        description: "Haybarn engine tag (default haybarn-v2.0.0-rc6)"
+        description: "Haybarn engine tag (default haybarn-v2.0.0-rc7)"
         type: string
       ci_tools_version:
         type: string
@@ -119,7 +119,7 @@ concurrency:
 # ci-tools checkout. Keep all of them in lockstep.
 env:
   HAYBARN_ENGINE_REPO: 'Query-farm-haybarn/haybarn'
-  HAYBARN_ENGINE_TAG: 'haybarn-v2.0.0-rc6'   # 5ab8a76db12
+  HAYBARN_ENGINE_TAG: 'haybarn-v2.0.0-rc7'   # 74a0e809885
   HAYBARN_CI_TOOLS_REF: 'haybarn-2.0'
 
 jobs:
@@ -157,7 +157,7 @@ jobs:
       # comparing, so `ref` is used for haybarn-v2.0.0-rcN and `variegata`
       # for haybarn-v1.5.6*.
       DUCKDB_LATEST_STABLE: 'v2.0.0'
-      DUCKDB_VERSION: ${{ inputs.duckdb_version || 'haybarn-v2.0.0-rc6' }}
+      DUCKDB_VERSION: ${{ inputs.duckdb_version || 'haybarn-v2.0.0-rc7' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -199,7 +199,7 @@ jobs:
     # a ref_next).
     if: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_NAME != '' && needs.prepare.outputs.COMMUNITY_EXTENSION_REF != '' }}
     with:
-      duckdb_version: ${{ inputs.duckdb_version || 'haybarn-v2.0.0-rc6' }}
+      duckdb_version: ${{ inputs.duckdb_version || 'haybarn-v2.0.0-rc7' }}
       duckdb_tag: ${{ inputs.duckdb_tag || '' }}
       duckdb_commit: ${{ inputs.duckdb_commit || '' }}
       ci_tools_version: ${{ inputs.ci_tools_version || 'haybarn-2.0' }}
@@ -270,7 +270,7 @@ jobs:
     secrets: inherit
     with:
       deploy_latest: true
-      duckdb_version: ${{ inputs.duckdb_version || 'haybarn-v2.0.0-rc6' }}
+      duckdb_version: ${{ inputs.duckdb_version || 'haybarn-v2.0.0-rc7' }}
       duckdb_tag: ${{ inputs.duckdb_tag || '' }}
       ci_tools_version: ${{ inputs.ci_tools_version || 'haybarn-2.0' }}
       exclude_archs: wasm_mvp;osx_amd64;windows_arm64;${{ needs.prepare.outputs.COMMUNITY_EXTENSION_EXCLUDE_PLATFORMS }}
