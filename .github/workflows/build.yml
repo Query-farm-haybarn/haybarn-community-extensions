@@ -187,6 +187,12 @@ jobs:
     # the org secret is HAYBARN_VCPKG_TOKEN; inherit forwards by name only.
     secrets:
       vcpkg_token: ${{ secrets.HAYBARN_VCPKG_TOKEN }}
+      # Direct vcpkg cache writes to R2 (macOS/Windows; ci-tools skips them when these are empty).
+      # A token scoped to the haybarn-build-cache bucket only, never the R2_* publishing keys:
+      # these jobs run the extensions' own build code.
+      VCPKG_CACHING_AWS_ACCESS_KEY_ID: ${{ secrets.HAYBARN_BUILD_CACHE_R2_ACCESS_KEY_ID }}
+      VCPKG_CACHING_AWS_SECRET_ACCESS_KEY: ${{ secrets.HAYBARN_BUILD_CACHE_R2_SECRET_ACCESS_KEY }}
+      VCPKG_CACHING_AWS_ENDPOINT_URL: ${{ secrets.R2_ENDPOINT }}
     # Upstream also skips when build.py wrote no ref (require_ref_next without
     # a ref_next).
     if: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_NAME != '' && needs.prepare.outputs.COMMUNITY_EXTENSION_REF != '' }}
