@@ -138,6 +138,11 @@ with open('env.sh', 'w+') as hdl:
     job_timeout = desc['extension'].get('haybarn_job_timeout_minutes')
     if isinstance(job_timeout, int) and not isinstance(job_timeout, bool) and job_timeout > 0:
         hdl.write(f"COMMUNITY_EXTENSION_JOB_TIMEOUT_MINUTES={job_timeout}\n")
+    # Haybarn-specific: `haybarn_test_timeout_minutes: <n>` raises ci-tools'
+    # 30-minute limit on the test step (upstream has none).
+    test_timeout = desc['extension'].get('haybarn_test_timeout_minutes')
+    if isinstance(test_timeout, int) and not isinstance(test_timeout, bool) and test_timeout > 0:
+        hdl.write(f"COMMUNITY_EXTENSION_TEST_TIMEOUT_MINUTES={test_timeout}\n")
     # Haybarn-specific: `haybarn_wasm_cmake_flags: "<flags>"` passes extra CMake
     # flags to the wasm legs only (e.g. to drop an extension's pin of Rust 1.86,
     # which it keeps for upstream's older emscripten).

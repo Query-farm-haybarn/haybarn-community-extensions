@@ -1,5 +1,8 @@
 extension:
   name: sitting_duck
+  # Haybarn: its suite runs with a 2-hour batch timeout of its own and reached 50% in our 30-minute test step.
+  haybarn_test_timeout_minutes: 120
+  haybarn_job_timeout_minutes: 180
   description: Parse and analyze source code ASTs from 28 programming languages with tree-sitter grammars, pattern matching, and structural search
   version: 1.16.0
   language: C++
