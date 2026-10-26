@@ -11,6 +11,7 @@ extension:
 repo:
   github: teaguesterling/duckdb_duck_block_utils
   ref: 531b0596017773ec5d3eee1e71e25361a5d49525
+  variegata: 531b0596017773ec5d3eee1e71e25361a5d49525
   ref_next: 531b0596017773ec5d3eee1e71e25361a5d49525
 docs:
   hello_world: "-- Build a document programmatically\nSELECT duck_blocks_assemble([\n\

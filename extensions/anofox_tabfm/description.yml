@@ -14,7 +14,8 @@ extension:
   excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_mingw;linux_amd64_musl
 repo:
   github: DataZooDE/anofox-tabfm
-  ref: ff5af557ca31a1ef0cf63c3345789f68d62c4dd7
+  ref: 2bab7849dc2f2b9076cb1f46411dc2101c75b3b8
+  variegata: 2bab7849dc2f2b9076cb1f46411dc2101c75b3b8
 docs:
   hello_world: "-- Fetch a real tabular foundation model once (Mitra, Apache-2.0,\
     \ ~300 MB,\n-- no license gate). Cached under ~/.cache/anofox-tabfm and reused\

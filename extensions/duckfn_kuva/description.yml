@@ -3,7 +3,7 @@ extension:
   description: Statistical plotting in SQL - a thin wrapper around the Rust library
     kuva, with the statistical semantics of seaborn and ggplot2 but no Python or R
     environment, on every platform DuckDB runs (console, JVM, Python, Node, browser)
-  version: 0.2.0
+  version: 0.3.0
   language: Rust
   build: cargo
   license: MIT
@@ -12,7 +12,8 @@ extension:
   - shijianjs
 repo:
   github: shijianjs/duckfn-kuva
-  ref: 229292db2882927cbaaa209687d44f6117ba1065
+  ref: 5fd677c70d5572f61eab5d44ce9a157708d15486
+  ref_next: 5fd677c70d5572f61eab5d44ce9a157708d15486
 docs:
   hello_world: "-- One function: a JSON chart spec in, an SVG document out\nSELECT\
     \ kuva_render('{\"series\":[{\"type\":\"scatter\",\"data\":[{\"x\":1,\"y\":2},{\"\
@@ -32,16 +33,19 @@ docs:
     \    '{\"d\":[{\"a\":1,\"b\":2},{\"a\":3,\"b\":4}]}');\n-- <svg xmlns=\"http://www.w3.org/2000/svg\"\
     \ ...> ... </svg>\n"
   extended_description: "Renders statistical charts from SQL. The extension wraps\
-    \ the Rust plotting library kuva (SVG backend\nonly) and exposes it through three\
+    \ the Rust plotting library kuva (SVG backend\nonly) and exposes it through five\
     \ scalar functions, so charts work anywhere DuckDB runs - the CLI, a\nPython or\
     \ R session, the JVM, or the browser build (DuckDB-Wasm) - from one and the same\
     \ extension\nbinary. There is no matplotlib or ggplot2 in the loop, and no plotting\
     \ environment to install.\n\n| Function | Kind | Input -> output |\n| --- | ---\
     \ | --- |\n| `kuva_render(spec)` | scalar | `VARCHAR` (a JSON chart spec) -> `VARCHAR`\
     \ (an SVG document) |\n| `kuva_render_terminal(spec)` | scalar | `VARCHAR` ->\
-    \ `VARCHAR` (terminal text: braille dots and ANSI colour) |\n| `kuva_render_file(spec)`\
-    \ | scalar | `VARCHAR` -> `VARCHAR` (the path of the SVG file it wrote; native\
-    \ builds only) |\n\nAll three take the same JSON spec, and all three also take\
+    \ `VARCHAR` (terminal text: braille dots and ANSI colour) |\n| `kuva_render_typst(spec)`\
+    \ | scalar | `VARCHAR` -> `VARCHAR` (Typst source: a `.typ` CETZ document for\
+    \ `typst compile`) |\n| `kuva_render_file(spec)` | scalar | `VARCHAR` -> `VARCHAR`\
+    \ (the path of the SVG file it wrote; native builds only) |\n| `kuva_version()`\
+    \ | scalar | `-> VARCHAR` (the kuva version the loaded build was compiled against)\
+    \ |\n\nAll four render functions take the same JSON spec, and all four also take\
     \ an optional second argument: a JSON\nobject mapping dataset names to arrays\
     \ of rows, so the chart config and the data can be built by\ndifferent things\
     \ - the config by a host SDK, the data by SQL. A series names a dataset with\n\
@@ -50,32 +54,38 @@ docs:
     \ the JSON: `kuva_render_terminal` reads a top-level `terminal` object\n(`cols`\
     \ / `rows` / `print`) and `kuva_render_file` reads a top-level `file` object (`dir`\
     \ / `name` /\n`open`), which is what lets one statement write a chart to disk\
-    \ and optionally open it in a browser.\n\nThe JSON spec uses snake_case keys and\
-    \ describes the drawing rather than one particular chart. The\ntop-level keys\
-    \ are `title`, `x_axis`, `y_axis`, `grid`, `legend`, `theme`, `palette`, `font`,\n\
-    `annotations`, `width`, `height` and `series`. Every `series` entry carries a\
-    \ `type` from the table\nbelow and declares only the fields that type needs, so\
-    \ a scatter takes `data` as `{\"x\":\u2026, \"y\":\u2026}`\nobjects with optional\
-    \ `x_err` / `y_err`, a bar takes `categories` plus `values` (or several named\n\
-    `series` for grouped and stacked bars), a histogram takes `values` with optional\
-    \ `bins` and a `kde`\noverlay, a box takes `groups` of raw values, and a pie takes\
-    \ `slices`.\n\n| Group | `type` values |\n| --- | --- |\n| Distributions | `histogram`\
-    \ `histogram2d` `density` `ridgeline` `ecdf` `qq` `box` `violin` `strip` `raincloud`\
-    \ `hexbin` `heatmap` |\n| Relationships & correlation | `scatter` `line` `series`\
-    \ `band` `jointplot` `contour` `parallel` `polar` `ternary` `quiver` |\n| Categorical\
-    \ & comparison | `bar` `pie` `waffle` `funnel` `pareto` `pyramid` `lollipop` `slope`\
-    \ `dot_plot` `dice_plot` `venn` `mosaic` `rose` `radar` `upset` |\n| Time series\
-    \ | `stacked_area` `streamgraph` `candlestick` `waterfall` `horizon` `calendar`\
-    \ `gantt` `bump` |\n| Statistical & model evaluation | `roc` `pr` `survival` `forest`\
-    \ `volcano` `manhattan` |\n| Hierarchical & network | `treemap` `sunburst` `network`\
-    \ `sankey` `chord` `phylo` `clustermap` |\n| 3D | `scatter3d` `surface3d` |\n\
-    | Composite & utility | `brick` `synteny` `text` `legend_plot` |\n\nJSON rather\
-    \ than a STRUCT is deliberate: the series of one figure are heterogeneous, and\
-    \ a STRUCT\nlist cannot hold a mix of them.\n\nComposition works two ways. Several\
-    \ series in one `series` array are overlaid on a shared set of\naxes - a line\
-    \ with its scatter points on top, for instance. A top-level `figure` with `rows`,\n\
-    `cols` and `panels` switches to a multi-panel grid with shared axes and an optional\
-    \ shared legend.\n\n`theme` selects light, dark, minimal or solarized (or overrides\
+    \ and optionally open it in a browser.\n`kuva_render_typst` has no options object:\
+    \ it returns Typst source (a CETZ vector drawing) that you\ncompile yourself with\
+    \ `typst compile`.\n\nThe JSON spec uses snake_case keys and describes the drawing\
+    \ rather than one particular chart. The\ntop-level keys are `title`, `x_axis`,\
+    \ `y_axis`, `grid`, `legend`, `theme`, `palette`, `font`,\n`annotations`, `width`,\
+    \ `height` and `series` (or `figure` / `composite` instead of `series`). Every\n\
+    `series` entry carries a `type` from the table\nbelow and declares only the fields\
+    \ that type needs, so a scatter takes `data` as `{\"x\":\u2026, \"y\":\u2026}`\n\
+    objects with optional `x_err` / `y_err`, a bar takes `categories` plus `values`\
+    \ (or several named\n`series` for grouped and stacked bars), a histogram takes\
+    \ `values` with optional `bins` and a `kde`\noverlay, a box takes `groups` of\
+    \ raw values, and a pie takes `slices`.\n\n| Group | `type` values |\n| --- |\
+    \ --- |\n| Distributions | `histogram` `histogram2d` `density` `ridgeline` `ecdf`\
+    \ `qq` `box` `violin` `strip` `raincloud` `hexbin` `heatmap` |\n| Relationships\
+    \ & correlation | `scatter` `line` `series` `band` `jointplot` `contour` `parallel`\
+    \ `polar` `ternary` `quiver` |\n| Categorical & comparison | `bar` `pie` `waffle`\
+    \ `funnel` `pareto` `pyramid` `lollipop` `slope` `dot_plot` `dice_plot` `venn`\
+    \ `mosaic` `rose` `radar` `upset` |\n| Time series | `stacked_area` `streamgraph`\
+    \ `candlestick` `waterfall` `horizon` `calendar` `gantt` `bump` |\n| Statistical\
+    \ & model evaluation | `roc` `pr` `survival` `forest` `volcano` `manhattan` |\n\
+    | Hierarchical & network | `treemap` `sunburst` `network` `sankey` `chord` `phylo`\
+    \ `clustermap` |\n| 3D | `scatter3d` `surface3d` |\n| Composite & utility | `brick`\
+    \ `synteny` `text` `legend_plot` |\n\nJSON rather than a STRUCT is deliberate:\
+    \ the series of one figure are heterogeneous, and a STRUCT\nlist cannot hold a\
+    \ mix of them.\n\nComposition works three ways. Several series in one `series`\
+    \ array are overlaid on a shared set of\naxes - a line with its scatter points\
+    \ on top, for instance. A top-level `figure` with `rows`,\n`cols` and `panels`\
+    \ switches to a multi-panel grid with shared axes and an optional shared legend.\n\
+    A top-level `composite` object draws a genome-browser coverage figure or a population\n\
+    allele-frequency figure (`type: coverage` or `brick_pop`); it is mutually exclusive\
+    \ with `series`\nand `figure`, carries its own canvas size and does not read a\
+    \ dataset.\n\n`theme` selects light, dark, minimal or solarized (or overrides\
     \ individual colours), `palette`\nselects one of the named palettes or an explicit\
     \ colour list, and `annotations` adds reference\nlines, shaded regions and text\
     \ callouts. `grid` and `legend` cover the axis chrome, tick formats,\ngrayscale\

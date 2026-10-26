@@ -1,0 +1,39 @@
+extension:
+  name: decide
+  description: Filter, classify, and score text with OpenAI Decisions or Cloudflare
+    Clef
+  version: 0.2.0
+  language: C++
+  build: cmake
+  license: MIT
+  excluded_platforms: osx_amd64;wasm_mvp;wasm_eh;wasm_threads
+  maintainers:
+  - gzheng92
+repo:
+  github: gzheng92/duckdb-decide
+  ref: 96a0e33fa9b52210af63c2f08bd21024bd2ae0ab
+docs:
+  hello_world: "-- OpenAI example; use your own API key.\nSET decisions_provider =\
+    \ 'openai';\nCREATE OR REPLACE SECRET decide_credentials (TYPE decisions, API_KEY\
+    \ 'your-key');\nSELECT decision_prob('The parcel arrived crushed.',\n        \
+    \             'Does this report physical damage?') AS probability;\n"
+  extended_description: "`decide` integrates OpenAI Decisions and Cloudflare Clef\
+    \ (Workers AI)\nwith the same DuckDB SQL functions.\nIt provides boolean predicates,\
+    \ probabilities, categorical choices,\nrubric scores, and explicit multi-question\
+    \ JSON answers.\nTyped functions batch 20 rows per request by default; set\n`decisions_batch_size\
+    \ = 1` for independent row evaluation.\nNon-NULL inputs and instructions are sent\
+    \ to the selected provider and can\nincur API charges. OpenAI is the default provider\
+    \ and uses `gpt-6-luna`.\nCredentials use DuckDB's `decisions` secret type or\
+    \ `OPENAI_API_KEY`.\n\n### Cloudflare Clef\n\nSelect Cloudflare and supply a Workers\
+    \ AI token and account ID:\n\n```sql\nSET decisions_provider = 'cloudflare';\n\
+    SET decisions_model = 'clef'; -- also supports 'clef-flash'\nCREATE OR REPLACE\
+    \ SECRET decide_credentials (\n    TYPE decisions,\n    API_KEY 'workers-ai-token',\n\
+    \    ACCOUNT_ID 'your-account-id'\n);\nSELECT decision_prob('The parcel arrived\
+    \ crushed.',\n                     'Does this report physical damage?') AS probability;\n\
+    ```\n\nAlternatively, set `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.\n\
+    The same predicates, choices, scores, and batching functions work with either\n\
+    provider. Cloudflare requests are capped at 64 questions per request and\nCloudflare\
+    \ does not return refusal answers. Both integrations accept text only.\n\nNo API\
+    \ key is required to build or run the offline tests.\nThis is an independent integration;\
+    \ the OpenAI Decisions API is in public beta.\nSee the [README](https://github.com/gzheng92/duckdb-decide#readme)\n\
+    for function signatures, limits, refusal handling, and batching semantics.\n"

@@ -2,7 +2,7 @@ extension:
   name: semantic_views
   description: Semantic views -- a declarative layer for dimensions, metrics, and
     relationships
-  version: 0.13.0
+  version: 0.15.0
   language: Rust
   build: cargo
   license: MIT
@@ -11,8 +11,9 @@ extension:
   maintainers:
   - anentropic
 repo:
-  github: anentropic/duckdb-semantic-views
-  ref: 27e6271218f3ee9687e9f15cae6e85171eded45c
+  github: s-layer/duckdb-semantic-views
+  ref: d2be4b1bad4e218df3f8d339f329fd2716706c31
+  variegata: 8d02550da117b1b1e92ad08a819e4c99dd4f4653
 docs:
   hello_world: "-- Create sample data\nCREATE TABLE demo(region VARCHAR, amount DECIMAL(10,2));\n\
     INSERT INTO demo VALUES ('US', 100), ('US', 200), ('EU', 150);\n\n-- Define a\
@@ -30,6 +31,6 @@ docs:
     fan trap detection, role-playing dimensions, derived metrics, and FACTS.
 
 
-    Documentation: https://anentropic.github.io/duckdb-semantic-views/
+    Documentation: https://s-layer.github.io/duckdb-semantic-views/
 
     '

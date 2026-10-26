@@ -9,8 +9,8 @@ extension:
   - nonodename
 repo:
   github: nonodename/duck_rdf
-  ref: de345a85c40ccb023d09509181a597ba99c28ffe
-  ref_next: 290b86c1366865442b3726305613e87eedc1224c
+  variegata: de345a85c40ccb023d09509181a597ba99c28ffe
+  ref: 290b86c1366865442b3726305613e87eedc1224c
 docs:
   hello_world: "-- 0. Assuming the extension is already installed and loaded\n\n--\
     \ 1. Get number of ntriples in a directory\nSELECT COUNT(*) FROM read_rdf('data/shards/*.nt');\n\

@@ -13,6 +13,7 @@ extension:
 repo:
   github: alitrack/duckdb-luajit
   ref: 2419c908a7bb014fe3b4bcb17b1deaf55dd51721
+  ref_next: 2419c908a7bb014fe3b4bcb17b1deaf55dd51721
 docs:
   hello_world: "-- Load and compile a UDF in one shot\nLOAD luajit;\nSELECT message\
     \ FROM luajit_module(\n    mode := 'quick_compile',\n    source := 'return function(x)\

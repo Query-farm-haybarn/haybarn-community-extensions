@@ -13,6 +13,7 @@ extension:
 repo:
   github: teaguesterling/duckdb_read_lines
   ref: 63d27fec46a4c9baa98708cc1884329f20a597bf
+  variegata: 63d27fec46a4c9baa98708cc1884329f20a597bf
   ref_next: 63d27fec46a4c9baa98708cc1884329f20a597bf
 docs:
   hello_world: '-- Read all lines from a file

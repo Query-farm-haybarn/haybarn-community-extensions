@@ -9,7 +9,7 @@ extension:
   - nkwork9999
 repo:
   github: nkwork9999/duckgl
-  ref: e8bbc917f3676ff738eb41c4617201bcfd7624c9
+  ref: 2cfa0a924beaa0985af6729c4986c129e8c52ce5
 docs:
   hello_world: '-- Start DuckGL server
 
@@ -35,5 +35,17 @@ docs:
     - GeoJSON layer rendering from spatial tables
 
     - SQL query execution from browser UI
+
+
+    **HTML and PDF reports**:
+
+    Export HTML downloads an offline snapshot containing the last successful SQL query,
+    all returned rows,
+
+    and a north-up SVG geometry overview without base-map tiles. Export PDF opens
+    that report in the
+
+    browser print dialog; choose Save as PDF. Saved HTML contains no scripts and does
+    not execute SQL.
 
     '

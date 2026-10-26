@@ -13,6 +13,7 @@ extension:
 repo:
   github: teaguesterling/duckdb_yaml
   ref: 84f5de21e39eab9994c691d1ed06ade04d9e02df
+  variegata: 84f5de21e39eab9994c691d1ed06ade04d9e02df
   ref_next: 84f5de21e39eab9994c691d1ed06ade04d9e02df
 docs:
   hello_world: "-- Load the extension\nLOAD yaml;\n\n-- Query YAML files directly\n\

@@ -7,12 +7,14 @@ extension:
   build: cargo
   license: MIT
   excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64;windows_amd64_rtools;windows_amd64_mingw;linux_amd64_musl
+  opt_in_platforms: osx_amd64
   requires_toolchains: rust;python3
   maintainers:
   - nicosuave
 repo:
   github: sidequery/duckflight-extension
-  ref: d6646edb7877ab65f39ffa1cfe53b5d090f3694b
+  ref: a36f686e136f2a4ee22253f25ebdff6e28f36343
+  variegata: d6646edb7877ab65f39ffa1cfe53b5d090f3694b
 docs:
   hello_world: "-- Let PostgreSQL clients query this DuckDB database.\nSELECT * FROM\
     \ duckflight_pg_serve(\n  '127.0.0.1:5433', '/path/to/duckflight.toml'\n);\n\n\
@@ -39,6 +41,5 @@ docs:
     \ session/catalog helpers installed by the runtime. These support PostgreSQL\n\
     queries and client metadata discovery; they are not additional server controls\
     \ or a complete\nimplementation of PostgreSQL functions. Their catalog comments\
-    \ describe each helper.\nDuckDB 1.5.6 does not expose function-description setters\
-    \ through the table-function C API,\nso the five native server functions are documented\
-    \ above.\n"
+    \ describe each helper.\nThe v1 table-function C API does not expose function-description\
+    \ setters,\nso the five native server functions are documented above.\n"

@@ -14,6 +14,7 @@ extension:
 repo:
   github: alitrack/duckdb_dq
   ref: 3d5e95d24383353a1bd36e20edfa76ee169b805a
+  ref_next: 3d5e95d24383353a1bd36e20edfa76ee169b805a
 docs:
   hello_world: "-- Single assertion \u2192 result table (0 rows = pass)\nSELECT *\
     \ FROM expect_not_null('sales', 'amount');\n-- rule | table_name | column_name\

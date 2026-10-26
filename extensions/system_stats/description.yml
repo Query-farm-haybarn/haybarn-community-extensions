@@ -2,7 +2,7 @@ extension:
   name: system_stats
   description: Provides table functions to access system-level statistics for monitoring
     purpose
-  version: 1.0.0
+  version: 1.1.0
   language: Rust & C++
   build: cmake
   license: MIT
@@ -12,7 +12,7 @@ extension:
   - dentiny
 repo:
   github: dentiny/system_stats
-  ref: 5d8b119d78f904b1cffa2f3b3adcbc443b5b58fe
+  ref: e7dea146ce16cb4c734d5b4f16aa1e006f72f370
 docs:
   hello_world: '-- Get memory information
 
