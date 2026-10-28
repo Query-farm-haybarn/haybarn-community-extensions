@@ -1,38 +1,36 @@
 extension:
   name: semantic_views
-  description: "Semantic views -- a declarative layer for dimensions, metrics, and relationships"
-  version: 0.15.0
+  description: Semantic views -- a declarative layer for dimensions, metrics, and
+    relationships
+  version: 0.17.0
   language: Rust
   build: cargo
   license: MIT
-  excluded_platforms: "wasm_mvp;wasm_eh;wasm_threads;windows_amd64_rtools;windows_amd64_mingw;linux_amd64_musl;linux_arm64_musl;windows_arm64"
-  requires_toolchains: "rust;python3"
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_rtools;windows_amd64_mingw;linux_amd64_musl;linux_arm64_musl;windows_arm64
+  requires_toolchains: rust;python3
   maintainers:
-    - anentropic
-
+  - anentropic
 repo:
   github: s-layer/duckdb-semantic-views
-  ref: d2be4b1bad4e218df3f8d339f329fd2716706c31
-  variegata: 8d02550da117b1b1e92ad08a819e4c99dd4f4653
-
+  ref: a3a5547e516984903508c6d027fbd374175ce723
+  variegata: 71ea4f11e76c6ad2542bbc77c8669ac491ebc2a4
 docs:
-  hello_world: |
-    -- Create sample data
-    CREATE TABLE demo(region VARCHAR, amount DECIMAL(10,2));
-    INSERT INTO demo VALUES ('US', 100), ('US', 200), ('EU', 150);
+  hello_world: "-- Create sample data\nCREATE TABLE demo(region VARCHAR, amount DECIMAL(10,2));\n\
+    INSERT INTO demo VALUES ('US', 100), ('US', 200), ('EU', 150);\n\n-- Define a\
+    \ semantic view\nCREATE SEMANTIC VIEW sales AS\n  TABLES (d AS demo PRIMARY KEY\
+    \ (region))\n  DIMENSIONS (d.region AS d.region)\n  METRICS (d.revenue AS SUM(d.amount));\n\
+    \n-- Query it\nFROM semantic_view('sales', dimensions := ['region'], metrics :=\
+    \ ['revenue']);\n"
+  extended_description: 'Semantic views let you define dimensions, metrics, joins,
+    and filters once,
 
-    -- Define a semantic view
-    CREATE SEMANTIC VIEW sales AS
-      TABLES (d AS demo PRIMARY KEY (region))
-      DIMENSIONS (d.region AS d.region)
-      METRICS (d.revenue AS SUM(d.amount));
-
-    -- Query it
-    FROM semantic_view('sales', dimensions := ['region'], metrics := ['revenue']);
-  extended_description: |
-    Semantic views let you define dimensions, metrics, joins, and filters once,
     then query any combination. The extension handles GROUP BY, JOIN, and filter
+
     composition automatically. Supports multi-table joins with PK/FK relationships,
+
     fan trap detection, role-playing dimensions, derived metrics, and FACTS.
 
+
     Documentation: https://s-layer.github.io/duckdb-semantic-views/
+
+    '
