@@ -1,156 +1,103 @@
 extension:
   name: duck_dggs
-  description: DuckDB extension for discrete global grid systems (DGGS) powered by DGGRID v9.
-  
-  version: 0.1.11 # x-release-please-version
+  description: DuckDB extension for discrete global grid systems (DGGS) powered by
+    DGGRID v9.1.
+  version: 0.2.0
   language: C++
   build: cmake
   license: MIT
   maintainers:
-    - am2222
-
+  - am2222
 repo:
   github: am2222/duckdb-dggs
-  # community-extensions builds `ref` against DuckDB v2.0 and `variegata`
-  # against v1.5.6 (duckdb/community-extensions#3081); `ref_next` no longer
-  # triggers a build. Both refs are placeholders: release-please.yml stamps
-  # them with the release SHA on its way to community-extensions.
-  ref: b6a45d0d6225ed21a7537e79332083e7c99a2a93
-  variegata: b6a45d0d6225ed21a7537e79332083e7c99a2a93
-
+  ref: 5a297119d34370c770905f983be3bc1787e89c10
 docs:
-  hello_world: |
-    INSTALL duck_dggs FROM community;
-    LOAD duck_dggs;
-
-    -- Geographic point → cell ID at resolution 5 (default ISEA4H grid)
-    SELECT geo_to_seqnum('POINT(0.0 0.0)'::GEOMETRY, 5);
-    -- → 2380
-
-    -- Cell ID → cell centre point
-    SELECT seqnum_to_geo(2380, 5);
-    -- → POINT (-0.9020481125846749 -1.2067949803565235e-09)
-
-    -- Cell ID → cell boundary polygon (requires the spatial extension)
-    LOAD spatial;
-    SELECT seqnum_to_boundary(2380, 5);
-    -- → POLYGON ((...))
-
-    -- Grid statistics
-    SELECT dggs_n_cells(5);
-    -- → 10242
-
-    -- Neighbors, parent, children
-    SELECT seqnum_neighbors(2380::UBIGINT, 5);
-    -- → [2412, 2413, 2381, 2348, 2347, 2379]
-
-    SELECT seqnum_parent(2380::UBIGINT, 5);
-    -- → 599
-
-    SELECT seqnum_children(599::UBIGINT, 4);
-    -- → [2380, 2412, 2413, 2381, 2348, 2347, 2379]
-
-    -- Use a custom grid (ISEA3H — aperture 3 hexagons)
-    SELECT geo_to_seqnum('POINT(0.0 0.0)'::GEOMETRY, 5,
-        dggs_params('ISEA', 3, 'HEXAGON', 0.0, 58.28252559, 11.25));
-    -- → 572
-
-    -- Mixed-aperture sequence grid
-    SELECT dggs_n_cells(3,
-        dggs_params('ISEA', 3, 'HEXAGON', 0.0, 58.28252559, 11.25, true, '3434'));
-    -- → 362
-  extended_description: |
-    `duck_dggs` transforms geographic coordinates (as `GEOMETRY` POINT) to and from DGGS cell
-    identifiers across multiple coordinate reference frames, powered by [DGGRID v9](https://github.com/sahrk/DGGRID).
-
-    Full documentation: **https://am2222.github.io/duckdb-dggs/**
-
-    All transform functions accept a `GEOMETRY` POINT (`x` = longitude°, `y` = latitude°) and a
-    resolution integer. Every function has a second overload that accepts an explicit `dggs_params`
-    struct for full control over the grid configuration.
-
-    **Grid configuration**
-
-    All functions use ISEA4H by default (ISEA projection, aperture 4, hexagon topology).
-    Pass a `dggs_params` struct as the last argument to use a different grid:
-
-    ```sql
-    -- Standard (6 args)
-    dggs_params(projection, aperture, topology, azimuth_deg, pole_lat_deg, pole_lon_deg)
-    -- With aperture sequence (8 args)
-    dggs_params(projection, aperture, topology, azimuth_deg, pole_lat_deg, pole_lon_deg,
-                is_aperture_sequence, aperture_sequence)
-    ```
-
-    Common presets:
-
-    | Grid | Call |
-    |------|------|
-    | ISEA4H (default) | `dggs_params('ISEA', 4, 'HEXAGON', 0.0, 58.28252559, 11.25)` |
-    | ISEA3H | `dggs_params('ISEA', 3, 'HEXAGON', 0.0, 58.28252559, 11.25)` |
-    | ISEA4T (triangles) | `dggs_params('ISEA', 4, 'TRIANGLE', 0.0, 58.28252559, 11.25)` |
-    | ISEA4D (diamonds) | `dggs_params('ISEA', 4, 'DIAMOND', 0.0, 58.28252559, 11.25)` |
-    | FULLER4H | `dggs_params('FULLER', 4, 'HEXAGON', 0.0, 58.28252559, 11.25)` |
-    | Mixed aperture | `dggs_params('ISEA', 3, 'HEXAGON', 0.0, 58.28252559, 11.25, true, '3437')` |
-
-    **Utility functions:**
-
-    - `duck_dggs_version()` — extension version string
-    - `dggs_params(...)` — build a grid configuration (6-arg or 8-arg with aperture sequence)
-
-    **Grid statistics** (each has `res` and optional `params` overload):
-
-    - `dggs_n_cells` — total cell count at a resolution
-    - `dggs_cell_area_km` — average cell area in km²
-    - `dggs_cell_dist_km` — average cell spacing in km
-    - `dggs_cls_km` — characteristic length scale in km
-    - `dggs_res_info` — all stats as a struct
-
-    **Transform functions** (each has `res` and optional `params` overload):
-
-    - From GEO: `geo_to_seqnum`, `geo_to_geo`, `geo_to_plane`, `geo_to_projtri`, `geo_to_q2dd`, `geo_to_q2di`
-    - From SEQNUM: `seqnum_to_geo`, `seqnum_to_boundary`, `seqnum_to_seqnum`, `seqnum_to_plane`, `seqnum_to_projtri`, `seqnum_to_q2dd`, `seqnum_to_q2di`
-    - From Q2DI: `q2di_to_seqnum`, `q2di_to_geo`, `q2di_to_plane`, `q2di_to_projtri`, `q2di_to_q2dd`, `q2di_to_q2di`
-    - From Q2DD: `q2dd_to_seqnum`, `q2dd_to_geo`, `q2dd_to_plane`, `q2dd_to_projtri`, `q2dd_to_q2dd`, `q2dd_to_q2di`
-    - From PROJTRI: `projtri_to_seqnum`, `projtri_to_geo`, `projtri_to_plane`, `projtri_to_projtri`, `projtri_to_q2dd`, `projtri_to_q2di`
-
-    **Neighbor & hierarchy functions:**
-
-    - `seqnum_neighbors` — topologically adjacent cells
-    - `seqnum_parent` — parent cell at res-1
-    - `seqnum_all_parents` — all touching parent cells at res-1
-    - `seqnum_children` — child cells at res+1
-    - `seqnum_index_parent` / `seqnum_index_children` — parent and children in the
-      grid's hierarchical indexing system (Z3 / ZOrder / Z7); unlike the spatial
-      functions these form a strict tree
-    - `seqnum_k_ring` — the cell plus every cell within k neighbor steps
-
-    **Coverage & geodesy:**
-
-    - `polygon_to_seqnums` — every cell whose centre lies inside a POLYGON / MULTIPOLYGON
-    - `seqnum_cell_area_km` — true spherical area of one cell (vs the grid average)
-    - `geo_distance_km` / `geo_azimuth_deg` — great-circle distance and bearing between points
-
-    **Hierarchical index conversions:**
-
-    - `seqnum_to_zorder` / `zorder_to_seqnum` — Z-order (Morton code) indexing
-    - `seqnum_to_z3` / `z3_to_seqnum` — Z3 index (aperture 3 only)
-    - `seqnum_to_z7` / `z7_to_seqnum` — Z7 index (aperture 7 only)
-    - `seqnum_to_vertex2dd` / `vertex2dd_to_seqnum` — vertex-based 2D coordinates
-
-    **IGEO7 / Z7 bit-level operations** (operate directly on the packed 64-bit Z7 index;
-    no `dggs_params` needed; logic ported from [`allixender/igeo7_duckdb`](https://github.com/allixender/igeo7_duckdb)):
-
-    - `igeo7_from_string` / `igeo7_to_string` — compact string ↔ packed 64-bit index
-    - `igeo7_encode` — pack base cell + 20 three-bit digit slots
-    - `igeo7_encode_at_resolution` — `igeo7_encode` then truncate to a target resolution
-    - `igeo7_get_resolution` — resolution (0–20) from a packed index
-    - `igeo7_get_base_cell` — base cell ID (0–11)
-    - `igeo7_get_digit` — extract the i-th digit (1–20)
-    - `igeo7_parent` / `igeo7_parent_at` — ancestor at res-1 or a specific resolution
-    - `igeo7_get_neighbours` / `igeo7_get_neighbour` — all 6 neighbours or one by direction
-    - `igeo7_first_non_zero` — position of the first non-zero digit slot
-    - `igeo7_is_valid` — false only for the `UINT64_MAX` invalid-neighbour sentinel
-    - `igeo7_decode_str` — verbose `base-d1.d2…d20` form showing all 20 slots (SQL macro)
-    - `igeo7_string_parent` / `igeo7_string_local_pos` / `igeo7_string_is_center` — compact-string helpers (SQL macros)
-    - `igeo7_geo_to_authalic` / `igeo7_authalic_to_geo` — remap each vertex's latitude in a `GEOMETRY` between WGS84 geodetic and authalic (equal-area sphere) using the Karney 2022 order-6 polynomial Fourier series; useful before equal-area binning of lon/lat data
+  hello_world: "INSTALL duck_dggs FROM community;\nLOAD duck_dggs;\n\n-- Geographic\
+    \ point \u2192 cell ID at resolution 5 (default ISEA4H grid)\nSELECT geo_to_seqnum('POINT(0.0\
+    \ 0.0)'::GEOMETRY, 5);\n-- \u2192 2380\n\n-- Cell ID \u2192 cell centre point\n\
+    SELECT seqnum_to_geo(2380, 5);\n-- \u2192 POINT (-0.9020481122620776 1.4282740292403947e-09)\n\
+    \n-- Cell ID \u2192 cell boundary polygon (requires the spatial extension)\nLOAD\
+    \ spatial;\nSELECT seqnum_to_boundary(2380, 5);\n-- \u2192 POLYGON ((...))\n\n\
+    -- Grid statistics\nSELECT dggs_n_cells(5);\n-- \u2192 10242\n\n-- Neighbors,\
+    \ parent, children\nSELECT seqnum_neighbors(2380::UBIGINT, 5);\n-- \u2192 [2412,\
+    \ 2413, 2381, 2348, 2347, 2379]\n\nSELECT seqnum_parent(2380::UBIGINT, 5);\n--\
+    \ \u2192 599\n\nSELECT seqnum_children(599::UBIGINT, 4);\n-- \u2192 [2380, 2412,\
+    \ 2413, 2381, 2348, 2347, 2379]\n\n-- Use a custom grid (ISEA3H \u2014 aperture\
+    \ 3 hexagons)\nSELECT geo_to_seqnum('POINT(0.0 0.0)'::GEOMETRY, 5,\n    dggs_params('ISEA',\
+    \ 3, 'HEXAGON', 0.0, 58.28252559, 11.25));\n-- \u2192 572\n\n-- Mixed-aperture\
+    \ sequence grid\nSELECT dggs_n_cells(3,\n    dggs_params('ISEA', 3, 'HEXAGON',\
+    \ 0.0, 58.28252559, 11.25, true, '3434'));\n-- \u2192 362\n"
+  extended_description: "`duck_dggs` transforms geographic coordinates (as `GEOMETRY`\
+    \ POINT) to and from DGGS cell\nidentifiers across multiple coordinate reference\
+    \ frames, powered by [DGGRID v9](https://github.com/sahrk/DGGRID).\n\nFull documentation:\
+    \ **https://am2222.github.io/duckdb-dggs/**\n\nAll transform functions accept\
+    \ a `GEOMETRY` POINT (`x` = longitude\xB0, `y` = latitude\xB0) and a\nresolution\
+    \ integer. Every function has a second overload that accepts an explicit `dggs_params`\n\
+    struct for full control over the grid configuration.\n\n**Grid configuration**\n\
+    \nAll functions use ISEA4H by default (ISEA projection, aperture 4, hexagon topology).\n\
+    Pass a `dggs_params` struct as the last argument to use a different grid:\n\n\
+    ```sql\n-- Standard (6 args)\ndggs_params(projection, aperture, topology, azimuth_deg,\
+    \ pole_lat_deg, pole_lon_deg)\n-- With aperture sequence (8 args)\ndggs_params(projection,\
+    \ aperture, topology, azimuth_deg, pole_lat_deg, pole_lon_deg,\n            is_aperture_sequence,\
+    \ aperture_sequence)\n```\n\nCommon presets:\n\n| Grid | Call |\n|------|------|\n\
+    | ISEA4H (default) | `dggs_params('ISEA', 4, 'HEXAGON', 0.0, 58.28252559, 11.25)`\
+    \ |\n| ISEA3H | `dggs_params('ISEA', 3, 'HEXAGON', 0.0, 58.28252559, 11.25)` |\n\
+    | ISEA4T (triangles) | `dggs_params('ISEA', 4, 'TRIANGLE', 0.0, 58.28252559, 11.25)`\
+    \ |\n| ISEA4D (diamonds) | `dggs_params('ISEA', 4, 'DIAMOND', 0.0, 58.28252559,\
+    \ 11.25)` |\n| FULLER4H | `dggs_params('FULLER', 4, 'HEXAGON', 0.0, 58.28252559,\
+    \ 11.25)` |\n| Mixed aperture | `dggs_params('ISEA', 3, 'HEXAGON', 0.0, 58.28252559,\
+    \ 11.25, true, '3437')` |\n| IGEO7 (WGS84 lon/lat) | `dggs_preset('IGEO7v2')`\
+    \ |\n\nProjections: `ISEA`, `IVEA`, `FULLER`, `GNOMONIC`. The optional 9th `datum`\
+    \ argument is\n`'AUTHALIC_SPHERE'` (default) or `'WGS84'`, which maps geodetic\
+    \ lon/lat to and from the\nauthalic sphere the grid is built on.\n\n**Utility\
+    \ functions:**\n\n- `duck_dggs_version()` \u2014 extension version string\n- `dggs_params(...)`\
+    \ \u2014 build a grid configuration (6 args; 8 adds an aperture sequence, 9 the\
+    \ datum)\n- `dggs_preset(name)` \u2014 the configuration of a DGGRID preset, e.g.\
+    \ `'IGEO7v2'`, `'ISEA4H'`, `'IVEA7HL'`\n\n**Grid statistics** (each has `res`\
+    \ and optional `params` overload):\n\n- `dggs_n_cells` \u2014 total cell count\
+    \ at a resolution\n- `dggs_cell_area_km` \u2014 average cell area in km\xB2\n\
+    - `dggs_cell_dist_km` \u2014 average cell spacing in km\n- `dggs_cls_km` \u2014\
+    \ characteristic length scale in km\n- `dggs_res_info` \u2014 all stats as a struct\n\
+    \n**Transform functions** (each has `res` and optional `params` overload):\n\n\
+    - From GEO: `geo_to_seqnum`, `geo_to_geo`, `geo_to_plane`, `geo_to_projtri`, `geo_to_q2dd`,\
+    \ `geo_to_q2di`\n- From SEQNUM: `seqnum_to_geo`, `seqnum_to_boundary`, `seqnum_to_seqnum`,\
+    \ `seqnum_to_plane`, `seqnum_to_projtri`, `seqnum_to_q2dd`, `seqnum_to_q2di`\n\
+    - From Q2DI: `q2di_to_seqnum`, `q2di_to_geo`, `q2di_to_plane`, `q2di_to_projtri`,\
+    \ `q2di_to_q2dd`, `q2di_to_q2di`\n- From Q2DD: `q2dd_to_seqnum`, `q2dd_to_geo`,\
+    \ `q2dd_to_plane`, `q2dd_to_projtri`, `q2dd_to_q2dd`, `q2dd_to_q2di`\n- From PROJTRI:\
+    \ `projtri_to_seqnum`, `projtri_to_geo`, `projtri_to_plane`, `projtri_to_projtri`,\
+    \ `projtri_to_q2dd`, `projtri_to_q2di`\n\n**Neighbor & hierarchy functions:**\n\
+    \n- `seqnum_neighbors` \u2014 topologically adjacent cells\n- `seqnum_parent`\
+    \ \u2014 parent cell at res-1\n- `seqnum_all_parents` \u2014 all touching parent\
+    \ cells at res-1\n- `seqnum_children` \u2014 child cells at res+1\n- `seqnum_index_parent`\
+    \ / `seqnum_index_children` \u2014 parent and children in the\n  grid's hierarchical\
+    \ indexing system (Z3 / ZOrder / Z7); unlike the spatial\n  functions these form\
+    \ a strict tree\n- `seqnum_to_index_string` / `index_string_to_seqnum` \u2014\
+    \ the Z3 / ZOrder / Z7 index in its\n  text form (base cell + one digit per resolution)\n\
+    - `seqnum_k_ring` \u2014 the cell plus every cell within k neighbor steps\n\n\
+    **Coverage & geodesy:**\n\n- `polygon_to_seqnums` \u2014 every cell whose centre\
+    \ lies inside a POLYGON / MULTIPOLYGON\n- `seqnum_cell_area_km` \u2014 true spherical\
+    \ area of one cell (vs the grid average)\n- `geo_distance_km` / `geo_azimuth_deg`\
+    \ \u2014 great-circle distance and bearing between points\n\n**Hierarchical index\
+    \ conversions:**\n\n- `seqnum_to_zorder` / `zorder_to_seqnum` \u2014 Z-order (Morton\
+    \ code) indexing\n- `seqnum_to_z3` / `z3_to_seqnum` \u2014 Z3 index (aperture\
+    \ 3 only)\n- `seqnum_to_z7` / `z7_to_seqnum` \u2014 Z7 index (aperture 7 only)\n\
+    - `seqnum_to_vertex2dd` / `vertex2dd_to_seqnum` \u2014 vertex-based 2D coordinates\n\
+    \n**IGEO7 / Z7 bit-level operations** (operate directly on the packed 64-bit Z7\
+    \ index;\nno `dggs_params` needed; logic ported from [`allixender/igeo7_duckdb`](https://github.com/allixender/igeo7_duckdb)):\n\
+    \n- `igeo7_from_string` / `igeo7_to_string` \u2014 compact string \u2194 packed\
+    \ 64-bit index\n- `igeo7_encode` \u2014 pack base cell + 20 three-bit digit slots\n\
+    - `igeo7_encode_at_resolution` \u2014 `igeo7_encode` then truncate to a target\
+    \ resolution\n- `igeo7_get_resolution` \u2014 resolution (0\u201320) from a packed\
+    \ index\n- `igeo7_get_base_cell` \u2014 base cell ID (0\u201311)\n- `igeo7_get_digit`\
+    \ \u2014 extract the i-th digit (1\u201320)\n- `igeo7_parent` / `igeo7_parent_at`\
+    \ \u2014 ancestor at res-1 or a specific resolution\n- `igeo7_get_neighbours`\
+    \ / `igeo7_get_neighbour` \u2014 all 6 neighbours or one by direction\n- `igeo7_first_non_zero`\
+    \ \u2014 position of the first non-zero digit slot\n- `igeo7_is_valid` \u2014\
+    \ false only for the `UINT64_MAX` invalid-neighbour sentinel\n- `igeo7_decode_str`\
+    \ \u2014 verbose `base-d1.d2\u2026d20` form showing all 20 slots (SQL macro)\n\
+    - `igeo7_string_parent` / `igeo7_string_local_pos` / `igeo7_string_is_center`\
+    \ \u2014 compact-string helpers (SQL macros)\n- `igeo7_geo_to_authalic` / `igeo7_authalic_to_geo`\
+    \ \u2014 remap each vertex's latitude in a `GEOMETRY` between WGS84 geodetic and\
+    \ authalic (equal-area sphere) using the Karney 2022 order-6 polynomial Fourier\
+    \ series; useful before equal-area binning of lon/lat data\n"
