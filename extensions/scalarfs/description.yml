@@ -1,7 +1,7 @@
 extension:
   name: scalarfs
   description: A collection of virtual filesystems for working with scalars
-  version: 1.6.3
+  version: 1.7.0
   language: C++
   build: cmake
   license: MIT
@@ -9,9 +9,9 @@ extension:
   - teaguesterling
 repo:
   github: teaguesterling/duckdb_scalarfs
-  ref: c5f66ec884e6070d7a9abd560ae24369b2e96d5e
-  variegata: c5f66ec884e6070d7a9abd560ae24369b2e96d5e
-  ref_next: c5f66ec884e6070d7a9abd560ae24369b2e96d5e
+  ref: 16a2637eaab656d3b94e7a25f612573f8e056769
+  variegata: 16a2637eaab656d3b94e7a25f612573f8e056769
+  ref_next: 16a2637eaab656d3b94e7a25f612573f8e056769
 docs:
   hello_world: "LOAD scalarfs;\n\n-- Read JSON from a variable\nSET VARIABLE config\
     \ = '{\"debug\": true, \"port\": 8080}';\nSELECT * FROM read_json('variable:config');\n\
