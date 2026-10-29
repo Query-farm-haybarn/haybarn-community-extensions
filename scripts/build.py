@@ -14,7 +14,7 @@
 #     skipped (no COMMUNITY_EXTENSION_REF is written, build.yml skips the build)
 #
 # Haybarn differences:
-#   1. DUCKDB_VERSION may be a Haybarn engine tag (`haybarn-v2.0.0-rc7`); it
+#   1. DUCKDB_VERSION may be a Haybarn engine tag (`haybarn-v2.0.0-rc9`); it
 #      is normalized to the plain semver (`v2.0.0`) before the comparison, so
 #      the same tag-shaped inputs that pick the engine also pick the ref.
 #   2. `repo.haybarn_fork` / `repo.haybarn_ref` override `github` / `ref`
