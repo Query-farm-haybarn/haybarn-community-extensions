@@ -1,7 +1,7 @@
 extension:
   name: maxmind
   description: Read MaxMind databases (GeoLite, GeoIP, and more)
-  version: 0.11.0
+  version: 0.12.0
   language: Zig
   build: cmake
   license: ISC
@@ -10,17 +10,17 @@ extension:
   - marselester
 repo:
   github: marselester/duckdb-maxmind
-  ref: 6d0327c9b8bd90f19c4287dcf634301e79f8557e
+  ref: 08a80d772143c083c160ebd846642ecac1ef035c
 docs:
   hello_world: 'SELECT geolite_city(''./GeoLite2-City.mmdb'', ''1.0.64.0'', '''');
 
     '
   extended_description: "Read any MaxMind database using table and scalar functions.\n\
-    GeoLite and GeoIP databases get typed columns;\nother MMDB files return JSON in\
-    \ a `record` VARCHAR column.\n\nScan all IP network blocks with `read_mmdb()`.\n\
-    Use the optional `network` parameter to limit the scan to a subnet,\ne.g., `read_mmdb(path,\
-    \ network='1.0.0.0/8')`.\nEmpty records are excluded by default; use `include_empty=true`\
-    \ to include them.\n\n```sql\nSELECT network, city.names.en\nFROM read_mmdb('./GeoLite2-City.mmdb')\n\
+    GeoLite and GeoIP databases get typed columns;\nother MMDB files return a `record`\
+    \ JSON column.\n\nScan all IP network blocks with `read_mmdb()`.\nUse the optional\
+    \ `network` parameter to limit the scan to a subnet,\ne.g., `read_mmdb(path, network='1.0.0.0/8')`.\n\
+    Empty records are excluded by default; use `include_empty=true` to include them.\n\
+    \n```sql\nSELECT network, city.names.en\nFROM read_mmdb('./GeoLite2-City.mmdb')\n\
     WHERE city.names.en IS NOT NULL\nLIMIT 1;\n\u250C\u2500\u2500\u2500\u2500\u2500\
     \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\
     \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502   network   \u2502  \
@@ -37,9 +37,9 @@ docs:
     \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 Hiroshima \u2502\
     \n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\
     \n```\n\nUse `mmdb_record()` to look up a record from any MMDB file as JSON:\n\
-    \n```sql\nSELECT mmdb_record('./GeoLite2-City.mmdb', '1.0.64.0', 'city')::json\
-    \ -> 'city' -> 'names' ->> 'en' AS en;\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\
-    \u2500\u2500\u2500\u2500\u2500\u2510\n\u2502    en     \u2502\n\u251C\u2500\u2500\
-    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 Hiroshima\
-    \ \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
-    \u2518\n```\n"
+    \n```sql\nSELECT mmdb_record('./GeoLite2-City.mmdb', '1.0.64.0', 'city') -> 'city'\
+    \ -> 'names' ->> 'en' AS en;\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2510\n\u2502    en     \u2502\n\u251C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 Hiroshima \u2502\
+    \n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\
+    \n```\n"

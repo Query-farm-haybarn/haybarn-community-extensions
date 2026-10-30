@@ -1,18 +1,20 @@
 extension:
   name: ducksmiles
-  description: Cheminformatics toolkit for DuckDB - SMILES, InChI, MOL/SDF, PDB, SELFIES;
-    descriptors (LogP, TPSA, QED), Morgan/MACCS fingerprints + similarity, drug-likeness/toxicophore
-    filters, and a native in-silico docking pipeline, from SQL
-  version: 0.5.0
+  description: Cheminformatics and CPU numerical analytics for DuckDB - molecular
+    formats, descriptors, fingerprints, similarity, regression, statistical inference,
+    experimental design, time series, reliability and model evaluation from SQL
+  version: 0.6.1
   language: C++
   build: cmake
   requires_toolchains: rust
+  test_config: '{"test_env_variables":{"DUCKDB_TEST_ON_INIT":"LOAD ''{BUILD_DIR}/extension/ducksmiles/ducksmiles.duckdb_extension'';","T":"\"test/*\"
+    --test-flags=''--require ducksmiles --require json'' --fail-require-skip","DUCKDB_TEST_STATICALLY_LOADED_EXTENSIONS":"[''core_functions'',''json'']"}}'
   license: MIT
   maintainers:
   - nkwork9999
 repo:
   github: nkwork9999/duckSMILES
-  ref: ff7c681ca14698d7ed6ec4a5d7a15fc40cefe834
+  ref: 46f357e7c6c2cd28dbf8a7d11dfe1c7f7c141dbc
 docs:
   hello_world: "-- Parse SMILES and get molecular formula\nSELECT mol_formula('CCO');\n\
     -- C2H6O\n\n-- Calculate molecular weight\nSELECT round(mol_weight('c1ccccc1'),\
@@ -29,8 +31,9 @@ docs:
     \n-- Retrospective virtual-screening enrichment over a docked, labelled library\n\
     SELECT roc_auc(list(score), list(is_active)),\n       enrichment_factor(list(score),\
     \ list(is_active), 0.01),\n       bedroc(list(score), list(is_active), 20.0)\n\
-    FROM docked_library;\n\n-- Convert SMILES to SELFIES (ML-friendly notation)\n\
-    SELECT smiles_to_selfies('CCO');\n"
+    FROM docked_library;\n\n-- CPU PCA on a numeric matrix, returning versioned JSON\n\
+    SELECT chem_pca([[1.0,2.0],[2.0,4.0],[3.0,6.0]], [1.0,0.0]);\n\n-- Convert SMILES\
+    \ to SELFIES (ML-friendly notation)\nSELECT smiles_to_selfies('CCO');\n"
   extended_description: "Cheminformatics toolkit for DuckDB - analyze molecular structures\
     \ directly from SQL\nwithout leaving your database. Pure Rust implementation with\
     \ no external chemistry\nlibrary dependencies (no RDKit required).\n\n**Supported\
@@ -39,9 +42,13 @@ docs:
     \ skeleton matching\n- MOL/SDF: V2000/V3000 block parsing, 3D geometry, molecule\
     \ counting\n- PDB/CIF/XYZ: protein structure analysis (atom, chain, residue, model\
     \ counts)\n- SELFIES: bidirectional SMILES-SELFIES conversion for ML pipelines\n\
-    \n**130+ scalar SQL functions** for molecular property extraction, format conversion,\n\
-    structural comparison, fingerprinting, similarity search, drug-likeness /\ntoxicophore\
-    \ filtering, and structure-based virtual screening.\n\n**Descriptors (RDKit-faithful\
+    \n**418 SQL overloads**, including the existing 151 molecular overloads and\n\
+    267 CPU analytics functions. Molecular methods cover property extraction, format\
+    \ conversion,\nstructural comparison, fingerprinting, similarity search, drug-likeness\
+    \ /\ntoxicophore filtering, and structure-based virtual screening.\n\nFunction\
+    \ descriptions, meaningful argument names, runnable examples and\ncategories are\
+    \ discoverable through `duckdb_functions()` for every overload.\nFilter with `list_contains(categories,\
+    \ 'ducksmiles')` after loading the extension.\n\n**Descriptors (RDKit-faithful\
     \ ports):**\n- 21 structural-profile functions: fragments, formal charge, hydrogen\
     \ and\n  bond counts, ring membership, elemental counts, fractions, isotope-aware\n\
     \  heavy-atom mass and mean heavy-atom degree. A pinned RDKit 2025.09.6\n  reference\
@@ -51,10 +58,17 @@ docs:
     \ polar surface area.\n- `qed()` - QED drug-likeness (Bickerton 2012), a port\
     \ of RDKit `Chem.QED`.\n- Lipinski set: `num_h_donors()`, `num_h_acceptors()`,\
     \ `num_rotatable_bonds()`,\n  `fraction_csp3()`, `num_heteroatoms()`, and the\
-    \ full ring-count descriptor family.\n\n**Fingerprints & similarity:**\n- `morgan_fp_bits()`\
-    \ (Morgan/ECFP-style, radius 2 / 2048-bit default) and\n  `maccs_keys()` (167-bit\
-    \ MACCS). Morgan bit positions are not claimed to\n  be identical to RDKit's MorganGenerator.\n\
-    - Full bit-fingerprint similarity family over raw BLOBs, faithful to RDKit\n \
+    \ full ring-count descriptor family.\n\n**Mass context and native graphs:**\n\
+    - `formula_exact_mass()` parses supported flat formulas strictly.\n- `adduct_neutral_mass()`\
+    \ and `adduct_precursor_mz()` perform versioned\n  arithmetic for 29 explicit\
+    \ adduct labels, including signed electron corrections.\n- `mol_graph_json()`\
+    \ exports a versioned native atom/bond graph in input\n  order with explicit hydrogen\
+    \ vertices, isotope, charge and raw stereo tokens.\n  This sidecar is not pretrained-model\
+    \ tensors or full RDKit sanitization.\n- Unsupported or malformed inputs return\
+    \ NULL.\n\n**Fingerprints & similarity:**\n- `morgan_fp_bits()` (Morgan/ECFP-style,\
+    \ radius 2 / 2048-bit default) and\n  `maccs_keys()` (167-bit MACCS). Morgan bit\
+    \ positions are not claimed to\n  be identical to RDKit's MorganGenerator.\n-\
+    \ Full bit-fingerprint similarity family over raw BLOBs, faithful to RDKit\n \
     \ `DataStructs/BitOps.cpp`: `tanimoto_bit`, `dice_bit`, `cosine_bit`, `kulczynski_bit`,\n\
     \  `sokal_bit`, `mcconnaughey_bit`, `asymmetric_bit`, `braun_blanquet_bit`,\n\
     \  `russel_bit`, and asymmetric `tversky_bit(a, b, alpha, beta)`.\n\n**Structure\
@@ -74,6 +88,18 @@ docs:
     \  torsion-tree docking with an AutoDock-Vina-style scoring function and 3D affinity\n\
     \  maps; returns ranked poses with coordinates as JSON.\n- Retrospective-validation\
     \ harness: `roc_auc`, `enrichment_factor(fraction)`,\n  `bedroc(alpha)` to measure\
-    \ how well a docked library enriches known actives.\n\n**Architecture:** Rust\
-    \ (core logic, zero external chemistry crates) + C++ (DuckDB\nintegration via\
-    \ FFI).\n"
+    \ how well a docked library enriches known actives.\n\n**CPU numerical analytics:**\n\
+    - 267 functions for descriptive/inferential statistics, regression, mixed/latent\n\
+    \  models, IRT/SEM, causal evaluation, experimental design, quality/reliability,\n\
+    \  time series, functional preprocessing, numeric text analysis and spatial models.\n\
+    - Numeric matrices and ordered parameter lists; versioned JSON results, reusable\n\
+    \  fitted models, and NULL for invalid or resource-limited inputs. No GPU or Python\n\
+    \  runtime is required. Existing molecular methods remain available.\n- Complete\
+    \ SQL examples, parameter contracts, validation evidence and remaining\n  gaps\
+    \ are in the [README](https://github.com/nkwork9999/duckSMILES#cpu-analytics-complete-sql-api-reference).\n\
+    \  These are bounded partial method contracts; full JMP equivalence is not claimed.\n\
+    \nThe new bounded CPU methods include censored regression, estimated spatial\n\
+    covariance, static SVG histograms/box plots and ordered categorical ML with\n\
+    saved prediction. JMP default Lasso, sandwich inference and full plot options\n\
+    remain explicitly incomplete in the source README.\n\n**Architecture:** Rust (core\
+    \ logic, zero external chemistry crates) + C++ (DuckDB\nintegration via FFI).\n"

@@ -2,7 +2,7 @@ extension:
   name: plinking_duck
   description: Read and write PLINK 2 genomics file formats and run common genetic
     analyses directly in SQL
-  version: 0.14.0
+  version: 0.14.2
   language: C++
   build: cmake
   license: MIT
@@ -11,7 +11,9 @@ extension:
   - teaguesterling
 repo:
   github: teaguesterling/plinking_duck
-  ref: e2a474474ccefb73690f3a8298a11c9d81d6d9b3
+  ref: 7a34f3ab8d76534aaebed0aaa88e8ef27099f4e6
+  variegata: 7a34f3ab8d76534aaebed0aaa88e8ef27099f4e6
+  ref_next: 7a34f3ab8d76534aaebed0aaa88e8ef27099f4e6
 docs:
   hello_world: '-- Read variant metadata from a .pvar file
 

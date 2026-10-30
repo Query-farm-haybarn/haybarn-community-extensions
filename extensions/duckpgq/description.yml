@@ -1,7 +1,7 @@
 extension:
   name: duckpgq
   description: Extension that adds support for SQL/PGQ and graph algorithms
-  version: 0.3.1
+  version: 1.0.0
   language: C++
   build: cmake
   license: MIT
@@ -10,9 +10,11 @@ extension:
   excluded_platforms: linux_amd64;linux_arm64;linux_amd64_musl;linux_arm64_musl;osx_amd64;osx_arm64;windows_amd64;windows_arm64;windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
 repo:
   github: cwida/duckpgq-extension
-  ref: f386a6cfb90aadb0077e734377bb86740bdda71b
+  variegata: 61f5d08270bef2c81fc4e5d9af32739e67adc2be
+  ref: 29ca668a2218810862bed794cc501add03a4149a
 docs:
-  hello_world: "CREATE TABLE Person AS SELECT * FROM 'https://gist.githubusercontent.com/Dtenwolde/2b02aebbed3c9638a06fda8ee0088a36/raw/8c4dc551f7344b12eaff2d1438c9da08649d00ec/person-sf0.003.csv';\n\
+  hello_world: "SET active_grammar_extensions = ['duckpgq'];\n\nCREATE TABLE Person\
+    \ AS SELECT * FROM 'https://gist.githubusercontent.com/Dtenwolde/2b02aebbed3c9638a06fda8ee0088a36/raw/8c4dc551f7344b12eaff2d1438c9da08649d00ec/person-sf0.003.csv';\n\
     CREATE TABLE Person_knows_person AS SELECT * FROM 'https://gist.githubusercontent.com/Dtenwolde/81c32c9002d4059c2c3073dbca155275/raw/8b440e810a48dcaa08c07086e493ec0e2ec6b3cb/person_knows_person-sf0.003.csv';\n\
     \nCREATE PROPERTY GRAPH snb\n  VERTEX TABLES (\n    Person\n  )\n  EDGE TABLES\
     \ (\n    Person_knows_person SOURCE KEY (Person1Id) REFERENCES Person (id)\n \
@@ -21,7 +23,7 @@ docs:
     \  COLUMNS (a.id, b.id)\n)\nLIMIT 1;\n\nFROM GRAPH_TABLE (snb \n  MATCH p = ANY\
     \ SHORTEST (a:person)-[k:knows]->{1,3}(b:Person) \n  COLUMNS (a.id, b.id, path_length(p))\n\
     ) \nLIMIT 1;\n\nFROM local_clustering_coefficient(snb, person, knows);\n\nDROP\
-    \ PROPERTY GRAPH snb; \n"
+    \ PROPERTY GRAPH snb;\n"
   extended_description: 'The DuckPGQ extension supports the SQL/PGQ syntax as part
     of the official SQL:2023 standard developed by ISO.
 
@@ -29,6 +31,8 @@ docs:
     It introduces visual graph pattern matching and a more concise syntax for path-finding.
     For more information, please see the [DuckPGQ documentation](https://duckpgq.org).
 
+    *Note:* Starting with DuckDB v2.0, you have to opt in to the DuckPGQ grammar after
+    loading the extension by running `SET active_grammar_extensions = [''duckpgq''];`.
 
     *Disclaimer:* As this extension is part of an ongoing research project by the
     Database Architectures group at CWI, some features may still be under development.

@@ -1,0 +1,106 @@
+extension:
+  name: factorize
+  description: Answers count, sum, avg, min, max and GROUP BY over many-to-many equi-join
+    graphs without materialising the join
+  version: 0.2.0
+  language: C++
+  build: cmake
+  license: MIT
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads
+  maintainers:
+  - maxdemarzi
+repo:
+  github: maxdemarzi/factorize
+  ref: 1f38c96adc116ab0aa4cd59610a6a1ca2437a5fc
+docs:
+  hello_world: "-- The engine keeps intermediate joins in a factorised representation\
+    \ and\n-- counts from it, so a result too large to materialise is still countable.\n\
+    -- With factorize_mode='auto' an ordinary count(*) is taken over only where\n\
+    -- a cost model predicts a win, and left alone otherwise.\nSET factorize_mode\
+    \ = 'auto';\n\nSELECT count(*)\n  FROM edges a, edges b, edges c, edges d\n WHERE\
+    \ a.src = b.src AND b.src = c.src AND c.src = d.src;\n\n-- EXPLAIN shows a FACTORIZED\
+    \ operator where it fired, and\n-- SET factorize_explain = true prints why it\
+    \ did or did not.\n"
+  extended_description: "A clean-room implementation of Lehner & Neumann, *The Data\
+    \ World Is Not\nFlat: Efficient Factorized Execution for Relational Systems* (PVLDB\n\
+    19(11):3006-3019, 2026), derived from the paper only.\n\nA join's result can be\
+    \ exponentially larger than the data it comes from. A\nfactorised representation\
+    \ keeps it as a product of independent parts rather\nthan writing every combination\
+    \ out: records grow by sum where tuples grow\nby product. For an aggregate that\
+    \ only needs the count, the count can be\nread from that representation without\
+    \ ever materialising it.\n\n**What it is for.** Queries whose join result is too\
+    \ large to produce. On\nthe 442 queries of the cardinality-estimation benchmark\
+    \ whose results exceed\n1e9 tuples, this answers 244 `count(\\*)` queries that\
+    \ stock DuckDB does not\nfinish in sixty seconds, in a median of 0.09 s. One of\
+    \ them counts 10.8\ntrillion results in 24 seconds where the stock plan produces\
+    \ nothing in 180.\n\nThat 244 is specific to `count(\\*)`, and deliberately says\
+    \ so: which queries\nstock DuckDB cannot finish depends on the aggregate, not\
+    \ only on the join.\nOver a random 120-query sample of the same corpus, with both\
+    \ plans timed\nand a sixty-second cap, stock finishes 38 to 41 of them once the\
+    \ fold is\nnot `count(\\*)` -- about a third of the corpus stops being out of\
+    \ reach.\n\nThe rescues survive the change of aggregate, which had been assumed\
+    \ rather\nthan measured until it was:\n\n    fold          rescued   faster  \
+    \ slower   neither   lost\n    min                45       34        7       \
+    \ 34      0\n    max                47       33        7        33      0\n  \
+    \  avg                45       31       10        34      0\n    sum         \
+    \       46       31        9        33      1\n    count(c)           59     \
+    \  29       13        18      1\n    sum(x * y)         46       30       10 \
+    \       34      0\n\n\"Neither\" is the floor neither plan clears inside the cap.\
+    \ count(c) reaches\nfurthest because the matcher only accepts it where the column\
+    \ cannot be\nNULL, which makes the fold a counter again.\n\nThe slower column\
+    \ is mostly not this engine. Splitting the same runs by\nwhether the gate fired,\
+    \ every one of those slowdowns but two sits among\nthe queries it *declined* --\
+    \ where `auto` runs the stock plan and the\ndifference is two timings of the same\
+    \ work, median ratio 0.98 over 151\npairs. Across 458 fired queries there are\
+    \ two bad outcomes, both under\ncount(c): one is the 60s cap falling just past\
+    \ a 58.8s stock plan, and the\nother is watdiv_acyclic_217_10, which this project\
+    \ has recorded the cost\nmodel failing on since well before these measurements.\n\
+    \nWhere it does regress is the corpus it is not for. On the queries DuckDB\ncan\
+    \ already materialise, about a third of the queries the gate fires on\ncome out\
+    \ slower -- 13 of the 37 it fires on for count(\\*). And `auto` costs about 2\
+    \ to 4 milliseconds to decline -- the\nstatistics sampling behind the decision\
+    \ -- which is invisible past 100ms\nand around 20% on a 10ms query.\n\n**What\
+    \ it is not for.** Queries DuckDB already handles. For a plain\ncount(\\*) DuckDB\
+    \ carries no payload columns through a join and counts empty\ntuples faster than\
+    \ this engine can build a representation: firing on every\neligible query is about\
+    \ 11x *slower* on the benchmark's live corpus. The\ncost model exists to tell\
+    \ those regimes apart, and `auto` declines far more\noften than it fires.\n\n\
+    **Scope.** count(\\*), count(c), sum, avg, min, max, bool_and and bool_or\nover\
+    \ acyclic equi-join\ngraphs of many-to-many joins on integer and DECIMAL columns,\
+    \ with GROUP BY,\nEXISTS and LIMIT. Also sum(x * y) for two columns, ungrouped,\
+    \ which is the\ncase factorisation is for: over independent branches it decomposes\
+    \ into a\nproduct of one-column sums, so the pairings of x and y are summed without\n\
+    being enumerated even though they are the join result itself.\nAnything else is\
+    \ declined and the stock plan runs unchanged. `auto` is\nbit-exact against `off`;\
+    \ if the factorised path raises, the replaced plan\nanswers instead.\n\nThe aggregates\
+    \ beyond count(\\*) are timed as well as verified (D81). The\ngate prices min\
+    \ and max separately from the rest, because they are not\nfolded at all: an ungrouped\
+    \ min or max over an acyclic join is answered by\na semijoin reducer, which reads\
+    \ the inputs and never builds the join. So\nthe folds no longer fire on the same\
+    \ queries as each other, which they did\nuntil the reducer got a cost model of\
+    \ its own.\n\nOn the benchmark's live corpus, over the same 119 join graphs, medians\
+    \ of\nthree runs each:\n\n    fold          fires   ratio\n    min           \
+    \   65    3.9x\n    max              65    3.7x\n    count(\\*)        37    1.7x\n\
+    \    count(c)         36    1.4x\n    avg              29    1.5x\n    sum(x *\
+    \ y)       29    1.5x\n    sum              29    1.5x\n\nSingle runs of this\
+    \ measurement vary by about 10%, so these are medians\nand not precise quantities.\
+    \ bool_and and bool_or are not listed separately:\nthe matcher compiles them to\
+    \ the min and max folds with the same binding,\nso they are those rows with a\
+    \ BOOLEAN result type. An earlier reading of 0.93x for\nsum(x * y) -- \"slower\
+    \ than not firing\" -- was an artifact: 65 of the 119\nqueries in that corpus\
+    \ multiplied two INTEGER join keys whose product\noverflows INT32, so they raised\
+    \ instead of answering, and the gate fired on\n30 of those against 3 of the rest.\
+    \ It measured how fast each plan reached\nthe same error (D85, D86). In the regime\
+    \ these exist for: on 50 of the\nexcluded queries sum(x * y) is 7 faster against\
+    \ 1 slower with no losses,\n221s of stock against 92s.\n\n**Known limitations**,\
+    \ measured rather than assumed, with the numbers in\nDECISIONS.md: the cost model's\
+    \ coefficients are fitted on one machine and do\nnot transfer between machines\
+    \ or datasets; its estimates are wrong where it\nis most confident; and on the\
+    \ benchmark corpus a handful of queries run\nslower than the plan they replace,\
+    \ one of them past a sixty-second cap.\nScored against a per-query oracle with\
+    \ both plans timed, the gate lands\nwithin about 1.1x to 1.4x of perfect depending\
+    \ on the aggregate, and most\nof what is left is one query.\n\nThe counts of rescued\
+    \ queries above were measured before the semijoin\nreducer and before the cost\
+    \ model was refitted for it, both of which only\nwidened what gets answered, so\
+    \ they understate the current state rather\nthan overstating it. DECISIONS.md\
+    \ carries each measurement with the date\nand method it was taken by.\n"

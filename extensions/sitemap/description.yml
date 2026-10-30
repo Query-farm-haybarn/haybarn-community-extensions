@@ -1,7 +1,7 @@
 extension:
   name: sitemap
   description: Parse XML sitemaps from websites with automatic discovery via robots.txt
-  version: '2026020501'
+  version: '2026102301'
   language: C++
   build: cmake
   license: MIT
@@ -11,7 +11,8 @@ extension:
   - onnimonni
 repo:
   github: midwork-finds-jobs/duckdb-sitemap
-  ref: 15e96dfd6e5dfb6d70a9b7cc5a2675b3969e16b3
+  variegata: 15e96dfd6e5dfb6d70a9b7cc5a2675b3969e16b3
+  ref: ab4c5718d2eda09b6123a7e7915ebef2266b3e3b
 docs:
   hello_world: "-- Get all URLs from a sitemap (auto-prepends https://)\nSELECT *\
     \ FROM sitemap_urls('example.com');\n\n-- Direct sitemap URL (skips discovery)\n\

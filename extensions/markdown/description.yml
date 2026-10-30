@@ -12,6 +12,7 @@ extension:
 repo:
   github: teaguesterling/duckdb_markdown
   ref: 6fc7013de640191ea5248897df3b60a7bc07db67
+  variegata: 6fc7013de640191ea5248897df3b60a7bc07db67
   ref_next: 6fc7013de640191ea5248897df3b60a7bc07db67
 docs:
   hello_world: "-- Load the extension\nLOAD markdown;\n\n-- Read Markdown files with\

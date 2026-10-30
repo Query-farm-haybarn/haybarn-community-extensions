@@ -1,0 +1,44 @@
+extension:
+  name: improv
+  description: Improv's spreadsheet formula language (674 functions) and multidimensional
+    models (categories, measures, formulas over them) on DuckDB tables
+  version: 0.9.0
+  language: Rust
+  build: cargo
+  license: MIT OR Apache-2.0
+  maintainers:
+  - gburd
+  requires_toolchains: rust;python3
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_mingw;linux_amd64_musl
+repo:
+  github: gburd/improv
+  ref: 874a031ffc83edbdc5736b8b54c6bc1b3964b28b
+docs:
+  hello_world: "LOAD improv;\n-- Any of Improv's 674 built-in functions, on named\
+    \ inputs.\nSELECT improv_calc('ROUND(PMT(rate/12, n, -pv), 2)',\n            \
+    \       json_object('rate', 0.06, 'n', 360, 'pv', 200000));  -- 1199.1\nSELECT\
+    \ improv_calc_text('1/0');                                          -- #DIV/0!\n\
+    SELECT name, signature FROM improv_functions(query := 'pmt');\n-- A multidimensional\
+    \ model over a table: one row per computed cell.\nCREATE TABLE sales AS SELECT\
+    \ * FROM (VALUES\n  (2024, 'WidgetA', 10, 100), (2024, 'WidgetB', 20, 50),\n \
+    \ (2025, 'WidgetA', 11, 120), (2025, 'WidgetB', 20, 40)) t(year, product, price,\
+    \ qty);\nSELECT * FROM improv('sales', '\n  category Time = year\n  category Product\
+    \ = product\n  input Price = price\n  input Quantity = qty sum\n  Revenue = Price\
+    \ * Quantity\n  Share = Revenue / SUM(Revenue OVER Product)\n  Growth = Revenue\
+    \ - PREV(Revenue, Time, 1, 0)');\n"
+  extended_description: "Improv is a multidimensional spreadsheet in the Lotus Improv\
+    \ / Quantrix\ntradition: data lives in categories (Time, Product, Region) instead\
+    \ of\ncell addresses, and formulas name measures (`Revenue = Price *\nQuantity`),\
+    \ so one formula covers every cell it applies to.\n\nThis extension brings its\
+    \ formula engine to DuckDB:\n\n- `improv_calc(formula [, inputs])` evaluates a\
+    \ scalar Improv formula\n  (math, statistics, financial, text, dates, engineering,\
+    \ `IF`, `LET`,\n  `LAMBDA`; aggregations over categories need a model) on named\
+    \ inputs\n  passed as a JSON object. An error value is NULL; `improv_calc_text`\n\
+    \  returns any type and renders errors (`#DIV/0!`).\n- `improv_functions([query\
+    \ := ...])` lists the functions with their\n  signatures and descriptions.\n-\
+    \ `improv(source, model)` reads a table or a SELECT, builds a model from\n  a\
+    \ short spec (categories from columns, inputs from columns with an\n  optional\
+    \ sum/avg/min/max/count, derived measures as formulas, with\n  aggregations across\
+    \ categories and PREV/NEXT along them) and returns\n  one row per computed cell,\
+    \ ready to join.\n\nThe same engine runs Improv's desktop GUI, terminal UI, CLI\
+    \ and its\nPostgreSQL extension (pg_improv). Source: https://codeberg.org/gregburd/improv\n"

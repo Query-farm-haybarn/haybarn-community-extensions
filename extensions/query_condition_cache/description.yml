@@ -3,7 +3,7 @@ extension:
   description: This extension provides a cache for query conditions, which is useful
     for repeated-query workloads like metrics monitoring dashboards, log investigations,
     etc.
-  version: 0.1.3
+  version: 0.2.0
   language: C++
   build: cmake
   license: MIT
@@ -14,7 +14,7 @@ extension:
   - dentiny
 repo:
   github: dentiny/duckdb-query-condition-cache
-  ref: 8d934bc5796bea4fd6eb059143d4e71b4feaa4b9
+  ref: e6af277259ecd0a28db21675deaa47792900d7dc
 docs:
   hello_world: 'SELECT * FROM condition_cache_build(''t'', ''val = 42 AND msg LIKE
     ''''%2'''''');

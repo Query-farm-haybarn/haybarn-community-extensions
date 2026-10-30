@@ -14,6 +14,7 @@ extension:
 repo:
   github: teaguesterling/duckdb_panduck
   ref: fbc56ed5c5d550a9dd601c617649a56625c89d19
+  variegata: fbc56ed5c5d550a9dd601c617649a56625c89d19
   ref_next: fbc56ed5c5d550a9dd601c617649a56625c89d19
 docs:
   hello_world: "LOAD panduck;\n\n-- Read a document straight into flattened duck_block\

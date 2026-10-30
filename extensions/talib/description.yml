@@ -12,7 +12,7 @@ extension:
   excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_rtools;windows_amd64_mingw
 repo:
   github: neuesql/atm_talib
-  ref: baebee616765169eab9efac31d469d64f8aecf79
+  ref: 5caac83a9a6f89c49985482cd634ed1f6f17cffe
 docs:
   hello_world: "-- Scalar form: operate on a pre-collected list\nSELECT t_sma([1.0,\
     \ 2.0, 3.0, 4.0, 5.0], 3);\n\n-- Aggregate/window form: use OVER() for row-by-row\

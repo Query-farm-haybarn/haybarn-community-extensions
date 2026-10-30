@@ -1,0 +1,52 @@
+extension:
+  name: qvd_next
+  description: Read (streaming) and write Qlik QVD files - next-generation build of
+    qvd on the DuckDB C API v2
+  version: 0.1.0
+  language: Rust
+  build: cmake
+  license: Apache-2.0
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_mingw;windows_amd64_rtools;linux_amd64_musl
+  requires_toolchains: rust;python3
+  maintainers:
+  - snouhaud
+repo:
+  github: snouhaud/DuckDB-QVD-Extension
+  ref: 9e371e8cd8c5ec655b6c52a4090e2c273a05218a
+docs:
+  hello_world: 'INSTALL qvd_next FROM community;
+
+    LOAD qvd_next;
+
+
+    -- Read (streaming, bounded memory)
+
+    SELECT * FROM read_qvd(''sales.qvd'');
+
+    SELECT * FROM read_qvd(''data/*.qvd'');         -- glob
+
+
+    -- Write: field names come from the query
+
+    COPY (SELECT * FROM sales) TO ''output.qvd'' (FORMAT qvd);
+
+
+    -- Import: values are cast to the target table''s column types
+
+    COPY sales FROM ''output.qvd'' (FORMAT qvd);
+
+    '
+  extended_description: "Next-generation build of the [`qvd`](https://github.com/duckdb/community-extensions/tree/main/extensions/qvd)\n\
+    extension, on DuckDB's C API v2 (via the `duckdb-neo` crate). Same SQL surface\n\
+    (`read_qvd`, `COPY ... (FORMAT qvd)`), plus:\n\n- `COPY ... TO` keeps the query's\
+    \ column names (`FIELD_NAMES` becomes an\n  optional override);\n- `COPY ... FROM`\
+    \ casts values to the target table's column types;\n- `read_qvd(path)` is documented\
+    \ in `duckdb_functions()`.\n\nReading is streaming and projected (bounded memory;\
+    \ only the projected\ncolumns' symbol tables are read and decoded), with native\
+    \ typing from the\nQlik tags, projection pushdown and multi-file glob. All I/O\
+    \ goes through\nDuckDB's file system, so `s3://`, `https://`, etc. work once httpfs\
+    \ is\nloaded (remote globs included). QVD headers are validated against the file\n\
+    before reading, so corrupt files fail cleanly.\n\nTrade-off: the C API v2 is not\
+    \ stable yet, so this build targets one exact\nDuckDB version and is experimental.\
+    \ `qvd` (stable C ABI) remains the\nconservative choice. Load only one of `qvd`\
+    \ / `qvd_next` per session: both\nregister `read_qvd` and `FORMAT qvd`.\n"
