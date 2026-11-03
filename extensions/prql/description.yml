@@ -1,44 +1,28 @@
 extension:
   name: prql
   description: Support for PRQL, the Pipelined Relational Query Language
-  version: 1.0.0
+  version: 1.1.0
   language: C++
   build: cmake
-  requires_toolchains: "rust"
+  requires_toolchains: rust
   license: MIT
-  excluded_platforms: "linux_amd64_musl"
+  excluded_platforms: linux_amd64_musl
   maintainers:
-    - ywelsch
-
+  - ywelsch
 repo:
   github: ywelsch/duckdb-prql
-  ref: 17368b6881efcd7a045dcbc26fc617edfaf2fd09
-
+  ref: 96562b93570a6ec9be8fac10b7cc0af91578b55c
+  variegata: 17368b6881efcd7a045dcbc26fc617edfaf2fd09
 docs:
-  hello_world: |
-    let invoices = s"select * from 'https://raw.githubusercontent.com/PRQL/prql/0.8.0/prql-compiler/tests/integration/data/chinook/invoices.csv'"
-    let customers = s"select * from 'https://raw.githubusercontent.com/PRQL/prql/0.8.0/prql-compiler/tests/integration/data/chinook/customers.csv'"
-    from invoices
-    filter invoice_date >= @1970-01-16
-    derive {
-      transaction_fees = 0.8,
-      income = total - transaction_fees
-    }
-    filter income > 1
-    group customer_id (
-      aggregate {
-        average total,
-        sum_income = sum income,
-        ct = count total,
-      }
-    )
-    sort {-sum_income}
-    take 10
-    join c=customers (==customer_id)
-    derive name = f"{c.last_name}, {c.first_name}"
-    select {
-      c.customer_id, name, sum_income
-    }
-    derive db_version = s"version()"
-  extended_description: |
-    The PRQL extension adds support for the [Pipelined Relational Query Language](https://prql-lang.org).
+  hello_world: "let invoices = s\"select * from 'https://raw.githubusercontent.com/PRQL/prql/0.8.0/prql-compiler/tests/integration/data/chinook/invoices.csv'\"\
+    \nlet customers = s\"select * from 'https://raw.githubusercontent.com/PRQL/prql/0.8.0/prql-compiler/tests/integration/data/chinook/customers.csv'\"\
+    \nfrom invoices\nfilter invoice_date >= @1970-01-16\nderive {\n  transaction_fees\
+    \ = 0.8,\n  income = total - transaction_fees\n}\nfilter income > 1\ngroup customer_id\
+    \ (\n  aggregate {\n    average total,\n    sum_income = sum income,\n    ct =\
+    \ count total,\n  }\n)\nsort {-sum_income}\ntake 10\njoin c=customers (==customer_id)\n\
+    derive name = f\"{c.last_name}, {c.first_name}\"\nselect {\n  c.customer_id, name,\
+    \ sum_income\n}\nderive db_version = s\"version()\"\n"
+  extended_description: 'The PRQL extension adds support for the [Pipelined Relational
+    Query Language](https://prql-lang.org).
+
+    '
