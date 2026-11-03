@@ -1,56 +1,77 @@
 extension:
   name: talib
-  description: "Technical Analysis Library (TA-Lib) functions for DuckDB -- 100+ indicators for financial market analysis"
+  description: Technical Analysis Library (TA-Lib) functions for DuckDB -- 100+ indicators
+    for financial market analysis.
   version: 0.1.1
   language: C++
   build: cmake
   license: MIT
   maintainers:
-    - neuesql
-    - wuqunfei
-  excluded_platforms: "wasm_mvp;wasm_eh;wasm_threads;windows_amd64_rtools;windows_amd64_mingw"
-
+  - neuesql
+  - wuqunfei
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_rtools;windows_amd64_mingw
 repo:
   github: neuesql/atm_talib
-  ref: 5caac83a9a6f89c49985482cd634ed1f6f17cffe
-
+  ref: 631348e25c178b08cdb97134400cfa05cb1630f6
 docs:
-  hello_world: |
-    -- Scalar form: operate on a pre-collected list
-    SELECT t_sma([1.0, 2.0, 3.0, 4.0, 5.0], 3);
-
-    -- Aggregate/window form: use OVER() for row-by-row SMA
-    SELECT date, close, ta_sma(close, 14) OVER (ORDER BY date ROWS BETWEEN 13 PRECEDING AND CURRENT ROW) AS sma_14 FROM ohlc;
-
-    -- Multi-output indicators return structs (MACD, Bollinger Bands)
-    SELECT t_macd(list(close ORDER BY date), 12, 26, 9) FROM ohlc;
-    SELECT t_bbands(list(close ORDER BY date), 20, 2.0, 2.0, 0) FROM ohlc;
-
-    -- Candlestick pattern recognition
-    SELECT t_cdldoji(list(open  ORDER BY date), list(high  ORDER BY date),
-                     list(low   ORDER BY date), list(close ORDER BY date))
-    FROM ohlc;
-  extended_description: |
-    100+ TA-Lib indicators as native DuckDB functions: overlap studies
-
-    | Category | Count | Examples |
-    |----------|-------|---------|
-    | 🔀 Overlap Studies | 8+ | `t_sma`, `t_ema`, `t_wma`, `t_dema`, `t_tema` |
-    | 🏃 Momentum | 15+ | `t_rsi`, `t_macd`, `t_willr`, `t_cci`, `t_adx` |
-    | 🔊 Volume | 1+ | `t_ad` |
-    | 🌊 Volatility | 2+ | `t_atr`, `t_natr` |
-    | 🕯️ Pattern Recognition | 49+ | `t_cdldoji`, `t_cdlhammer`, `t_cdlengulfing` |
-    | 💰 Price Transform | 2+ | `t_avgprice`, `t_bop` |
-    | 🔄 Cycle Indicators | 4+ | `t_ht_dcperiod`, `t_ht_trendline`, `t_ht_trendmode` |
-    | 📏 Statistics | 10+ | `t_linearreg`, `t_tsf`, `t_max`, `t_min` |
-    | ➗ Math Transform | 15 | `t_sin`, `t_cos`, `t_ln`, `t_sqrt` |
-
-    Every function is registered in two forms:
-    - Scalar (`t_*`): pass pre-collected lists, returns a list
-    - Aggregate/window (`ta_*`): use with `OVER()` for row-by-row results
-
-    | | 🏎️ Scalar `t_*` | 🧑‍💻 Aggregate `ta_*` |
-    |---|---|---|
-    | **Performance** | ⚡ Fast — one pass over the full series, O(N) | 🐢 Slower — recomputes per window frame, ~O(N × window) |
-    | **Ergonomics** | Requires `list(col ORDER BY date)` + `unnest` to rejoin rows | Natural SQL — plugs into `OVER (PARTITION BY … ORDER BY …)` |
-    | **Best for** | Backtests, full-history feature generation, large datasets | Dashboards, ad-hoc queries, mixing indicators with row-level columns |
+  hello_world: "--  It uses NVDA's real daily OHLCV for 2026-01-01 \u2192 2026-01-31\
+    \ (20 trading days):\nCREATE TABLE ohlc AS\n  SELECT * FROM (VALUES\n    ('NVDA',\
+    \ DATE '2026-01-02', 189.84, 192.93, 188.26, 188.85, 148240500),\n    ('NVDA',\
+    \ DATE '2026-01-05', 191.76, 193.63, 186.15, 188.12, 183529733),\n    ('NVDA',\
+    \ DATE '2026-01-06', 190.52, 192.17, 186.82, 187.24, 176862604),\n    ('NVDA',\
+    \ DATE '2026-01-07', 188.57, 191.37, 186.56, 189.11, 153543200),\n    ('NVDA',\
+    \ DATE '2026-01-08', 189.11, 189.55, 183.71, 185.04, 172457048),\n    ('NVDA',\
+    \ DATE '2026-01-09', 185.08, 186.34, 183.67, 184.86, 131327534),\n    ('NVDA',\
+    \ DATE '2026-01-12', 183.22, 187.12, 183.02, 184.94, 137968500),\n    ('NVDA',\
+    \ DATE '2026-01-13', 185.00, 188.11, 183.40, 185.81, 160128939),\n    ('NVDA',\
+    \ DATE '2026-01-14', 184.32, 184.46, 180.80, 183.14, 159586135),\n    ('NVDA',\
+    \ DATE '2026-01-15', 186.50, 189.70, 186.33, 187.05, 206188642),\n    ('NVDA',\
+    \ DATE '2026-01-16', 189.08, 190.44, 186.08, 186.23, 187967200),\n    ('NVDA',\
+    \ DATE '2026-01-20', 181.90, 182.38, 177.61, 178.07, 223345300),\n    ('NVDA',\
+    \ DATE '2026-01-21', 179.05, 185.38, 178.40, 183.32, 200381000),\n    ('NVDA',\
+    \ DATE '2026-01-22', 184.75, 186.17, 183.93, 184.84, 139636626),\n    ('NVDA',\
+    \ DATE '2026-01-23', 187.50, 189.60, 186.82, 187.67, 142748100),\n    ('NVDA',\
+    \ DATE '2026-01-26', 187.16, 189.12, 185.99, 186.47, 124799649),\n    ('NVDA',\
+    \ DATE '2026-01-27', 187.24, 190.00, 185.70, 188.52, 143711600),\n    ('NVDA',\
+    \ DATE '2026-01-28', 191.27, 192.35, 189.84, 191.52, 148552700),\n    ('NVDA',\
+    \ DATE '2026-01-29', 191.34, 193.48, 186.06, 192.51, 171764400),\n    ('NVDA',\
+    \ DATE '2026-01-30', 191.21, 194.49, 189.47, 191.13, 179489500)\n  ) AS t(ticker,\
+    \ date, open, high, low, close, volume);\n\n-- Three ways to compute SMA(14) on\
+    \ ohlc:\n-- 1\uFE0F\u20E3 List form (shortest & fastest): whole-series, returns\
+    \ a LIST<DOUBLE>\nSELECT t_sma(list(close ORDER BY date), 14)\nFROM ohlc WHERE\
+    \ ticker = 'NVDA';\n\n-- 2\uFE0F\u20E3 Window, bounded frame (fast, one row per\
+    \ input): recommended for dashboards\nSELECT date, close,\n  ta_sma(close, 14)\
+    \ OVER (ORDER BY date ROWS BETWEEN 13 PRECEDING AND CURRENT ROW) AS sma_14\nFROM\
+    \ ohlc WHERE ticker = 'NVDA'\nORDER BY date;\n\n-- 3\uFE0F\u20E3 Window, default\
+    \ frame (shortest SQL, but O(N\xB2) \u2014 avoid on large tables)\nSELECT date,\
+    \ close, ta_sma(close, 14) OVER (ORDER BY date) AS sma_14\nFROM ohlc WHERE ticker\
+    \ = 'NVDA'\nORDER BY date;\n\n-- More examples:\n-- \U0001F4D0 MACD with STRUCT\
+    \ output (needs ~35 bars to warm up \u2014 with only 20 days\n-- of history here\
+    \ every row is still NULL; add more history to see real values)\nSELECT t_macd(list(close\
+    \ ORDER BY date), 12, 26, 9) FROM ohlc WHERE ticker = 'NVDA';\n\n-- \U0001F56F\
+    \uFE0F Candlestick pattern detection \u2014 returns 0/1 per bar (no doji in this\
+    \ window)\nSELECT t_cdldoji(list(open ORDER BY date), list(high ORDER BY date),\n\
+    \                 list(low ORDER BY date), list(close ORDER BY date))\nFROM ohlc\
+    \ WHERE ticker = 'NVDA';\n"
+  extended_description: "100+ TA-Lib indicators as native DuckDB functions: overlap\
+    \ studies\n\n| Category | Count | Examples |\n|----------|-------|---------|\n\
+    | \U0001F500 Overlap Studies | 8+ | `t_sma`, `t_ema`, `t_wma`, `t_dema`, `t_tema`\
+    \ |\n| \U0001F3C3 Momentum | 15+ | `t_rsi`, `t_macd`, `t_willr`, `t_cci`, `t_adx`\
+    \ |\n| \U0001F50A Volume | 1+ | `t_ad` |\n| \U0001F30A Volatility | 2+ | `t_atr`,\
+    \ `t_natr` |\n| \U0001F56F\uFE0F Pattern Recognition | 49+ | `t_cdldoji`, `t_cdlhammer`,\
+    \ `t_cdlengulfing` |\n| \U0001F4B0 Price Transform | 2+ | `t_avgprice`, `t_bop`\
+    \ |\n| \U0001F504 Cycle Indicators | 4+ | `t_ht_dcperiod`, `t_ht_trendline`, `t_ht_trendmode`\
+    \ |\n| \U0001F4CF Statistics | 10+ | `t_linearreg`, `t_tsf`, `t_max`, `t_min`\
+    \ |\n| \u2797 Math Transform | 15 | `t_sin`, `t_cos`, `t_ln`, `t_sqrt` |\n\nEvery\
+    \ function is registered in two forms:\n- Scalar (`t_*`): pass pre-collected lists,\
+    \ returns a list\n- Aggregate/window (`ta_*`): use with `OVER()` for row-by-row\
+    \ results\n\n| | \U0001F3CE\uFE0F Scalar `t_*` | \U0001F9D1\u200D\U0001F4BB Aggregate\
+    \ `ta_*` |\n|---|---|---|\n| **Performance** | \u26A1 Fast \u2014 one pass over\
+    \ the full series, O(N) | \U0001F422 Slower \u2014 recomputes per window frame,\
+    \ ~O(N \xD7 window) |\n| **Ergonomics** | Requires `list(col ORDER BY date)` +\
+    \ `unnest` to rejoin rows | Natural SQL \u2014 plugs into `OVER (PARTITION BY\
+    \ \u2026 ORDER BY \u2026)` |\n| **Best for** | Backtests, full-history feature\
+    \ generation, large datasets | Dashboards, ad-hoc queries, mixing indicators with\
+    \ row-level columns |\n\n**Learn more**\n\n- [README](https://github.com/neuesql/atm_talib/blob/main/README.md)\n\
+    - [Function Reference](https://github.com/neuesql/atm_talib/blob/main/index.md)\n\
+    - [SQL Cookbook](https://github.com/neuesql/atm_talib/blob/main/cookbook.md)\n"
