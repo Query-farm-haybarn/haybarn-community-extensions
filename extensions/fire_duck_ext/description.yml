@@ -1,84 +1,118 @@
 extension:
   name: fire_duck_ext
   description: Query Google Cloud Firestore directly from DuckDB using SQL
-  version: 0.4.0
+  version: 0.4.2
   language: C++
   build: cmake
   license: MIT
-  excluded_platforms: "windows_amd64_mingw"
+  excluded_platforms: windows_amd64_mingw
+  opt_in_platforms: windows_arm64
   maintainers:
-    - BorisBesky
-
+  - BorisBesky
 repo:
   github: BorisBesky/fire_duck_ext
-  ref: 89f1537c55ec894c7f2c79ca726d2f028f68fdca
-
+  ref: c59ff962087da37c4630221f996fb6fd96f0e86a
 docs:
-  hello_world: |
-    LOAD fire_duck_ext;
+  hello_world: "LOAD fire_duck_ext;\n\n-- Authenticate with a service account key\
+    \ file (see the README for API-key\n-- and Firebase-user auth, including browser-safe\
+    \ authentication)\nCREATE SECRET my_firestore (\n    TYPE firestore,\n    PROJECT_ID\
+    \ 'my-gcp-project',\n    SERVICE_ACCOUNT_JSON '/path/to/service-account.json'\n\
+    );\n\n-- Read documents\nSELECT * FROM firestore_scan('users');\n\n-- Filter with\
+    \ SQL\nSELECT __document_id, name, email\nFROM firestore_scan('users')\nWHERE\
+    \ status = 'active';\n\n-- Update a document\nCALL firestore_update('users', 'user123',\
+    \ 'status', 'verified');\n\n-- Insert documents from a subquery\nCALL firestore_insert('users',\
+    \ (SELECT name, age FROM read_csv('new_users.csv')));\n"
+  extended_description: 'fire_duck_ext lets you work with Google Cloud Firestore directly
+    from DuckDB
 
-    -- Authenticate with a service account key file (see the README for API-key
-    -- and Firebase-user auth, including browser-safe authentication)
-    CREATE SECRET my_firestore (
-        TYPE firestore,
-        PROJECT_ID 'my-gcp-project',
-        SERVICE_ACCOUNT_JSON '/path/to/service-account.json'
-    );
-
-    -- Read documents
-    SELECT * FROM firestore_scan('users');
-
-    -- Filter with SQL
-    SELECT __document_id, name, email
-    FROM firestore_scan('users')
-    WHERE status = 'active';
-
-    -- Update a document
-    CALL firestore_update('users', 'user123', 'status', 'verified');
-
-    -- Insert documents from a subquery
-    CALL firestore_insert('users', (SELECT name, age FROM read_csv('new_users.csv')));
-
-  extended_description: |
-    fire_duck_ext lets you work with Google Cloud Firestore directly from DuckDB
     using SQL. Read with firestore_scan(), which also covers collection-group
-    queries (firestore_scan('~collection')) and subcollection-ID discovery
-    (firestore_scan('collection/doc_id')). Write with firestore_insert(),
+
+    queries (firestore_scan(''~collection'')) and subcollection-ID discovery
+
+    (firestore_scan(''collection/doc_id'')). Write with firestore_insert(),
+
     firestore_update(), firestore_delete(), their batch counterparts
+
     (firestore_update_batch(), firestore_delete_batch()), and the array-transform
+
     functions firestore_array_union(), firestore_array_remove(), and
+
     firestore_array_append(). Every function documents itself in
+
     duckdb_functions() with a description, parameter names, and an example.
 
+
     WHERE filters, SQL ORDER BY / LIMIT, the column projection, and a bare
+
     COUNT(*) are pushed down to Firestore where possible. A query then
+
     transfers only what it uses: matching rows, selected fields, and for a
+
     count, no documents at all. Firestore orders differently from SQL, so an
+
     ORDER BY is only sent when the sampled documents say the two agree;
+
     otherwise DuckDB sorts and the reason is logged.
 
-    Scans stream a page at a time, so a collection of any size can be read
-    without holding it in memory, and the page size adapts when documents turn
-    out to be unusually large. Settings cover paging, schema sampling, ORDER BY
-    pushdown, and optional parallel scanning.
 
-    Firestore's schemaless documents are mapped to typed DuckDB columns
+    Scans stream a page at a time, so a collection of any size can be read
+
+    without holding it in memory, and the page size adapts when documents turn
+
+    out to be unusually large. Settings cover paging, schema sampling, ORDER BY
+
+    pushdown, optional parallel scanning, and retries.
+
+
+    Transient failures -- 429 and 503 responses, aborted writes, dropped
+
+    connections -- are retried with jittered exponential backoff (5 retries by
+
+    default, honouring Retry-After). A failure that may have applied a request
+
+    is only retried when repeating it is harmless, so creating a document is
+
+    never sent twice after one.
+
+
+    Firestore''s schemaless documents are mapped to typed DuckDB columns
+
     automatically, with configurable handling for nested maps and for fields
+
     that appear in only some documents.
 
+
     Secrets require PROJECT_ID and one of: a service-account key **file path**
+
     (SERVICE_ACCOUNT_JSON, admin access, bypasses Security Rules via IAM,
+
     native-only) -- never embed this key in application code or a browser
+
     context; an API_KEY (unauthenticated, request.auth is null); or Firebase
+
     Auth user credentials (EMAIL/PASSWORD, ANONYMOUS, or a pre-obtained
+
     ID_TOKEN) -- authenticated, respects Security Rules, and works in the
+
     WebAssembly/browser build. GOOGLE_APPLICATION_CREDENTIALS is also read on
+
     startup if set.
 
+
     The extension also builds and runs under DuckDB-WASM using API-key or
+
     Firebase-user auth (service-account auth needs OpenSSL and is native-only).
 
-    Builds for DuckDB 2.0 and DuckDB 1.5.
+    Prefer DuckDB 2.0 there: the DuckDB 1.5 WASM runtime misreports requests
+
+    Firestore refuses, so a rejected update or delete can look successful.
+
+
+    Builds for DuckDB 2.0 (including Windows ARM64) and DuckDB 1.5.
+
 
     See the project README for the parameter and settings reference, type
+
     mapping, pushdown semantics, and platform notes.
+
+    '
