@@ -1,7 +1,7 @@
 extension:
   name: celestial
   description: Astronomical coordinates utilities
-  version: 0.2.2
+  version: 0.2.3
   language: C++
   build: cmake
   license: Apache-2.0
@@ -9,7 +9,7 @@ extension:
   - teobouvard
 repo:
   github: lisa-sgs/duckdb-celestial
-  ref: 0f2e5ecdad056d2752ea34b20e5db34efe047130
+  ref: d8364c707b2f6147f9d3668e8bf69eeabd3cc30e
 docs:
   hello_world: 'SELECT angular_separation_deg(204.2538292, -29.8657611, 201.3650633,
     -43.0191125);
