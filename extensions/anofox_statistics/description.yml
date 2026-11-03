@@ -1,12 +1,19 @@
 extension:
   name: anofox_statistics
-  description: A DuckDB extension for statistical regression and inference in SQL - OLS, Ridge, Elastic Net, LARS/LassoLars, WLS, recursive least squares, robust estimators (Huber, RANSAC, Theil-Sen), GLMs (Poisson, Negative Binomial, Binomial, Tweedie, Gamma, Logistic) with offset support, mixed-effects/hierarchical GLMs with random slopes and crossed/nested factors, AFT survival regression, explicit priors with Laplace intervals, empirical-Bayes shrinkage, and time-series regression, all with full diagnostics and inference.
+  description: A DuckDB extension for statistical regression and inference in SQL
+    - OLS, Ridge, Elastic Net, LARS/LassoLars, WLS, recursive least squares, robust
+    estimators (Huber, RANSAC, Theil-Sen), GLMs (Poisson, Negative Binomial, Binomial,
+    Tweedie, Gamma, Logistic) with offset support, mixed-effects/hierarchical GLMs
+    with random slopes and crossed/nested factors, AFT survival regression, explicit
+    priors with Laplace intervals, empirical-Bayes shrinkage, and time-series regression,
+    all with full diagnostics and inference.
   language: C++
   build: cmake
   license: BSL 1.1
   maintainers:
-    - sipemu
+  - sipemu
   requires_toolchains: rust
 repo:
   github: DataZooDE/anofox-statistics
-  ref: 8ff90c49810b6edc3a46bb7daa36e63ec80bf6cb
+  ref: 828f5762daf16308e6477676e9081b1cc6f120a3
+  variegata: 828f5762daf16308e6477676e9081b1cc6f120a3
