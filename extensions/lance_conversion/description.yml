@@ -2,7 +2,7 @@ extension:
   name: lance_conversion
   description: Stream any DuckDB query into Lance datasets with Blob v2 storage and
     scalar, vector, text, and Bloom filter indexes
-  version: 0.2.0
+  version: 0.2.1
   language: C++ & Rust
   build: cmake
   license: MIT
@@ -12,7 +12,7 @@ extension:
   - dentiny
 repo:
   github: dentiny/duckdb_lance_conversion
-  ref: eaa66ae5906d6747f489aa7e4b69299ad3d5e0da
+  ref: 46a105d76e886df3bac24d47322345664225b733
 docs:
   hello_world: "INSTALL lance_conversion FROM community;\nLOAD lance_conversion;\n\
     \nCOPY (\n  SELECT *\n  FROM read_parquet('events/**/*.parquet')\n) TO 'events.lance'\
@@ -46,7 +46,12 @@ docs:
     \ and `SAMPLE_ROWS` write a random sample of the source\nrows instead of every\
     \ row:\n\n```sql\nCOPY events TO 'events_10pct.lance' (FORMAT LANCE, SAMPLE_PERCENT\
     \ 10);\nCOPY events TO 'events_sample.lance' (FORMAT LANCE, SAMPLE_ROWS 1000);\n\
-    ```\n\nBlob v2 layout, data file sizing, and indexes are configurable directly\n\
+    ```\n\n`GENERATED_COLUMNS` adds columns computed by DuckDB SQL expressions from\n\
+    each source row. Lance stores each expression in the column's metadata,\nand `APPEND`\
+    \ must use the same definitions:\n\n```sql\nCOPY (\n  SELECT * FROM read_warc('archive.warc.gz')\
+    \ WHERE type = 'response'\n) TO 'responses.lance' (FORMAT LANCE, GENERATED_COLUMNS\
+    \ {\n  'doc_id': $$ sha256(id || ':' || target_uri) $$,\n  'body_size': 'octet_length(body)'\n\
+    });\n```\n\nBlob v2 layout, data file sizing, and indexes are configurable directly\n\
     from the `COPY` statement:\n\n```sql\nCOPY (\n  SELECT id, event_id, category,\
     \ description, embedding, asset_uri\n  FROM read_parquet('catalog/**/*.parquet')\n\
     ) TO 'catalog.lance' (\n  FORMAT LANCE,\n  TARGET_FILE_SIZE 536870912,\n  BLOB_INLINE_SIZE_THRESHOLD\
