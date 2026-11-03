@@ -1,14 +1,14 @@
 extension:
   name: grainlift
   description: Query any database exposed by a Grainlift gateway from Haybarn DuckDB-WASM, over HTTP(S) or Iroh, through a statically linked ADBC driver.
-  version: 0.6.0
+  version: 0.6.1
   language: C++
   build: cmake
   license: MIT
   maintainers:
     - rustyconover
-  # WASM only: on Linux, macOS and Windows use adbc_scanner with the
-  # adbc-driver-grainlift driver instead. iroh:// needs wasm_threads (COI).
+  # This registry builds WASM; native DuckDB binaries ship through Query.Farm.
+  # iroh:// needs wasm_threads (COI).
   excluded_platforms: linux_amd64;linux_amd64_musl;linux_arm64;linux_arm64_musl;osx_amd64;osx_arm64;windows_amd64;windows_amd64_mingw;windows_arm64;wasm_mvp
   # The statically linked Rust driver needs the pinned nightly + rust-src
   # (-Z build-std) for wasm_threads.
@@ -16,8 +16,8 @@ extension:
 
 repo:
   github: query-farm/duckdb-grainlift
-  # Haybarn-only. ref = 2.0 (branch haybarn-2.0), variegata = 1.5 (main).
-  ref: 9fd4fe00f880babbc335f95e19d38b6c0669adf8
+  # ref = 2.0 (branch v2.0), variegata = 1.5 (main).
+  ref: f76daa6b5e78ef7af80daf9c9ec04b0d2c0dce03
   variegata: 0f55d16bd367e2c1482a4da3c1e96d9d3d32c332
 
 docs:
@@ -56,6 +56,8 @@ docs:
       Since 0.5.0 unscoped secrets are used only when named, and credential
       options are redacted in `duckdb_databases()`.
 
-    This extension is built for Haybarn WASM only. On Linux, macOS and Windows,
+    This registry publishes Haybarn 2.0 WASM builds. Native DuckDB 2.0 builds
+    for Linux and macOS are available with `INSTALL grainlift FROM query_farm`.
+    For other native ADBC drivers,
     use [`adbc_scanner`](https://duckdb.org/community_extensions/extensions/adbc_scanner)
     with the `adbc-driver-grainlift` driver.
