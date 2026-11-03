@@ -2,9 +2,9 @@ extension:
   name: anofox_decide
   description: "Natural-language decisions on your data inside DuckDB \u2014 yes/no\
     \ probabilities, one-of-N choices and ordinal scores with the answer sets written\
-    \ in the query, from hosted (TypeSafe Jev, Liquid AI D1), local-server and in-process\
-    \ ONNX decision models, plus calibration metrics"
-  version: 2026.10.26
+    \ in the query, from hosted (TypeSafe Jev, Liquid AI D1, OpenAI Decisions), local-server\
+    \ and in-process ONNX decision models, plus calibration metrics"
+  version: 2026.10.31
   language: C++
   build: cmake
   license: MIT
@@ -14,8 +14,8 @@ extension:
   excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_mingw;linux_amd64_musl;osx_amd64
 repo:
   github: DataZooDE/anofox-decide
-  ref: c0daf3163ce4cdbe3ef6af6c585ecbe33de0612b
-  variegata: c0daf3163ce4cdbe3ef6af6c585ecbe33de0612b
+  ref: edf0fb28710f147cf2faa8bc93ea83d597ab7e32
+  variegata: edf0fb28710f147cf2faa8bc93ea83d597ab7e32
 docs:
   hello_world: "-- Try the SQL with the built-in test model: no key, no network. It\
     \ returns\n-- constants (0.5, the first option), so it can never pass for a real\
@@ -23,8 +23,8 @@ docs:
     \ is requested.', model := 'stub') AS p;\n\n-- Real answers: register a hosted\
     \ model, opt in to remote calls, and ask.\n-- (export LIQUID_API_KEY=... before\
     \ starting DuckDB; a DuckDB secret overrides it)\nSET anofox_decide_allow_remote\
-    \ = true;                 -- your text goes to the provider\nSELECT decide_register_model('d1:free',\
-    \ 'liquid');\nSET anofox_decide_model = 'd1:free';\n\nSELECT id,\n       decide_probability(text,\
+    \ = true;                 -- your text goes to the provider\nSELECT decide_register_model('d1',\
+    \ 'liquid');\nSET anofox_decide_model = 'd1';\n\nSELECT id,\n       decide_probability(text,\
     \ 'A refund is requested.')                                    AS p_refund,\n\
     \       decide_choice(text, 'Which team owns this?', ['billing', 'defect', 'other'])\
     \          AS team,\n       decide_score(text, 'How frustrated is the writer?',\
@@ -53,9 +53,10 @@ docs:
     \n### Pick the model that fits\nOne interface, several models, comparable in a\
     \ single query:\n\n- **Hosted:** TypeSafe **Jev** (`typesafe`), Liquid AI **D1**\
     \ (`liquid`) and Cloudflare **Clef** /\n  **Clef-flash** (`cloudflare`, on Workers\
-    \ AI). Calls send the text you\n  score to the provider, so they sit behind an\
-    \ explicit opt-in (`anofox_decide_allow_remote`),\n  off by default.\n- **Local\
-    \ servers:** [strands-decider](https://github.com/strands-labs/strands-decider)\n\
+    \ AI) and OpenAI **gpt-6-luna** (`openai`, the Decisions API;\n  a refusal comes\
+    \ back as NULL). Calls send the text you\n  score to the provider, so they sit\
+    \ behind an explicit opt-in (`anofox_decide_allow_remote`),\n  off by default.\n\
+    - **Local servers:** [strands-decider](https://github.com/strands-labs/strands-decider)\n\
     \  (`strands`, keyless, on loopback), Kev, or any System One compatible endpoint\
     \ (`systemone`).\n- **In-process and offline:** **Laya** (multilingual or typed-decisions)\
     \ and **Julia-1** on ONNX Runtime\n  (`local`). `CALL decide_download('laya-multilingual')`\
