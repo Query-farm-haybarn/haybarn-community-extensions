@@ -1,267 +1,156 @@
 extension:
   name: whisper
   description: Speech-to-text transcription using whisper.cpp, OpenAI's Whisper model
-  version: 0.7.0
+  version: 0.7.1
   language: C++
   build: cmake
   license: MIT
-  excluded_platforms: "linux_amd64_gcc4;linux_amd64_musl;linux_arm64;osx_amd64;windows_amd64;windows_amd64_mingw;windows_amd64_rtools;wasm_mvp;wasm_eh;wasm_threads"
-  requires_toolchains: "multimedia"
+  excluded_platforms: linux_amd64_gcc4;linux_amd64_musl;linux_arm64;osx_amd64;windows_amd64;windows_amd64_mingw;windows_amd64_rtools;wasm_mvp;wasm_eh;wasm_threads
+  requires_toolchains: multimedia
   maintainers:
-    - tobilg
-
+  - tobilg
 repo:
   github: tobilg/duckdb-whisper
-  ref: dca64c5e5f86b67864c832756d2fdcdade2d0691
+  ref: ea3e28cec89677e0940806297af7bf37a43228d0
   variegata: d6ca92023f952818f7568d599fc1a63696c32343
-
 docs:
-  hello_world: |
-    -- Transcribe an audio file
-    D SELECT whisper_transcribe('audio.wav', 'tiny.en');
-    ┌──────────────────────────────────────────────────┐
-    │           whisper_transcribe(...)                │
-    │                   varchar                        │
-    ├──────────────────────────────────────────────────┤
-    │ Hello, this is a test of the whisper extension.  │
-    └──────────────────────────────────────────────────┘
-
-    -- Get detailed transcription segments with timestamps
-    D SELECT * FROM whisper_transcribe_segments('audio.wav', 'tiny.en');
-    ┌────────────┬────────────┬──────────┬────────────────────┬────────────┬──────────┐
-    │ segment_id │ start_time │ end_time │        text        │ confidence │ language │
-    │   int32    │   double   │  double  │      varchar       │   double   │ varchar  │
-    ├────────────┼────────────┼──────────┼────────────────────┼────────────┼──────────┤
-    │          0 │       0.00 │     2.50 │ Hello, this is a   │       0.95 │ en       │
-    │          1 │       2.50 │     4.00 │ test of whisper.   │       0.92 │ en       │
-    └────────────┴────────────┴──────────┴────────────────────┴────────────┴──────────┘
-
-    -- List available models
-    D SELECT model_name, size_mb, is_downloaded FROM whisper_list_models() LIMIT 3;
-    ┌────────────┬─────────┬───────────────┐
-    │ model_name │ size_mb │ is_downloaded │
-    │  varchar   │  int64  │    boolean    │
-    ├────────────┼─────────┼───────────────┤
-    │ tiny       │      75 │ false         │
-    │ tiny.en    │      75 │ true          │
-    │ base       │     142 │ false         │
-    └────────────┴─────────┴───────────────┘
-
-  extended_description: |
-    A DuckDB extension for speech-to-text transcription using [whisper.cpp](https://github.com/ggml-org/whisper.cpp), the C/C++ port of OpenAI's Whisper model.
-
-    Transcribe audio files directly from SQL queries in DuckDB, making it easy to process and analyze audio data alongside your other data.
-
-    ## Features
-
-    - Transcribe audio files (WAV, MP3, FLAC, OGG, and more)
-    - Live recording and transcription from microphone
-    - Voice-to-SQL: speak natural language questions, get query results
-    - Support for all Whisper models (tiny, base, small, medium, large)
-    - Detailed transcription segments with timestamps and confidence scores
-    - Automatic language detection or specify target language
-    - Works with file paths, BLOB data, or remote URLs
-
-    ## Quick Start
-
-    ### Download a Model
-
-    Models must be downloaded before use. They are stored in `~/.duckdb/whisper/models/`.
-
-    ```bash
-    mkdir -p ~/.duckdb/whisper/models
-    curl -L -o ~/.duckdb/whisper/models/ggml-tiny.en.bin \
-      https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.en.bin
-    ```
-
-    Check available models and download status:
-
-    ```sql
-    SELECT * FROM whisper_list_models();
-    ```
-
-    ### Transcribe an Audio File
-
-    ```sql
-    -- Simple transcription
-    SELECT whisper_transcribe('audio.wav', 'tiny.en');
-
-    -- Get detailed segments with timestamps
-    SELECT * FROM whisper_transcribe_segments('audio.wav', 'tiny.en');
-
-    -- Translate foreign audio to English
-    SELECT whisper_translate('german_speech.mp3', 'small');
-    ```
-
-    ## Example Use Cases
-
-    ### Transcribe Remote Audio
-
-    ```sql
-    INSTALL httpfs;
-    LOAD httpfs;
-
-    SELECT whisper_transcribe(content, 'tiny.en')
-    FROM read_blob('https://example.com/audio.mp3');
-    ```
-
-    ### Batch Transcribe Multiple Files
-
-    ```sql
-    SELECT file, whisper_transcribe(file, 'tiny.en') as transcript
-    FROM glob('audio/*.wav');
-    ```
-
-    ### Search Within Transcriptions
-
-    ```sql
-    SELECT * FROM whisper_transcribe_segments('meeting.wav', 'base.en')
-    WHERE text ILIKE '%action item%';
-    ```
-
-    ### Generate Subtitles (SRT Format)
-
-    ```sql
-    SELECT
-        segment_id + 1 as id,
-        printf('%02d:%02d:%02d,%03d',
-            (start_time/3600)::int, ((start_time%3600)/60)::int,
-            (start_time%60)::int, ((start_time - start_time::int) * 1000)::int
-        ) || ' --> ' ||
-        printf('%02d:%02d:%02d,%03d',
-            (end_time/3600)::int, ((end_time%3600)/60)::int,
-            (end_time%60)::int, ((end_time - end_time::int) * 1000)::int
-        ) as timestamp,
-        trim(text) as text
-    FROM whisper_transcribe_segments('video.mp4', 'small.en');
-    ```
-
-    ## Recording (requires microphone)
-
-    ### Setup Audio Device
-
-    Before using microphone recording or voice query features:
-
-    ```sql
-    -- List all available audio input devices
-    SELECT * FROM whisper_list_devices();
-
-    -- Set the device ID (use a device_id from the list above)
-    SET whisper_device_id = 0;
-
-    -- Verify your microphone is working
-    SELECT whisper_mic_level(3);
-    ```
-
-    ### Record and Transcribe
-
-    ```sql
-    -- Record for 5 seconds
-    SELECT whisper_record(5, 'tiny.en');
-
-    -- Record until silence (max 30 seconds)
-    SELECT whisper_record_auto(30);
-
-    -- Record and translate to English
-    SELECT whisper_record_translate(5, 'small');
-    ```
-
-    ## Voice-to-SQL (Experimental)
-
-    Speak natural language questions about your data and receive SQL query results.
-
-    Requires [text-to-sql-proxy](https://github.com/tobilg/text-to-sql-proxy) running locally.
-
-    ```sql
-    -- Create test data
-    CREATE TABLE customers (id INT, name VARCHAR, revenue DECIMAL);
-    INSERT INTO customers VALUES (1, 'Acme', 100000), (2, 'Beta', 50000);
-
-    -- Get SQL from voice (doesn't execute)
-    SELECT whisper_voice_to_sql();
-
-    -- Execute voice query directly
-    FROM whisper_voice_query();
-
-    -- Include generated SQL in results
-    FROM whisper_voice_query_with_sql();
-    ```
-
-    ## Available Models
-
-    | Model | Size | Description |
-    |-------|------|-------------|
-    | tiny/tiny.en | ~75MB | Fastest |
-    | base/base.en | ~142MB | Fast |
-    | small/small.en | ~466MB | Good balance |
-    | medium/medium.en | ~1.5GB | High quality |
-    | large-v1/v2/v3 | ~2.9GB | Best quality |
-    | large-v3-turbo | ~1.6GB | Fast + accurate |
-
-    Models with `.en` suffix are optimized for English.
-
-    ## Supported Audio Formats
-
-    The extension uses FFmpeg for audio decoding: WAV, MP3, FLAC, OGG/Vorbis, AAC/M4A, and many more. Audio is automatically converted to 16kHz mono as required by Whisper.
-
-    ## Function Reference
-
-    ### Transcription Functions
-
-    - `whisper_transcribe(audio, [model])` - Transcribes audio and returns the full text
-    - `whisper_translate(audio, [model])` - Translates audio from any language to English
-    - `whisper_transcribe_segments(audio, [model], [language], [translate])` - Returns table of segments with timestamps
-
-    ### Recording Functions
-
-    - `whisper_list_devices()` - Lists available audio input devices
-    - `whisper_record(duration_seconds, [model], [device_id])` - Records and transcribes
-    - `whisper_record_auto(max_seconds, [silence_seconds], [model], [threshold], [device_id])` - Records until silence
-    - `whisper_record_translate(duration_seconds, [model], [device_id])` - Records and translates to English
-    - `whisper_mic_level(duration_seconds, [device_id])` - Check microphone amplitude levels
-
-    ### Voice-to-SQL Functions
-
-    - `whisper_voice_to_sql([model], [device_id])` - Records voice and returns generated SQL
-    - `whisper_voice_query([model], [device_id])` - Records voice, generates SQL, executes it
-    - `whisper_voice_query_with_sql([model], [device_id])` - Same as above with SQL columns
-
-    ### Model Management Functions
-
-    - `whisper_list_models()` - Lists all available models and download status
-    - `whisper_download_model(model_name)` - Downloads a model into the model directory
-
-    ### Utility Functions
-
-    - `whisper_version()` - Returns extension and whisper.cpp version info
-    - `whisper_check_audio(file_path)` - Validates that an audio file can be read
-    - `whisper_audio_info(file_path)` - Returns audio file metadata
-    - `whisper_get_config()` - Returns current whisper configuration settings
-
-    ## Configuration
-
-    Configure settings using standard `SET` statements:
-
-    ```sql
-    -- Model settings
-    SET whisper_model = 'small.en';
-    SET whisper_model_path = '/custom/path/models';
-    SET whisper_language = 'en';
-    SET whisper_threads = 4;
-
-    -- Recording settings
-    SET whisper_device_id = 0;
-    SET whisper_max_duration = 30;
-    SET whisper_silence_duration = 2;
-    SET whisper_silence_threshold = 0.005;
-
-    -- Voice query settings
-    SET whisper_text_to_sql_url = 'http://localhost:8080/generate-sql';
-    SET whisper_text_to_sql_timeout = 60;
-    SET whisper_voice_query_show_sql = true;
-
-    -- View all whisper settings
-    SELECT * FROM duckdb_settings() WHERE name LIKE 'whisper_%';
-    ```
-
-    See the [GitHub repository](https://github.com/tobilg/duckdb-whisper) for full documentation.
+  hello_world: "-- Transcribe an audio file\nD SELECT whisper_transcribe('audio.wav',\
+    \ 'tiny.en');\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2510\n\u2502           whisper_transcribe(...)                \u2502\n\
+    \u2502                   varchar                        \u2502\n\u251C\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 Hello, this\
+    \ is a test of the whisper extension.  \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2518\n\n-- Get detailed transcription segments\
+    \ with timestamps\nD SELECT * FROM whisper_transcribe_segments('audio.wav', 'tiny.en');\n\
+    \u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2510\n\u2502 segment_id \u2502 start_time \u2502 end_time\
+    \ \u2502        text        \u2502 confidence \u2502 language \u2502\n\u2502 \
+    \  int32    \u2502   double   \u2502  double  \u2502      varchar       \u2502\
+    \   double   \u2502 varchar  \u2502\n\u251C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502   \
+    \       0 \u2502       0.00 \u2502     2.50 \u2502 Hello, this is a   \u2502 \
+    \      0.95 \u2502 en       \u2502\n\u2502          1 \u2502       2.50 \u2502\
+    \     4.00 \u2502 test of whisper.   \u2502       0.92 \u2502 en       \u2502\n\
+    \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2518\n\n-- List available models\nD SELECT model_name,\
+    \ size_mb, is_downloaded FROM whisper_list_models() LIMIT 3;\n\u250C\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502 model_name\
+    \ \u2502 size_mb \u2502 is_downloaded \u2502\n\u2502  varchar   \u2502  int64\
+    \  \u2502    boolean    \u2502\n\u251C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 tiny       \u2502      75 \u2502\
+    \ false         \u2502\n\u2502 tiny.en    \u2502      75 \u2502 true         \
+    \ \u2502\n\u2502 base       \u2502     142 \u2502 false         \u2502\n\u2514\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\
+    \n"
+  extended_description: "A DuckDB extension for speech-to-text transcription using\
+    \ [whisper.cpp](https://github.com/ggml-org/whisper.cpp), the C/C++ port of OpenAI's\
+    \ Whisper model.\n\nTranscribe audio files directly from SQL queries in DuckDB,\
+    \ making it easy to process and analyze audio data alongside your other data.\n\
+    \n## Features\n\n- Transcribe audio files (WAV, MP3, FLAC, OGG, and more)\n- Live\
+    \ recording and transcription from microphone\n- Voice-to-SQL: speak natural language\
+    \ questions, get query results\n- Support for all Whisper models (tiny, base,\
+    \ small, medium, large)\n- Detailed transcription segments with timestamps and\
+    \ confidence scores\n- Automatic language detection or specify target language\n\
+    - Works with file paths, BLOB data, or remote URLs\n\n## Quick Start\n\n### Download\
+    \ a Model\n\nModels must be downloaded before use. They are stored in `~/.duckdb/whisper/models/`.\n\
+    \n```bash\nmkdir -p ~/.duckdb/whisper/models\ncurl -L -o ~/.duckdb/whisper/models/ggml-tiny.en.bin\
+    \ \\\n  https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.en.bin\n\
+    ```\n\nCheck available models and download status:\n\n```sql\nSELECT * FROM whisper_list_models();\n\
+    ```\n\n### Transcribe an Audio File\n\n```sql\n-- Simple transcription\nSELECT\
+    \ whisper_transcribe('audio.wav', 'tiny.en');\n\n-- Get detailed segments with\
+    \ timestamps\nSELECT * FROM whisper_transcribe_segments('audio.wav', 'tiny.en');\n\
+    \n-- Translate foreign audio to English\nSELECT whisper_translate('german_speech.mp3',\
+    \ 'small');\n```\n\n## Example Use Cases\n\n### Transcribe Remote Audio\n\n```sql\n\
+    INSTALL httpfs;\nLOAD httpfs;\n\nSELECT whisper_transcribe(content, 'tiny.en')\n\
+    FROM read_blob('https://example.com/audio.mp3');\n```\n\n### Batch Transcribe\
+    \ Multiple Files\n\n```sql\nSELECT file, whisper_transcribe(file, 'tiny.en') as\
+    \ transcript\nFROM glob('audio/*.wav');\n```\n\n### Search Within Transcriptions\n\
+    \n```sql\nSELECT * FROM whisper_transcribe_segments('meeting.wav', 'base.en')\n\
+    WHERE text ILIKE '%action item%';\n```\n\n### Generate Subtitles (SRT Format)\n\
+    \n```sql\nSELECT\n    segment_id + 1 as id,\n    printf('%02d:%02d:%02d,%03d',\n\
+    \        (start_time/3600)::int, ((start_time%3600)/60)::int,\n        (start_time%60)::int,\
+    \ ((start_time - start_time::int) * 1000)::int\n    ) || ' --> ' ||\n    printf('%02d:%02d:%02d,%03d',\n\
+    \        (end_time/3600)::int, ((end_time%3600)/60)::int,\n        (end_time%60)::int,\
+    \ ((end_time - end_time::int) * 1000)::int\n    ) as timestamp,\n    trim(text)\
+    \ as text\nFROM whisper_transcribe_segments('video.mp4', 'small.en');\n```\n\n\
+    ## Recording (requires microphone)\n\n### Setup Audio Device\n\nBefore using microphone\
+    \ recording or voice query features:\n\n```sql\n-- List all available audio input\
+    \ devices\nSELECT * FROM whisper_list_devices();\n\n-- Set the device ID (use\
+    \ a device_id from the list above)\nSET whisper_device_id = 0;\n\n-- Verify your\
+    \ microphone is working\nSELECT whisper_mic_level(3);\n```\n\n### Record and Transcribe\n\
+    \n```sql\n-- Record for 5 seconds\nSELECT whisper_record(5, 'tiny.en');\n\n--\
+    \ Record until silence (max 30 seconds)\nSELECT whisper_record_auto(30);\n\n--\
+    \ Record and translate to English\nSELECT whisper_record_translate(5, 'small');\n\
+    ```\n\n## Voice-to-SQL (Experimental)\n\nSpeak natural language questions about\
+    \ your data and receive SQL query results.\n\nRequires [text-to-sql-proxy](https://github.com/tobilg/text-to-sql-proxy)\
+    \ running locally.\n\n```sql\n-- Create test data\nCREATE TABLE customers (id\
+    \ INT, name VARCHAR, revenue DECIMAL);\nINSERT INTO customers VALUES (1, 'Acme',\
+    \ 100000), (2, 'Beta', 50000);\n\n-- Get SQL from voice (doesn't execute)\nSELECT\
+    \ whisper_voice_to_sql();\n\n-- Execute voice query directly\nFROM whisper_voice_query();\n\
+    \n-- Include generated SQL in results\nFROM whisper_voice_query_with_sql();\n\
+    ```\n\n## Available Models\n\n| Model | Size | Description |\n|-------|------|-------------|\n\
+    | tiny/tiny.en | ~75MB | Fastest |\n| base/base.en | ~142MB | Fast |\n| small/small.en\
+    \ | ~466MB | Good balance |\n| medium/medium.en | ~1.5GB | High quality |\n| large-v1/v2/v3\
+    \ | ~2.9GB | Best quality |\n| large-v3-turbo | ~1.6GB | Fast + accurate |\n\n\
+    Models with `.en` suffix are optimized for English.\n\n## Supported Audio Formats\n\
+    \nThe extension uses FFmpeg for audio decoding: WAV, MP3, FLAC, OGG/Vorbis, AAC/M4A,\
+    \ and many more. Audio is automatically converted to 16kHz mono as required by\
+    \ Whisper.\n\n## Function Reference\n\n### Transcription Functions\n\n- `whisper_transcribe(audio,\
+    \ [model])` - Transcribes audio and returns the full text\n- `whisper_translate(audio,\
+    \ [model])` - Translates audio from any language to English\n- `whisper_transcribe_segments(audio,\
+    \ [model], [language], [translate])` - Returns table of segments with timestamps\n\
+    \n### Recording Functions\n\n- `whisper_list_devices()` - Lists available audio\
+    \ input devices\n- `whisper_record(duration_seconds, [model], [device_id])` -\
+    \ Records and transcribes\n- `whisper_record_auto(max_seconds, [silence_seconds],\
+    \ [model], [threshold], [device_id])` - Records until silence\n- `whisper_record_translate(duration_seconds,\
+    \ [model], [device_id])` - Records and translates to English\n- `whisper_mic_level(duration_seconds,\
+    \ [device_id])` - Check microphone amplitude levels\n\n### Voice-to-SQL Functions\n\
+    \n- `whisper_voice_to_sql([model], [device_id])` - Records voice and returns generated\
+    \ SQL\n- `whisper_voice_query([model], [device_id])` - Records voice, generates\
+    \ SQL, executes it\n- `whisper_voice_query_with_sql([model], [device_id])` - Same\
+    \ as above with SQL columns\n\n### Model Management Functions\n\n- `whisper_list_models()`\
+    \ - Lists all available models and download status\n- `whisper_download_model(model_name)`\
+    \ - Downloads a model into the model directory\n\n### Utility Functions\n\n- `whisper_version()`\
+    \ - Returns extension and whisper.cpp version info\n- `whisper_check_audio(file_path)`\
+    \ - Validates that an audio file can be read\n- `whisper_audio_info(file_path)`\
+    \ - Returns audio file metadata\n- `whisper_get_config()` - Returns current whisper\
+    \ configuration settings\n\n## Configuration\n\nConfigure settings using standard\
+    \ `SET` statements:\n\n```sql\n-- Model settings\nSET whisper_model = 'small.en';\n\
+    SET whisper_model_path = '/custom/path/models';\nSET whisper_language = 'en';\n\
+    SET whisper_threads = 4;\n\n-- Recording settings\nSET whisper_device_id = 0;\n\
+    SET whisper_max_duration = 30;\nSET whisper_silence_duration = 2;\nSET whisper_silence_threshold\
+    \ = 0.005;\n\n-- Voice query settings\nSET whisper_text_to_sql_url = 'http://localhost:8080/generate-sql';\n\
+    SET whisper_text_to_sql_timeout = 60;\nSET whisper_voice_query_show_sql = true;\n\
+    \n-- View all whisper settings\nSELECT * FROM duckdb_settings() WHERE name LIKE\
+    \ 'whisper_%';\n```\n\nSee the [GitHub repository](https://github.com/tobilg/duckdb-whisper)\
+    \ for full documentation.\n"
