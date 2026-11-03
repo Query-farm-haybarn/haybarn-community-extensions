@@ -1,23 +1,25 @@
 extension:
   name: st_read_multi
   description: Read multiple geospatial files
-  version: 0.0.4
+  version: 0.0.6
   language: Rust
   build: cargo
   license: MIT
-  excluded_platforms: "wasm_mvp;wasm_eh;wasm_threads;linux_amd64_musl;windows_amd64_mingw"
-  requires_toolchains: "rust;python3"
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;linux_amd64_musl;windows_amd64_mingw
+  requires_toolchains: rust;python3
   maintainers:
-    - yutannihilation
-
+  - yutannihilation
 repo:
   github: yutannihilation/duckdb-ext-st-read-multi
-  ref: 27060866a7f71433d70d7598033ccefab9fc510c
-
+  ref: b57e6f26d86e7a979e3de8c2970bee3a758b5d38
 docs:
-  hello_world: |
-    LOAD spatial;
+  hello_world: 'LOAD spatial;
 
-    FROM ST_Read_Multi('path/to/*.geojson');
-  extended_description: |
-    Read multiple geospatial files. Currently, only GeoJSON, GeoPackage, and Shapefile are supported.
+
+    FROM ST_Read_Multi(''path/to/*.geojson'');
+
+    '
+  extended_description: 'Read multiple geospatial files. Currently, only GeoJSON,
+    GeoPackage, and Shapefile are supported.
+
+    '
