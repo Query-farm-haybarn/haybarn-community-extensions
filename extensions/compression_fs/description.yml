@@ -1,28 +1,31 @@
 extension:
   name: compression_fs
   description: Adds LZ4, Snappy, Brotli, Bzip2, and XZ file compression support
-  version: 0.2.0
+  version: 0.2.1
   language: C++
   build: cmake
   license: MIT
-  excluded_platforms: "wasm_mvp;wasm_eh;wasm_threads"
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads
   maintainers:
-    - dentiny
-
+  - dentiny
 repo:
   github: dentiny/duckdb-compression-filesystem
-  ref: d609652f36a258a77eb8a6d50ffbd9b0a161fcef
-
+  ref: 32834aff1214d1b65947928dc83c7d339c9045d7
 docs:
-  hello_world: |
-    COPY (SELECT 42 AS value) TO 'example.csv.xz'
-      (FORMAT CSV, HEADER, COMPRESSION 'xz');
-    SELECT * FROM read_csv('example.csv.xz');
-  extended_description: |
-    This extension adds file-level compression formats that DuckDB does not
-    support natively. It integrates with DuckDB's virtual filesystem so
+  hello_world: "COPY (SELECT 42 AS value) TO 'example.csv.xz'\n  (FORMAT CSV, HEADER,\
+    \ COMPRESSION 'xz');\nSELECT * FROM read_csv('example.csv.xz');\n"
+  extended_description: 'This extension adds file-level compression formats that DuckDB
+    does not
+
+    support natively. It integrates with DuckDB''s virtual filesystem so
+
     compressed files can be used directly by readers and writers such as
+
     `read_csv` and `COPY`.
 
+
     Supported formats include LZ4 (`.lz4`), Snappy (`.sz` and `.snappy`),
+
     Brotli (`.br`), Bzip2 (`.bz2`), and XZ (`.xz`).
+
+    '
