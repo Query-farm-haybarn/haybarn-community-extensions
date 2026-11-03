@@ -2,7 +2,7 @@ extension:
   name: duck_block_utils
   description: Build, transform, validate, and extract content from structured documents
     using the duck_block type
-  version: 3.5.1
+  version: 4.0.0
   language: C++
   build: cmake
   license: MIT
@@ -10,9 +10,9 @@ extension:
   - teaguesterling
 repo:
   github: teaguesterling/duckdb_duck_block_utils
-  ref: 531b0596017773ec5d3eee1e71e25361a5d49525
-  variegata: 531b0596017773ec5d3eee1e71e25361a5d49525
-  ref_next: 531b0596017773ec5d3eee1e71e25361a5d49525
+  ref: 65f03cb7f776549a68ae9efba0b5a6d6adc259d3
+  variegata: 65f03cb7f776549a68ae9efba0b5a6d6adc259d3
+  ref_next: 65f03cb7f776549a68ae9efba0b5a6d6adc259d3
 docs:
   hello_world: "-- Build a document programmatically\nSELECT duck_blocks_assemble([\n\
     \    duck_block_heading(1, 'Hello World'),\n    duck_block_paragraph([\n     \
@@ -29,10 +29,20 @@ docs:
     \ transforming, validating, and\nextracting content from structured documents.\
     \ All functions use the `duck_block` type - a\nunified representation for document\
     \ elements that works across formats.\n\n**Documentation:** [duck-block-utils.readthedocs.io](https://duck-block-utils.readthedocs.io)\n\
-    \n## 2.0.0 is a breaking rename\n\nEvery `db_*` function was renamed to `duck_block_*`\
-    \ (builders) or `duck_blocks_*`\n(operations on a list). 54 names present in 1.6.1\
-    \ are gone and there is no alias\npath, so 1.6.1 queries must be updated. The\
-    \ mapping is mechanical:\n\n```sql\ndb_heading(1, 'Title')      ->  duck_block_heading(1,\
+    \n## 4.0.0 moves the Pandoc converter out\n\nNine names and eleven overloads left\
+    \ this extension for\n[duckdb_panduck](https://github.com/teaguesterling/duckdb_panduck),\
+    \ with no\nalias path: `pandoc_ast_to_blocks`, `read_pandoc_ast`, `write_pandoc_ast`,\n\
+    `duck_blocks_to_pandoc_ast`, `duck_blocks_to_pandoc_blocks`, `pandoc_ast`,\n`pandoc_inlines_to_db_inlines`,\
+    \ `pandoc_inlines_to_text` and\n`duck_blocks_inlines_to_pandoc`. This extension\
+    \ is utility macros over the\n`duck_block` type; the Pandoc AST is panduck's subject.\n\
+    \n**Upgrade both sides.** One extension must own each name, and `pandoc_ast`\n\
+    has an identical signature in both, so loading 3.5.1 together with panduck\n0.7.0\
+    \ makes the second `LOAD` fail. Every other combination is fine.\n\nNo spec change:\
+    \ `duck_block_spec_version()` is unchanged at spec 1.4.\n\n## 2.0.0 is a breaking\
+    \ rename\n\nEvery `db_*` function was renamed to `duck_block_*` (builders) or\
+    \ `duck_blocks_*`\n(operations on a list). 54 names present in 1.6.1 are gone\
+    \ and there is no alias\npath, so 1.6.1 queries must be updated. The mapping is\
+    \ mechanical:\n\n```sql\ndb_heading(1, 'Title')      ->  duck_block_heading(1,\
     \ 'Title')\ndb_assemble(blocks)         ->  duck_blocks_assemble(blocks)\ndb_blocks_to_text(blocks)\
     \   ->  duck_blocks_to_text(blocks)\ndb_page                     ->  page_break\n\
     ```\n\n## The duck_block Type\n\nA unified struct for block-level, inline and\
@@ -90,14 +100,12 @@ docs:
     \ quality, which is NOT conformance |\n| `duck_block_spec_version()` | The spec\
     \ version this build implements |\n\n## Rendering\n\n| Function | Description\
     \ |\n|----------|-------------|\n| `duck_blocks_render_ansi(blocks, width)` |\
-    \ Terminal rendering with themes |\n\n## Pandoc integration\n\nConvert between\
-    \ Pandoc's JSON AST and `duck_block` without invoking Pandoc:\n\n| Function |\
-    \ Description |\n|----------|-------------|\n| `pandoc_ast_to_blocks(json)` |\
-    \ Parse a Pandoc AST |\n| `duck_blocks_to_pandoc_ast(blocks)` | Emit a full Pandoc\
-    \ document |\n| `duck_blocks_to_pandoc_blocks(blocks)` | Emit just the block list\
-    \ |\n| `read_pandoc_ast(path)` / `write_pandoc_ast(path, blocks)` | Read and write\
-    \ AST files |\n\n## Ecosystem\n\n- **[duckdb_markdown](https://github.com/teaguesterling/duckdb_markdown)**\
-    \ - `read_markdown_blocks()`, and `COPY ... TO ... (FORMAT markdown, MARKDOWN_MODE\
+    \ Terminal rendering with themes |\n\n## Pandoc integration moved to panduck in\
+    \ 4.0.0\n\nThe Pandoc converter now lives in\n[duckdb_panduck](https://github.com/teaguesterling/duckdb_panduck),\
+    \ under the\nsame names. `LOAD panduck;` and the call sites are unchanged.\n\n\
+    ```sql\nLOAD panduck;\nSELECT pandoc_ast_to_blocks(ast_json);\n```\n\n## Ecosystem\n\
+    \n- **[duckdb_markdown](https://github.com/teaguesterling/duckdb_markdown)** -\
+    \ `read_markdown_blocks()`, and `COPY ... TO ... (FORMAT markdown, MARKDOWN_MODE\
     \ duck_block)`\n- **[duckdb_webbed](https://github.com/teaguesterling/duckdb_webbed)**\
     \ - HTML parsing and generation\n\n```sql\n-- Read markdown, append to it, write\
     \ it back\nLOAD markdown;\nLOAD duck_block_utils;\n\nCOPY (\n    SELECT unnest(duck_blocks_concat(\n\
