@@ -2,7 +2,7 @@ extension:
   name: finetype
   description: "Semantic type classification \u2014 detects 251 data types (emails,\
     \ URLs, dates, UUIDs, currencies, etc.) from raw strings"
-  version: 0.6.64
+  version: 0.6.66
   language: Rust
   build: cargo
   license: MIT
@@ -13,8 +13,8 @@ extension:
   - hughcameron
 repo:
   github: meridian-online/finetype
-  ref: 5c0dd5559607cc90747e0871913bc6318511cabd
-  ref_next: 5c0dd5559607cc90747e0871913bc6318511cabd
+  ref: 6b85e500659f44520ca7e6e70073e335cc3e3acb
+  ref_next: 6b85e500659f44520ca7e6e70073e335cc3e3acb
   variegata: a8ec8663862d28b1b9e0794f5026efbdb2ea3836
 docs:
   hello_world: "-- Profile every column of a table: one row per column, with the detected\n\
@@ -188,38 +188,46 @@ docs:
     SELECT ft_infer('true');                 -- representation.boolean.terms\n```\n\
     \n### `ft_cast(value VARCHAR) \u2192 VARCHAR`\nNormalize a value for safe `TRY_CAST()`\
     \ to its detected DuckDB type. Handles date format\nconversion (US/EU \u2192 ISO),\
-    \ boolean normalization, UUID lowercasing, numeric cleanup.\n\n```sql\nSELECT\
-    \ ft_cast('01/15/2024');  -- 2024-01-15 (US date \u2192 ISO)\n```\n\n### `ft_validate_text(value\
-    \ VARCHAR, schema_json VARCHAR) \u2192 STRUCT(valid BOOLEAN, \"constraint\" VARCHAR,\
-    \ message VARCHAR, grade VARCHAR, note VARCHAR)`\nValidate a single value against\
-    \ a JSON Schema fragment. Returns a struct: `valid` is `true` when\nthe value\
-    \ conforms (with `constraint` and `message` `NULL`); on failure `valid` is `false`\
-    \ and\n`constraint` / `message` name the failing keyword and the reason. This\
-    \ is the per-cell engine the\n`ft_validate` table verb runs over every column.\n\
-    \n`grade` is `conforms`, `noted` or `fails`. A `noted` value is valid but carries\
-    \ a `note`, such as\na non-canonical form (an uppercase UUID) or a withdrawn code,\
-    \ when the fragment declares the\n`x-finetype-canonical` or `x-finetype-historic`\
-    \ extension. `valid` still means \"not a failure\".\nThe scalar applies the fragment's\
-    \ JSON Schema keywords and these extensions only; the checksum\nchecks `finetype\
-    \ validate` applies are not run here.\n\n```sql\nSELECT ft_validate_text('not-an-email',\
-    \ '{\"type\":\"string\",\"pattern\":\"^[^@]+@[^@]+\\\\.[^@]+$\"}');\n-- {'valid':\
-    \ false, 'constraint': pattern, 'message': '\"not-an-email\" does not match \"\
-    ^[^@]+@[^@]+\\.[^@]+$\"', 'grade': fails, 'note': NULL}\n\nSELECT ft_validate_text('550E8400-E29B-41D4-A716-446655440000',\n\
+    \ boolean normalization, UUID lowercasing, numeric cleanup. A\npercentage casts\
+    \ to a fraction, the value a spreadsheet holds.\n\n```sql\nSELECT ft_cast('01/15/2024');\
+    \  -- 2024-01-15 (US date \u2192 ISO)\nSELECT ft_cast('95.5%');       -- 0.955\
+    \ (percentage \u2192 fraction)\n```\n\n### `ft_validate_text(value VARCHAR, schema_json\
+    \ VARCHAR) \u2192 STRUCT(valid BOOLEAN, \"constraint\" VARCHAR, message VARCHAR,\
+    \ grade VARCHAR, note VARCHAR)`\nValidate a single value against a JSON Schema\
+    \ fragment. Returns a struct: `valid` is `true` when\nthe value conforms (with\
+    \ `constraint` and `message` `NULL`); on failure `valid` is `false` and\n`constraint`\
+    \ / `message` name the failing keyword and the reason. This is the per-cell engine\
+    \ the\n`ft_validate` table verb runs over every column.\n\n`grade` is `conforms`,\
+    \ `noted` or `fails`. A `noted` value is valid but carries a `note`, such as\n\
+    a non-canonical form (an uppercase UUID) or a withdrawn code, when the fragment\
+    \ declares the\n`x-finetype-canonical` or `x-finetype-historic` extension. `valid`\
+    \ still means \"not a failure\".\nThe scalar applies the same per-value check\
+    \ as `finetype validate`: enum membership ignores\nletter-case, and when the fragment's\
+    \ `x-finetype-label` names a type with a check digit (ISBN,\nIBAN, NPI and others),\
+    \ a right-shape value with a bad check digit fails with constraint\n`checksum`.\n\
+    \n```sql\nSELECT ft_validate_text('not-an-email', '{\"type\":\"string\",\"pattern\"\
+    :\"^[^@]+@[^@]+\\\\.[^@]+$\"}');\n-- {'valid': false, 'constraint': pattern, 'message':\
+    \ '\"not-an-email\" does not match \"^[^@]+@[^@]+\\.[^@]+$\"', 'grade': fails,\
+    \ 'note': NULL}\n\nSELECT ft_validate_text('550E8400-E29B-41D4-A716-446655440000',\n\
     \  '{\"type\":\"string\",\"pattern\":\"^[0-9a-fA-F-]{36}$\",\n    \"x-finetype-canonical\"\
     :{\"kind\":\"non_canonical\",\"name\":\"lowercase\",\"pattern\":\"^[^A-F]*$\"\
     }}');\n-- {'valid': true, 'constraint': NULL, 'message': NULL, 'grade': noted,\
-    \ 'note': 'non_canonical: lowercase'}\n```\n\n### `ft_unpack(json VARCHAR) \u2192\
-    \ VARCHAR`\nRecursively classify every scalar value in a JSON document. Returns\
-    \ annotated JSON carrying the\ntype, confidence, recommended DuckDB type, and\
-    \ original value for each field.\n\n### `ft_version() \u2192 VARCHAR`\nReturns\
-    \ the extension version string.\n\n> **Names.** Every function carries the `ft_`\
-    \ prefix. The earlier un-prefixed names (`finetype`,\n> `finetype_detail`, `finetype_cast`,\
-    \ \u2026) were removed in 0.6.57; the migration table is in the\n> FineType changelog.\n\
-    \n## Type Taxonomy\n\n251 types organized into 7 domains:\n- **container**: JSON,\
-    \ XML, CSV, arrays, key-value (12 types)\n- **datetime**: dates, times, timestamps,\
-    \ epochs, durations, offsets (89 types)\n- **finance**: currencies, accounting,\
-    \ market identifiers, transactions (29 types)\n- **geography**: coordinates, locations,\
-    \ addresses, transportation (25 types)\n- **identity**: names, emails, phones,\
-    \ payments, medical (34 types)\n- **representation**: booleans, numbers, text,\
-    \ files, scientific (32 types)\n- **technology**: URLs, IPs, UUIDs, versions,\
-    \ codes (30 types)\n\nFor more information, see the [FineType documentation](https://github.com/meridian-online/finetype).\n"
+    \ 'note': 'non_canonical: lowercase'}\n\nSELECT ft_validate_text('0306406153',\n\
+    \  '{\"type\":\"string\",\"pattern\":\"^[0-9]{9}[0-9X]$\",\"x-finetype-label\"\
+    :\"identity.commerce.isbn\"}');\n-- {'valid': false, 'constraint': checksum, 'message':\
+    \ '\"0306406153\" fails its isbn check digit', 'grade': fails, 'note': NULL}\n\
+    ```\n\n### `ft_unpack(json VARCHAR) \u2192 VARCHAR`\nRecursively classify every\
+    \ scalar value in a JSON document. Returns annotated JSON carrying the\ntype,\
+    \ confidence, recommended DuckDB type, and original value for each field.\n\n\
+    ### `ft_version() \u2192 VARCHAR`\nReturns the extension version string.\n\n>\
+    \ **Names.** Every function carries the `ft_` prefix. The earlier un-prefixed\
+    \ names (`finetype`,\n> `finetype_detail`, `finetype_cast`, \u2026) were removed\
+    \ in 0.6.57; the migration table is in the\n> FineType changelog.\n\n## Type Taxonomy\n\
+    \n251 types organized into 7 domains:\n- **container**: JSON, XML, CSV, arrays,\
+    \ key-value (12 types)\n- **datetime**: dates, times, timestamps, epochs, durations,\
+    \ offsets (89 types)\n- **finance**: currencies, accounting, market identifiers,\
+    \ transactions (29 types)\n- **geography**: coordinates, locations, addresses,\
+    \ transportation (25 types)\n- **identity**: names, emails, phones, payments,\
+    \ medical (34 types)\n- **representation**: booleans, numbers, text, files, scientific\
+    \ (32 types)\n- **technology**: URLs, IPs, UUIDs, versions, codes (30 types)\n\
+    \nFor more information, see the [FineType documentation](https://github.com/meridian-online/finetype).\n"
