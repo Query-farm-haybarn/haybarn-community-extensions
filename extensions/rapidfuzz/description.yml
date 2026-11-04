@@ -14,4 +14,4 @@ repo:
   github: query-farm/rapidfuzz
   ref: f26a9693db5037ef1b012f901eeeb771551df664
   variegata: 9331bf3003cd3c2bc7ad7659cb747705ccce1e3b
-  haybarn_ref: cd02f9b659b30dbdfb40271174337e545de2a59c
+  haybarn_ref: 2ff3a15fcb41d9b7dab6e0964beed3434d4e34d8
