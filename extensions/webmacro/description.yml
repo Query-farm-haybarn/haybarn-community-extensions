@@ -81,4 +81,4 @@ repo:
   github: quackscience/duckdb-extension-webmacro
   ref: a9694a967c289aa62f2fadf4e3c82d9d2391dca9
   variegata: 2d725bd8f730f1556dc230e3cf984fec4c17a95d
-  haybarn_ref: aba49f18a9b362e0ba897dcf54c786bcaa75faf8
+  haybarn_ref: 4acef9dd0bc264acaa1525b49dce53fd6c34035c
