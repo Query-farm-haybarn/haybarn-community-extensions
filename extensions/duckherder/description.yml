@@ -1,7 +1,7 @@
 extension:
   name: duckherder
   description: Run duckdb query on remote server
-  version: 0.0.10
+  version: 0.1.0
   language: C++
   build: cmake
   license: MIT
@@ -11,7 +11,7 @@ extension:
   - dentiny
 repo:
   github: dentiny/duckdb-distributed-execution
-  ref: c254790685d4f11a8b5bc2b543b9ddb1c4dcb95a
+  ref: 3598d5422575eb05e901b852c52d8be30d028622
 docs:
   hello_world: 'SELECT duckherder_start_local_server(8815); ATTACH DATABASE ''localhost:8815''
     AS dh (TYPE duckherder);

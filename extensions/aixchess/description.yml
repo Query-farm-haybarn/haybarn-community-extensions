@@ -1,7 +1,7 @@
 extension:
   name: aixchess
   description: Efficiently query large chess game collections
-  version: 0.2.0
+  version: 0.3.0
   language: C++
   build: cmake
   license: GPL-3.0
@@ -12,7 +12,7 @@ extension:
   - thomas-daniels
 repo:
   github: thomas-daniels/aix
-  ref: 728e58fb70d343b6b69a9d0bc395db5309b4dc65
+  ref: 907b5107601ebe95bb4e567e0a3f4ad03afeff27
 docs:
   hello_world: "-- Count en passant moves played in Lichess games from January 2013\n\
     \nWITH lichess_2013_01 AS (\n    FROM 'hf://datasets/thomasd1/aix-lichess-database/low_compression/aix_lichess_2013-01_low.parquet'\n\

@@ -9,7 +9,7 @@ extension:
     \ STRUCT columns with diagnostics, queryAll (archived + deleted), Tooling-API\
     \ fast schema, and metadata helpers (manual cache refresh, picklist values, record\
     \ types). Requires DuckDB v1.5.4 or newer."
-  version: 0.19.1
+  version: 0.20.2
   language: C++
   build: cmake
   license: MIT
@@ -18,7 +18,7 @@ extension:
   excluded_platforms: osx_amd64;wasm_mvp;wasm_eh;wasm_threads;windows_amd64_mingw;linux_amd64_musl;linux_arm64;linux_arm64_musl;windows_arm64
 repo:
   github: flozer/duckdb-salesforce
-  ref: ef57aa928999240f310bd48ae1badf537a2a53df
+  ref: 0c9c2620d7e0479cf9d499674187cd82bcb030d4
 docs:
   hello_world: '-- Published build is signed: INSTALL salesforce FROM community; LOAD
     salesforce;
@@ -57,18 +57,33 @@ docs:
     \ server sums in floating\npoint), salesforce_relationship_graph recurses child\
     \ relationships up to\nmax_depth with cycle protection, and the Report Bridge\
     \ resolves a report's\nbase object from the official reportTypeMetadata when the\
-    \ first category\nis unambiguous. Built and tested against DuckDB v1.5.4, v1.5.5\
-    \ and\nv1.5.6 (v1.5.2/v1.5.3 support was dropped in v0.15.0 \u2014 see CHANGELOG.md).\n\
-    Full change history in this repo's CHANGELOG.md. Since v0.19.1,\nsalesforce_deleted_ids\
-    \ paginates its queryAll sweep (v0.19.0 truncated at\nexactly 2,000 ids) and uses\
-    \ the Replication API getDeleted() as the\ndefault source for ANY window width\
-    \ (the 15-minute cap was an incorrect\nassumption; latestDateCovered resume +\
-    \ boundary dedup), covering objects\nwith no IsDeleted field (e.g. User).\nSince\
-    \ v0.19.0, salesforce_deleted_ids(catalog, object, since, until)\nsurfaces the\
-    \ ids deleted in the org within a window (Replication API\ngetDeleted for exact\
-    \ deletion timestamps; a queryAll IsDeleted scan as\nfallback for wider windows),\
-    \ salesforce_bulk_resume(catalog, job_id)\nre-streams the results of an existing\
-    \ Bulk query job (recovery without\nre-running it), salesforce_scan(catalog, object,\
-    \ filter, ...) scans an\nsObject directly with per-call overrides, transient HTTP\
-    \ failures retry\nwith tunable sf_retry_max/sf_retry_backoff_ms, and well-known\
+    \ first category\nis unambiguous. Built and tested against DuckDB v1.5.4, v1.5.5,\
+    \ v1.5.6\nAND v2.0.0 (dual-line: one source tree, version selected at build time;\n\
+    v1.5.2/v1.5.3 support was dropped in v0.15.0 \u2014 see CHANGELOG.md). Full\n\
+    change history in this repo's CHANGELOG.md.\nSince v0.20.2, the vcpkg manifest\
+    \ version matches the release provenance;\nthis metadata-only patch carries the\
+    \ same runtime code as v0.20.1.\nSince v0.20.1, DuckDB 2.0 table-function emissions\
+    \ synchronize logical\nchunk cardinality with child vector sizes, and REST/Bulk\
+    \ relationship\ndecoders mark populated parent STRUCT values valid explicitly,\
+    \ fixing\nprojected STRUCT IS NULL results while preserving 1.5.x behavior.\n\
+    Since v0.20.0, DuckDB v2.0.0 is a supported baseline alongside v1.5.x\n(same features\
+    \ on both lines, including the transparent COUNT(DISTINCT)\npushdown, which recognizes\
+    \ 2.0's split-aggregate plan shape).\nSince v0.19.2, salesforce_deleted_ids returns\
+    \ latest_date_covered (the\ngetDeleted coverage frontier, for wide-window sweep\
+    \ checkpoints), the\nread_only ATTACH option is accepted as a documented no-op\
+    \ (the catalog is\nread-only by design), Id literals in =/!=/IN filters are validated\
+    \ at\nplan time (15/18 alphanumeric chars; clear error instead of Salesforce's\n\
+    generic INVALID_QUERY_FILTER_OPERATOR), and the per-attempt HTTP read\ntimeout\
+    \ is tunable via sf_timeout_read_s (default 60s, cap 3600s).\nSince v0.19.1,\n\
+    salesforce_deleted_ids paginates its queryAll sweep (v0.19.0 truncated at\nexactly\
+    \ 2,000 ids) and uses the Replication API getDeleted() as the\ndefault source\
+    \ for ANY window width (the 15-minute cap was an incorrect\nassumption; latestDateCovered\
+    \ resume + boundary dedup), covering objects\nwith no IsDeleted field (e.g. User).\n\
+    Since v0.19.0, salesforce_deleted_ids(catalog, object, since, until)\nsurfaces\
+    \ the ids deleted in the org within a window (Replication API\ngetDeleted for\
+    \ exact deletion timestamps; a queryAll IsDeleted scan as\nfallback for wider\
+    \ windows), salesforce_bulk_resume(catalog, job_id)\nre-streams the results of\
+    \ an existing Bulk query job (recovery without\nre-running it), salesforce_scan(catalog,\
+    \ object, filter, ...) scans an\nsObject directly with per-call overrides, transient\
+    \ HTTP failures retry\nwith tunable sf_retry_max/sf_retry_backoff_ms, and well-known\
     \ Salesforce\nerrorCodes surface with embedded remedy hints.\n"
