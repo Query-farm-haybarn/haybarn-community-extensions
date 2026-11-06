@@ -1,0 +1,46 @@
+extension:
+  name: drex
+  description: 'Ask typed questions about each row in SQL: yes/no probabilities, labels
+    and scores from Nace''s Drex decision models'
+  version: 0.1.0
+  language: C++
+  build: cmake
+  license: MIT
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads
+  opt_in_platforms: osx_amd64
+  maintainers:
+  - mkaratayev
+repo:
+  github: nace-ai/drex-duckdb
+  ref: 8b48eac1ec6e2c625fdf1f8a5b4add27c3570f56
+docs:
+  hello_world: "INSTALL drex FROM community;\nLOAD drex;\n-- A Drex API key from https://console.nace.ai\n\
+    CREATE SECRET (TYPE nace, API_KEY 'nace_sk_...');\n-- The probability that the\
+    \ answer is yes\nSELECT prompt_drex('I was charged twice for my order', 'Is this\
+    \ a refund request?') AS refund;\n-- One label, with every label's probability\n\
+    SELECT prompt_drex('I was charged twice for my order', 'Which team should handle\
+    \ it?',\n                   choice := ['billing', 'shipping', 'tech']) AS team;\n"
+  extended_description: "`drex` connects DuckDB to Drex, Nace's decision models, to\
+    \ classify text, score rows and return\nprobabilities as native SQL values. `prompt_drex`\
+    \ asks a typed question about each row:\n\n- **Yes/no** (`noul`, the default)\
+    \ returns a `DOUBLE`, the probability that the answer is true.\n- **One label\
+    \ of a set** (`choice := [...]`) returns a `STRUCT` with the label, every label's\
+    \ probability\n  and a confidence.\n- **A score on ordered levels** (`score :=\
+    \ [...]`) returns a `STRUCT` with the score, every level's\n  probability and\
+    \ a confidence.\n- **Several questions at once** (`questions := {...}`) asks up\
+    \ to 512 in one request per row and returns\n  one struct field per question.\n\
+    \nThe arguments and result types follow MotherDuck's `prompt_jev`, plus `model\
+    \ :=` (the default is\n`drex-v2.0`). Inputs can be `VARCHAR`, `JSON`, or a `BLOB`\
+    \ or `BLOB[]` of PNG, JPEG or WebP images on an\nimage-capable model such as `drex-max`.\
+    \ `drex_decide` sends JSON state and questions and returns the\nAPI's answer as\
+    \ JSON.\n\n**Credentials.** `CREATE SECRET (TYPE nace, PROVIDER env)` reads `NACE_API_KEY`\
+    \ (and an optional\n`NACE_BASE_URL`) from the environment, which keeps the key\
+    \ out of SQL history.\n\n**Requests.** Each evaluated non-NULL row normally makes\
+    \ one request. Requests run concurrently\n(`drex_max_concurrency`, 8 by default,\
+    \ or `concurrency := N` per call), with an optional requests-per-minute\ncap (`drex_max_rpm`).\
+    \ Transient failures and rate limits are retried within a bounded budget, honoring\n\
+    the server's retry headers. A row the API refuses (an oversized input, an invalid\
+    \ image) returns NULL\nwith a warning; authentication, billing and unknown models\
+    \ fail the query.\n\n- README: https://github.com/nace-ai/drex-duckdb\n- SQL API\
+    \ reference: https://github.com/nace-ai/drex-duckdb/blob/v0.1.0/docs/API.md\n\
+    - Issues: https://github.com/nace-ai/drex-duckdb/issues\n"

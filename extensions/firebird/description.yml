@@ -5,7 +5,7 @@ extension:
     projection + filter pushdown, INT128 / DECIMAL(38) / TIMESTAMP_TZ support, native
     ATTACH, and CHARACTER SET NONE handling (default win1252; strict / iso8859_1 /
     blob also available) with filter-pushdown correctness on transcoded columns.
-  version: 1.2.1
+  version: 1.3.1
   language: C++
   build: cmake
   license: MIT
@@ -14,7 +14,7 @@ extension:
   excluded_platforms: wasm_mvp;wasm_threads;wasm_eh
 repo:
   github: flozer/duckdb-firebird
-  ref: 21b6d651389c022ab4420c096ba29094e45ebe52
+  ref: 46d034ff7d377d257476f00ea846fdaf3333b57b
 docs:
   hello_world: "LOAD firebird;\n\n-- 1. Live scan against a Firebird server.\nSELECT\
     \ * FROM firebird_scan(\n    'firebird://APP_READONLY:secret@db.host:3050/srv:/data/prod.fdb?charset=UTF8',\n\
@@ -64,27 +64,31 @@ docs:
     \ keepalive with\n  fetch-failure context; `bytes_read_estimate` in the telemetry\
     \ and\n  per catalog.\n- Since v1.2.1, `none_encoding` / `none_pushdown` are also\
     \ accepted\n  inside the connection string (URI query and key=value DSN forms),\n\
-    \  with strict booleans and documented precedence.\n- Row estimate and scan advisories\
-    \ (v1.1.0): `firebird_profile_table`\n  reports `estimated_rows` (cheap PK-range\
-    \ upper bound, or an opt-in\n  exact `COUNT(*)` via `exact_row_count=true`) and\
-    \ structured\n  required-filter alerts (`filter_before_scan` /\n  `materialize_before_scan`);\
-    \ `firebird_pool_stats` exposes\n  `active_connections` and a password-redacted\
-    \ `last_error`.\n\n## Pushdown\n\n- **Projection**: only requested columns travel\
-    \ the wire.\n- **Filters**: `=, <>, <, >, <=, >=, IS [NOT] NULL, BETWEEN, IN,\n\
-    \  AND/OR, LIKE 'prefix%'` translate to Firebird SQL. Anything else\n  stays in\
-    \ DuckDB above the scan.\n- **PK-range parallel scan**: opt-in via the `partitions=N`\
-    \ named\n  parameter \u2014 recommended for remote / Classic Firebird servers\n\
-    \  where parallelism is cheap.\n- **Manual `row_limit=N`**: emits Firebird's `ROWS\
-    \ N` directly.\n\n## Type mapping\n\nFirebird 3 + 4 + 5 server compatibility:\n\
-    \n- `INTEGER`, `BIGINT`, `SMALLINT`, `CHAR(N)`, `VARCHAR(N)`,\n  `NUMERIC/DECIMAL(p,\
-    \ s)` (up to 38 digits), `FLOAT`, `DOUBLE`,\n  `DATE`, `TIME`, `TIMESTAMP`, `BOOLEAN`\
-    \ \u2014 exact mapping.\n- `INT128` \u2192 `HUGEINT`; `DECIMAL(p > 18, s)` \u2192\
-    \ `DECIMAL(38, s)`.\n- `TIMESTAMP WITH TIME ZONE` (including the FB4 extended-TZ\
-    \ form) \u2192\n  DuckDB `TIMESTAMP WITH TIME ZONE` (UTC instant preserved).\n\
-    - `TIME WITH TIME ZONE` \u2192 DuckDB `TIME WITH TIME ZONE`.\n- `BLOB SUB_TYPE\
-    \ 1` (text) \u2192 `VARCHAR`; other BLOBs \u2192 `BLOB`.\n- `DECFLOAT(16)` / `DECFLOAT(34)`\
-    \ \u2192 lossless `VARCHAR` via server-side\n  `CAST(... AS VARCHAR(64))` (v0.6).\n\
-    \n## Connection-string forms\n\n    firebird://USER:PASS@HOST:PORT/DB_PATH?charset=UTF8&dialect=3&role=\u2026\
+    \  with strict booleans and documented precedence.\n- DuckDB v2.0 support (v1.3.0/v1.3.1):\
+    \ the same source supports\n  DuckDB v1.5.6+ and v2.0+ through dual-path C++ API\
+    \ compilation,\n  with binaries built per DuckDB line. v1.3.1 recognizes v2.0's\n\
+    \  normalized `NOT IN` expression, restoring pushdown, residual-filter\n  telemetry,\
+    \ and `firebird_unpushed_mode` guards without changing\n  default behavior.\n\
+    - Row estimate and scan advisories (v1.1.0): `firebird_profile_table`\n  reports\
+    \ `estimated_rows` (cheap PK-range upper bound, or an opt-in\n  exact `COUNT(*)`\
+    \ via `exact_row_count=true`) and structured\n  required-filter alerts (`filter_before_scan`\
+    \ /\n  `materialize_before_scan`); `firebird_pool_stats` exposes\n  `active_connections`\
+    \ and a password-redacted `last_error`.\n\n## Pushdown\n\n- **Projection**: only\
+    \ requested columns travel the wire.\n- **Filters**: `=, <>, <, >, <=, >=, IS\
+    \ [NOT] NULL, BETWEEN, IN,\n  AND/OR, LIKE 'prefix%'` translate to Firebird SQL.\
+    \ Anything else\n  stays in DuckDB above the scan.\n- **PK-range parallel scan**:\
+    \ opt-in via the `partitions=N` named\n  parameter \u2014 recommended for remote\
+    \ / Classic Firebird servers\n  where parallelism is cheap.\n- **Manual `row_limit=N`**:\
+    \ emits Firebird's `ROWS N` directly.\n\n## Type mapping\n\nFirebird 3 + 4 + 5\
+    \ server compatibility:\n\n- `INTEGER`, `BIGINT`, `SMALLINT`, `CHAR(N)`, `VARCHAR(N)`,\n\
+    \  `NUMERIC/DECIMAL(p, s)` (up to 38 digits), `FLOAT`, `DOUBLE`,\n  `DATE`, `TIME`,\
+    \ `TIMESTAMP`, `BOOLEAN` \u2014 exact mapping.\n- `INT128` \u2192 `HUGEINT`; `DECIMAL(p\
+    \ > 18, s)` \u2192 `DECIMAL(38, s)`.\n- `TIMESTAMP WITH TIME ZONE` (including\
+    \ the FB4 extended-TZ form) \u2192\n  DuckDB `TIMESTAMP WITH TIME ZONE` (UTC instant\
+    \ preserved).\n- `TIME WITH TIME ZONE` \u2192 DuckDB `TIME WITH TIME ZONE`.\n\
+    - `BLOB SUB_TYPE 1` (text) \u2192 `VARCHAR`; other BLOBs \u2192 `BLOB`.\n- `DECFLOAT(16)`\
+    \ / `DECFLOAT(34)` \u2192 lossless `VARCHAR` via server-side\n  `CAST(... AS VARCHAR(64))`\
+    \ (v0.6).\n\n## Connection-string forms\n\n    firebird://USER:PASS@HOST:PORT/DB_PATH?charset=UTF8&dialect=3&role=\u2026\
     \n    user=APP_READONLY;password=secret;database=server:/data/db.fdb;charset=UTF8\n\
     \nA bare path (`/var/lib/firebird/test.fdb`, `C:/data/prod.fdb`) is\nalso accepted\
     \ for local databases.\n\nOverride the user / password / charset / role / dialect\
@@ -109,5 +113,5 @@ docs:
     \ literal we'd send is UTF-8\nand would not match the raw bytes server-side. DuckDB\
     \ applies\nthe post-transcode text filter above the scan.\n\n## Verified against\n\
     \n- Firebird 3.0 (apt `firebird3.0-server`, CI fixture)\n- Firebird 4.0.x (`firebirdsql/firebird:4-noble`)\n\
-    - Firebird 5.0.4 (Windows local + `firebirdsql/firebird:5-noble`)\n- DuckDB v1.5.3\
-    \ - v1.5.5 (`StorageExtension::Register` API)\n"
+    - Firebird 5.0.x (Windows local + `firebirdsql/firebird:5-noble`)\n- DuckDB v1.5.6\
+    \ and v2.0.0 (`StorageExtension::Register` API;\n  dual-path C++ compilation)\n"

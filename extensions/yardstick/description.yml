@@ -7,11 +7,14 @@ extension:
   license: MIT
   requires_toolchains: rust
   excluded_platforms: wasm_mvp;wasm_eh;wasm_threads
+  opt_in_platforms: osx_amd64
+  test_config: '{"test_env_variables":{"YARDSTICK_NATIVE_PEG":"1"}}'
   maintainers:
   - sidequery
 repo:
   github: sidequery/yardstick
-  ref: f19d73fa93f2601cfa81ca3ebad841dffcc5f609
+  ref: 6b5e9ead9dd69ee1f79323407c2469d5f1619481
+  variegata: f19d73fa93f2601cfa81ca3ebad841dffcc5f609
 docs:
   hello_world: "-- Create a view with measures\nCREATE VIEW sales_v AS\nSELECT\n \
     \   year,\n    region,\n    SUM(amount) AS MEASURE revenue,\n    COUNT(*) AS MEASURE\

@@ -1,19 +1,21 @@
 extension:
   name: stats_duck
-  description: "A statistical computing toolkit for DuckDB \u2014 descriptive statistics,\
-    \ hypothesis tests, R-style distribution functions (d/p/q/r), OLS regression with\
-    \ HC and cluster-robust standard errors, grammar-of-graphics charts (VISUALIZE\
-    \ \u2192 Vega-Lite), and first-class readers/writers for SAS, SPSS, and Stata\
-    \ files, all directly in SQL."
-  version: 0.8.0
+  description: A statistical computing toolkit for DuckDB, with descriptive statistics,
+    hypothesis tests, R-style distribution functions (d/p/q/r), linear and generalized
+    linear models with robust and cluster-robust standard errors, linear hypotheses
+    and estimated marginal means, grammar-of-graphics charts (VISUALIZE to Vega-Lite),
+    and readers and writers for SAS, SPSS and Stata files, all in SQL.
+  version: 0.9.0
   language: C++
   build: cmake
   license: Apache-2.0
   maintainers:
   - caerbannogwhite
+  opt_in_platforms: windows_arm64;osx_amd64;
 repo:
   github: KoliStat/the-stats-duck
-  ref: efdd24dec2a6616f825e9f14c2919a5754554827
+  ref: 98aa4e305ddd426ba94a1aca0e835edd707e949f
+  variegata: 98aa4e305ddd426ba94a1aca0e835edd707e949f
 docs:
   hello_world: "-- R-style distribution functions (d/p/q/r for 15+ families):\nD SELECT\
     \ pnorm(1.96) AS p, qt(0.975, 30) AS t_crit, dpois(3, 2.5) AS pmf;\n\u250C\u2500\
@@ -39,27 +41,41 @@ docs:
     \ SEs.\n-- vcov: 'const' | 'HC0'..'HC3' | 'CR0'/'CR1' (cluster-robust, + a cluster\
     \ key).\nD SELECT (c).term, (c).estimate, (c).std_error\n  FROM (\n    SELECT\
     \ unnest((lm_fit(y, [x1, x2], 'HC1')).coefficients) AS c\n    FROM my_data\n \
-    \ );\n\n-- A clinical \"Table 1\" over mixed variable types, with between-group\
-    \ tests:\nD SELECT * FROM table_one('patients', variables := ['age', 'sex', 'bmi'],\
-    \ by := ['arm']);\n\n-- Grammar-of-graphics: turn a query into a Vega-Lite spec\
-    \ (+ the SQL to feed it):\nD VISUALIZE wt AS x, mpg AS y FROM cars DRAW point;\n"
+    \ );\n\n-- A generalized linear model as an aggregate: poisson with a log link.\n\
+    -- Families: gaussian, binomial, poisson, gamma. Options (link, vcov,\n-- intercept,\
+    \ weights, offset, cluster) go in a trailing STRUCT.\nD SELECT (c).term, (c).estimate,\
+    \ (c).std_error\n  FROM (\n    SELECT unnest((glm_fit(events, [x1, x2], 'poisson',\
+    \ {'vcov': 'HC1'})).coefficients) AS c\n    FROM my_data\n  );\n\n-- A clinical\
+    \ \"Table 1\" over mixed variable types, with between-group tests:\nD SELECT *\
+    \ FROM table_one('patients', variables := ['age', 'sex', 'bmi'], by := ['arm']);\n\
+    \n-- Grammar-of-graphics: turn a query into a Vega-Lite spec (+ the SQL to feed\
+    \ it):\nD VISUALIZE wt AS x, mpg AS y FROM cars DRAW point;\n"
   extended_description: "## The Stats Duck\n\nA statistical computing toolkit that\
-    \ brings common statistical workflows\ninto DuckDB SQL. Everything runs as streaming\
-    \ aggregates and scalar\nfunctions, so it scales to large datasets \u2014 and\
-    \ also runs in DuckDB-WASM in\nthe browser.\n\n**What's included**\n\n- **Descriptive\
-    \ statistics** \u2014 `summary_stats`, `table_one` (the clinical\n  \"Table 1\"\
-    ), `corr_matrix`, `meta`.\n- **Hypothesis tests** \u2014 one/two-sample and paired\
-    \ t-tests, one-way ANOVA,\n  chi-square, Mann\u2013Whitney, Wilcoxon signed-rank,\
-    \ Kolmogorov\u2013Smirnov,\n  Shapiro\u2013Wilk, Anderson\u2013Darling, Jarque\u2013\
-    Bera, and correlation tests\n  (Pearson / Spearman / Kendall).\n- **Distribution\
-    \ functions** \u2014 R-style `d`/`p`/`q`/`r` quartets for 15+\n  families (normal,\
-    \ t, chi-square, F, gamma, beta, exponential, Weibull,\n  log-normal, Poisson,\
-    \ negative binomial, hypergeometric, \u2026).\n- **Regression** \u2014 `lm` /\
-    \ `lm_summary` table functions and the `lm_fit`\n  aggregate (one model per `GROUP\
-    \ BY`) with classical, HC0\u2013HC3\n  heteroskedasticity-consistent, and CR0/CR1\
-    \ cluster-robust standard errors.\n- **Grammar of graphics** \u2014 `VISUALIZE\
-    \ \u2026 DRAW <mark>` returns a Vega-Lite v5\n  spec plus the SQL needed to feed\
-    \ it.\n- **Statistical file formats** \u2014 first-class readers and writers for\
-    \ SAS\n  (`.sas7bdat`, `.xpt`), SPSS (`.sav`, `.por`), and Stata files, via ReadStat.\n\
-    - **Resampling & correction** \u2014 `bootstrap`, `adjust_p` (multiple-testing).\n\
-    \nFull function reference: <https://github.com/KoliStat/the-stats-duck>.\n"
+    \ brings common statistical work into\nDuckDB SQL. Every function is a streaming\
+    \ aggregate or a scalar function,\nso it runs inside `GROUP BY` and window frames\
+    \ over large tables, and the\nsame build runs in DuckDB-WASM in the browser.\n\
+    \n**What is included**\n\n- **Descriptive statistics**: `summary_stats`, `table_one`\
+    \ (the clinical\n  \"Table 1\"), `corr_matrix`, `meta`.\n- **Hypothesis tests**:\
+    \ one-sample, two-sample and paired t-tests, one-way\n  ANOVA, chi-square, Mann-Whitney,\
+    \ Wilcoxon signed-rank,\n  Kolmogorov-Smirnov, Shapiro-Wilk, Anderson-Darling,\
+    \ Jarque-Bera, and\n  correlation tests (Pearson, Spearman, Kendall).\n- **Distribution\
+    \ functions**: R-style `d`/`p`/`q`/`r` quartets for 15+\n  families (normal, t,\
+    \ chi-square, F, gamma, beta, exponential, Weibull,\n  log-normal, Poisson, negative\
+    \ binomial, hypergeometric, and more), plus\n  `ptukey` and `qtukey` for the studentized\
+    \ range.\n- **Regression**: the `lm` and `lm_summary` table functions and the\n\
+    \  `lm_fit` aggregate (one model per `GROUP BY`) with classical, HC0 to HC3\n\
+    \  heteroskedasticity-consistent, and CR0/CR1 cluster-robust standard\n  errors.\
+    \ A rank-deficient design is fitted with the aliased columns\n  reported NULL,\
+    \ as R does. `glm_fit` fits generalized linear models by\n  iteratively reweighted\
+    \ least squares for the gaussian, binomial, poisson\n  and gamma families and\
+    \ their links, with the same covariance options.\n- **Inference after a fit**:\
+    \ `lin_hyp` tests a general linear hypothesis\n  L\xB7\u03B2 = 0 on any fit's\
+    \ coefficients and covariance (contrasts, joint\n  tests, Type III sums of squares).\
+    \ `emmeans` computes estimated marginal\n  means and their pairwise differences,\
+    \ with Tukey, Bonferroni, Holm,\n  Hochberg, BH or BY adjustment.\n- **Grammar\
+    \ of graphics**: `VISUALIZE \u2026 DRAW <mark>` returns a Vega-Lite v5\n  spec\
+    \ plus the SQL needed to feed it.\n- **Statistical file formats**: readers and\
+    \ writers for SAS\n  (`.sas7bdat`, `.xpt`), SPSS (`.sav`, `.por`) and Stata files,\
+    \ via\n  ReadStat.\n- **Resampling and correction**: `bootstrap`, and `adjust_p`\
+    \ with the\n  Bonferroni, Holm, Hochberg, BH, BY or no correction.\n\nFull function\
+    \ reference: <https://github.com/KoliStat/the-stats-duck>.\n"

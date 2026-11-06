@@ -3,7 +3,7 @@ extension:
   description: Read documents natively into the duck_block vocabulary -- DOCX, ODT,
     EPUB, RTF, LaTeX, Org, RST, ipynb, MediaWiki and Textile -- and write them back
     as Pandoc JSON, without linking Pandoc
-  version: 0.6.2
+  version: 0.7.0
   language: C++
   build: cmake
   license: MIT
@@ -13,8 +13,9 @@ extension:
   vcpkg_commit: 84bab45d415d22042bd0b9081aea57f362da3f35
 repo:
   github: teaguesterling/duckdb_panduck
-  ref: fbc56ed5c5d550a9dd601c617649a56625c89d19
-  ref_next: fbc56ed5c5d550a9dd601c617649a56625c89d19
+  ref: dc094ee3261251a69f3f394b775709a682fb0640
+  variegata: dc094ee3261251a69f3f394b775709a682fb0640
+  ref_next: dc094ee3261251a69f3f394b775709a682fb0640
 docs:
   hello_world: "LOAD panduck;\n\n-- Read a document straight into flattened duck_block\
     \ rows\nSELECT * FROM read_docx_blocks('report.docx');\nSELECT * FROM read_epub_blocks('book.epub');\n\
@@ -164,6 +165,21 @@ docs:
     | `panduck_pandoc_ast_map()` | The constructor mapping, as a queryable table |
 
 
+    Since 0.7.0, panduck also registers the converter names that `duck_block_utils`
+    used
+
+    to register: `pandoc_ast_to_blocks`, `read_pandoc_ast`, `write_pandoc_ast`,
+
+    `duck_blocks_to_pandoc_ast`, `duck_blocks_to_pandoc_blocks`, `pandoc_ast`,
+
+    `pandoc_inlines_to_db_inlines`, `pandoc_inlines_to_text` and
+
+    `duck_blocks_inlines_to_pandoc`. Load it with a `duck_block_utils` release that
+    no
+
+    longer registers them.
+
+
     The governing rule is that panduck may be **more** faithful than pandoc -- richer
 
     attributes, better block types, metadata pandoc does not extract -- so long as
@@ -181,10 +197,11 @@ docs:
 
     reference implementations -- RTF, DOCX, ODT, EPUB, LaTeX, Org, RST, ipynb, MediaWiki,
 
-    Textile -- plus a Pandoc AST reader, with 3108 test assertions, differential validation
+    Textile -- plus a Pandoc AST reader, with 3163 test assertions, differential validation
 
-    against a real pandoc on every fixture, and eleven jobs in CI. PDF, Markdown and
-    HTML
+    against a real pandoc on every fixture, and CI that builds and tests against DuckDB
+
+    v1.5.6, v2.0.0 and main. PDF, Markdown and HTML
 
     are read by delegating to the pdf, markdown and webbed extensions rather than
     by a

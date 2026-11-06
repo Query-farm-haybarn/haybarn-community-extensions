@@ -1,9 +1,9 @@
 extension:
   name: healthkit_export
-  description: Read Apple Health app exports (HealthKit export.zip / export.xml) as
-    typed DuckDB tables (records, workouts, activity rings, workout routes and GPX
-    points).
-  version: 0.3.1
+  description: "Read Apple Health app exports (HealthKit export.zip / export.xml)\
+    \ as typed DuckDB tables \u2014 records, workouts, routes, correlations, metadata,\
+    \ ECG, and more."
+  version: 0.4.0
   language: C
   build: cmake
   license: Apache-2.0
@@ -13,11 +13,20 @@ extension:
   excluded_platforms: linux_amd64;linux_arm64;linux_amd64_musl;linux_arm64_musl;windows_amd64;windows_amd64_mingw;windows_amd64_rtools;windows_arm64;wasm_mvp;wasm_eh;wasm_threads
 repo:
   github: Mjboothaus/duckdb-healthkit-export
-  ref: 08cf61c655a9efc277535a1ae6c1d89feebaf400
+  ref: f60af1177a5f755da19997214095906dfece60ce
 docs:
   hello_world: '-- After INSTALL healthkit_export FROM community; LOAD healthkit_export;
 
     -- Use a Health app export.zip (or test fixture path when developing from source)
+
+    SELECT function_name, parameters
+
+    FROM healthkit_export_functions()
+
+    ORDER BY 1
+
+    LIMIT 8;
+
 
     SELECT type_short, count(*) AS n
 
@@ -34,18 +43,30 @@ docs:
     \ by the\n[Apple Health](https://www.apple.com/ios/health/) app (HealthKit `export.zip`\
     \ /\n`export.xml`). Written in **C** on DuckDB's **stable C API**\n([extension-template-c](https://github.com/duckdb/extension-template-c)).\n\
     \n**Not affiliated with, endorsed by, or sponsored by Apple Inc.** Apple, Apple\
-    \ Health,\nand HealthKit are trademarks of Apple Inc.\n\n### Table functions\n\
-    - `read_healthkit_export(path)` \u2014 top-level Health records\n- `healthkit_workouts(path)`\
-    \ \u2014 workouts\n- `healthkit_activity_summaries(path)` \u2014 daily activity\
-    \ rings\n- `healthkit_workout_routes(path)` \u2014 route metadata + GPX path\n\
-    - `healthkit_workout_route_points(path)` \u2014 GPX track points\n\n`path` may\
-    \ be `export.zip`, a directory containing `export.xml`, or `export.xml` itself.\n\
-    \n### Design notes\nLarge exports are a full **scan** (first pass can be memory-heavy).\
-    \ Prefer materialising\nslices with `COPY \u2026 TO '\u2026.parquet'` for day-to-day\
-    \ analytics.\n\nTop-level `<Record>` only \u2014 nested Correlation children are\
-    \ skipped (same samples usually\nalso appear top-level).\n\n### Platform\nInitial\
-    \ community builds target **macOS** (Apple Silicon / Intel). Other platforms may\n\
-    follow once CI is green.\n\n### Rename note\nThis listing **replaces** the short-lived\
-    \ `apple_health` community id (unintended branding).\nUse `INSTALL healthkit_export\
-    \ FROM community` going forward.\n\n### Source\nhttps://github.com/Mjboothaus/duckdb-healthkit-export\
-    \ \u2014 optional Python helpers in-repo are\n**not** part of this extension binary.\n"
+    \ Health,\nand HealthKit are trademarks of Apple Inc.\n\n### Discoverability\n\
+    Prefer the extension catalogue over `duckdb_functions()` (stable C API cannot\
+    \ set\nfunction descriptions or name positional parameters):\n\n```sql\nSELECT\
+    \ function_name, parameters, description, example\nFROM healthkit_export_functions()\n\
+    ORDER BY 1;\n```\n\n### Table functions (v0.4.0)\n- `read_healthkit_export(path\
+    \ [, types/start/end])` \u2014 top-level Health records; optional named filters\n\
+    - `healthkit_workouts(path)` \u2014 workout summaries\n- `healthkit_workout_events(path)`\
+    \ / `healthkit_workout_statistics(path)` \u2014 workout children\n- `healthkit_activity_summaries(path)`\
+    \ \u2014 daily activity rings\n- `healthkit_workout_routes(path)` / `healthkit_workout_route_points(path)`\
+    \ \u2014 routes + GPX points\n- `healthkit_export_info(path)` / `healthkit_me(path)`\
+    \ / `healthkit_zip_inventory(path)` \u2014 export catalogue\n- `healthkit_correlations(path)`\
+    \ / `healthkit_correlation_members(path)` / `healthkit_metadata(path)`\n- `healthkit_heartbeat_points(path)`\
+    \ \u2014 HRV instantaneous BPM points\n- `healthkit_ecg_recordings(path)` / `healthkit_ecg_samples(path)`\
+    \ \u2014 ECG CSV sidecars (**Name / DOB omitted**)\n- `healthkit_export_functions()`\
+    \ \u2014 zero-arg catalogue of the above\n\n`path` may be `export.zip`, a directory\
+    \ containing `export.xml`, or `export.xml` itself.\n\n### Privacy\n- `healthkit_me`\
+    \ returns characteristics (date of birth, sex, blood type, \u2026) \u2014 treat\
+    \ as sensitive.\n- ECG parsers never return CSV **Name** or **Date of Birth**\
+    \ header fields.\n\n### Design notes\nLarge exports are a full **scan** (first\
+    \ pass can be memory-heavy). Prefer materialising\nslices with `COPY \u2026 TO\
+    \ '\u2026.parquet'` for day-to-day analytics.\n\nTop-level `<Record>` only in\
+    \ `read_healthkit_export` \u2014 nested Correlation children are\navailable via\
+    \ the dedicated correlation table functions (and usually also appear top-level).\n\
+    \n### Platform\nCommunity builds target **DuckDB 2.0.0** on **macOS arm64**, **Linux**,\
+    \ and **Windows**.\n**Wasm** and **osx_amd64** are excluded.\n\n### Source\nhttps://github.com/Mjboothaus/duckdb-healthkit-export\
+    \ \u2014 tag **v0.4.0**. Optional Python\nhelpers in-repo are **not** part of\
+    \ this extension binary.\n"

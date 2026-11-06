@@ -1,7 +1,7 @@
 extension:
   name: pdf
   description: Read, OCR, inspect, transform, and write PDFs in SQL
-  version: 0.8.0
+  version: 0.9.0
   language: C++
   build: cmake
   license: GPL-2.0-or-later
@@ -13,12 +13,12 @@ extension:
   vcpkg_commit: 84bab45d415d22042bd0b9081aea57f362da3f35
 repo:
   github: asubbarao/duckdb-pdf
-  ref: 6535c8107e4106058df6f2a111407c1b823fb858
+  ref: 82d7ae3d6aa7af6b1688544b7ca26edb616e46a3
 docs:
   hello_world: 'LOAD pdf;
 
 
-    -- One row per page (file, list, or glob; parallel across pages/files)
+    -- One row per page (path or glob; parallel across pages/files)
 
     SELECT filename, page, text
 
@@ -34,28 +34,38 @@ docs:
 
     -- RAG chunks in one statement
 
-    CREATE TABLE chunks AS FROM pdf_chunks(''reports/*.pdf'');
+    CREATE TABLE chunks AS FROM read_pdf(''reports/*.pdf'', grain := ''chunk'');
 
 
     -- Page raster + native write
 
-    SELECT pdf_to_png(''report.pdf'', 1, 150) AS page_image;
+    SELECT pdf_render(''report.pdf'', 1, {dpi: 150}) AS page_image;
 
-    COPY (SELECT * FROM findings)
+    COPY (SELECT file, page_count FROM pdf_info(''reports/*.pdf''))
 
     TO ''findings.pdf'' (FORMAT pdf, TITLE ''Findings'', FOOTER ''page {page}'');
 
     '
   extended_description: "**Everything PDF, in SQL** \u2014 Poppler, Tesseract (OCR),\
     \ qpdf, and libharu,\nstatically linked. Paths or globs; no external tools at\
-    \ runtime for core\nops. Full docs and recipes:\n[github.com/asubbarao/duckdb-pdf](https://github.com/asubbarao/duckdb-pdf).\n\
-    \n**Read** \u2014 `read_pdf`, `read_pdf_lines`, `read_pdf_words` /\n`read_pdf_layout`\
-    \ (word boxes), `read_pdf_elements`, `read_pdf_tables`,\n`pdf_chunks`. Auto-OCR\
-    \ on image-only pages; English model bundled.\n\n**Inspect** \u2014 `pdf_info`,\
-    \ outline, attachments, form fields, annotations,\nrevisions, signatures, embedded\
-    \ images.\n\n**Convert / render** \u2014 text, markdown, HTML, XML, SVG, PNG;\
-    \ low-level\n`poppler_render_page` + `tesseract_ocr` for blob pipelines.\n\n**Transform\
-    \ & write** \u2014 merge, split, rotate, compress, encrypt/decrypt,\nwatermark,\
-    \ Bates, sign, redact; `write_pdf` / `COPY \u2026 (FORMAT pdf)`;\n`to_pdf` for\
-    \ office docs (LibreOffice at runtime).\n\n**Scope** \u2014 deterministic extraction,\
-    \ not ML document AI. **License** \u2014\nGPL-2.0-or-later (Poppler).\n"
+    \ runtime for core\nops. Full docs and recipes:\n[API reference](https://github.com/asubbarao/duckdb-pdf/blob/82d7ae3d6aa7af6b1688544b7ca26edb616e46a3/README.md)\
+    \ and\n[cookbook](https://github.com/asubbarao/duckdb-pdf/blob/82d7ae3d6aa7af6b1688544b7ca26edb616e46a3/COOKBOOK.md).\n\
+    \n**Breaking API update (0.9.0)** \u2014 19 public names replace the earlier\n\
+    separate entry points. Retired names are removed. See the\n[migration table](https://github.com/asubbarao/duckdb-pdf/blob/82d7ae3d6aa7af6b1688544b7ca26edb616e46a3/README.md#migration-from-48-names).\n\
+    This source targets DuckDB 2.0.0.\n\n**Discover functions** \u2014 `duckdb_functions()`\
+    \ exposes parameter names,\ndescriptions and examples. Scalar options use validated\
+    \ STRUCT fields.\n`pdf_render` and `ocr_image` each have scalar and table forms.\n\
+    \n**Read** \u2014 `read_pdf` selects page, line, element, table or chunk grain;\n\
+    `read_pdf_words` returns word boxes, geometric `line` and page size. Auto-OCR\
+    \ on\nimage-only pages for page/line/word/table readers; element/chunk OCR is\n\
+    opt-in. English model bundled.\n\n**Inspect** \u2014 `pdf_info` selects metadata/permissions\
+    \ or qpdf statistics;\n`pdf_objects` selects pages, outline, tagged structure,\
+    \ destinations, fonts,\nattachments, form fields, annotations, revisions, signatures\
+    \ or images.\n\n**Convert / render** \u2014 `pdf_text` selects text, Markdown,\
+    \ HTML, XML or JSON;\n`pdf_render` renders PNG/SVG as a scalar or streams pages\
+    \ as a table.\n`ocr_image` has scalar and table forms, with text/hocr/tsv output.\n\
+    \n**Transform & write** \u2014 `pdf_merge`, `pdf_pages`, `pdf_split`, `pdf_stamp`,\n\
+    `pdf_rewrite`, `pdf_sign`, `pdf_redact`, `pdf_ocr`;\n`write_pdf` / `COPY \u2026\
+    \ (FORMAT pdf)`;\n`to_pdf` for office docs (LibreOffice at runtime).\n\n**Scope**\
+    \ \u2014 deterministic extraction, not ML document AI. **License** \u2014\nGPL-2.0-or-later\
+    \ (Poppler).\n"
