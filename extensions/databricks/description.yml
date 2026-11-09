@@ -12,7 +12,8 @@ extension:
   vcpkg_commit: 84bab45d415d22042bd0b9081aea57f362da3f35
 repo:
   github: altertable-ai/duckdb-databricks
-  ref: 272162459a35364c0cb5639b2bc035bb8591d826
+  ref: f4251bf80648e6b8321e99b251fc4ab4457ab35b
+  variegata: 272162459a35364c0cb5639b2bc035bb8591d826
 docs:
   hello_world: "INSTALL databricks FROM community;\nLOAD databricks;\n\nCREATE SECRET\
     \ dbx (\n    TYPE databricks,\n    HOST 'adb-123.azuredatabricks.net',\n    WAREHOUSE_ID\

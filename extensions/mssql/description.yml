@@ -1,7 +1,7 @@
 extension:
   name: mssql
   description: Connect DuckDB to Microsoft SQL Server via native TDS (including TLS).
-  version: 0.2.5
+  version: 0.3.0
   language: C++
   build: cmake
   licence: MIT
@@ -13,13 +13,14 @@ extension:
   test_config: '{"test_env_variables": {"SKIP_TESTS": "1"}}'
 repo:
   github: hugr-lab/mssql-extension
-  ref: d35b617c16587e02b4d6e62057ead8f84c1568bf
+  ref: bfd347ffa89dc520eb0fb82c857b3c7af12673dc
+  variegata: d35b617c16587e02b4d6e62057ead8f84c1568bf
 docs:
   hello_world: 'INSTALL mssql FROM community;
 
     LOAD mssql;
 
-    ATTACH ''Server=localhost,1433;Database=master;User Id=sa;Password=YourStrong!Passw0rd''
+    ATTACH ''Server=localhost,1433;Database=master;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=yes''
     AS ms (TYPE mssql);
 
     SELECT * FROM ms.dbo.your_table LIMIT 5;
@@ -28,19 +29,20 @@ docs:
   extended_description: "DuckDB connector for Microsoft SQL Server, Azure SQL and\
     \ Microsoft Fabric\nover a native TDS 7.4 implementation \u2014 no ODBC, JDBC\
     \ or FreeTDS required.\nAttach a server as a DuckDB catalog and query, join, and\
-    \ bulk-load it\nalongside your local data.\n\nDocumentation: https://hugr-lab.github.io/mssql-extension/\n\
-    \n**Reading.** Attached tables come with schema/table catalog integration,\nlazy\
-    \ metadata cache, projection / filter / ORDER BY pushdown, and a\ncolumnar batch-decoded\
-    \ result path. Reading UTF-8-collated columns skips\nUTF-16 transcoding entirely\
-    \ (TDS UTF8SUPPORT).\n\n**Writing.** COPY TO and CTAS ship over the BCP bulk-load\
-    \ protocol with a\ncolumnar encoder and up to 8 parallel bulk sessions \u2014\
-    \ about 6\xD7 faster\nout of the box than 0.2.2 on a wide 38M-row table, and ~9\xD7\
-    \ with sized\nstring targets (`MSSQL_VARCHAR(n)` / `MSSQL_NVARCHAR(n)` annotations\
-    \ or\n`mssql_default_string_length`). Heap and clustered-columnstore targets\n\
-    (rowgroups land compressed directly), TABLOCK decided from the target's\nactual\
-    \ shape. INSERT with RETURNING, UPDATE/DELETE, transactions with\nconnection pinning.\n\
-    \n**Authentication.** SQL logins, Azure Entra ID (Service Principal, CLI,\nDevice\
-    \ Code), Kerberos on POSIX (kinit/keytab), Windows SSPI, TLS,\nDuckDB secrets.\n\
+    \ bulk-load it\nalongside your local data.\n\nDocumentation: https://hugr-lab.com/docs/mssql-extension/\n\
+    \n**Reading.** Attached tables come with schema/table catalog integration\nand\
+    \ a lazily loaded metadata cache. A SELECT the extension can write in\nT-SQL \u2014\
+    \ joins, aggregates, GROUP BY, window functions, ORDER BY / LIMIT,\nsubqueries,\
+    \ CTEs \u2014 runs on SQL Server as one statement (EXPLAIN shows it);\nthe rest\
+    \ streams through projection and filter pushdown and a columnar,\nbatch-decoded\
+    \ result path.\n\n**Writing.** COPY TO, CTAS and large INSERTs ship over the BCP\
+    \ bulk-load\nprotocol with up to 8 parallel sessions. UPDATE, DELETE, INSERT \u2026\
+    \ SELECT\nand MERGE run on the server as one statement when they can be written\
+    \ in\nT-SQL, and through a session staging table otherwise \u2014 no primary key\n\
+    required, RETURNING supported. DuckDB transactions map to SQL Server\ntransactions\
+    \ on one pinned connection.\n\n**Authentication and security.** SQL logins, Azure\
+    \ Entra ID (Service\nPrincipal, CLI, Device Code), Kerberos on POSIX, Windows\
+    \ SSPI, DuckDB\nsecrets; TLS with the server certificate verified by default.\n\
     \n**Operations.** Per-catalog connection pooling, eager ATTACH-time\ncredential\
     \ validation, named-instance resolution via SQL Server Browser,\ncustom Application\
-    \ Name, XML type support.\n\nIssues and feature requests: https://github.com/hugr-lab/mssql-extension\n"
+    \ Name.\n\nIssues and feature requests: https://github.com/hugr-lab/mssql-extension\n"
