@@ -12,3 +12,4 @@ extension:
 repo:
   github: query-farm/events
   ref: d6e9afda80991072386f64825c5c11339f051e99
+  haybarn_ref: 7314ad17e4a56b9005348a0a49f07191cdcab356
