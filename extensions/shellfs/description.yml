@@ -15,4 +15,4 @@ repo:
   github: query-farm/shellfs
   ref: aa33b9b8db9f838e535df467228593a2a95418da
   variegata: d762423eea333f7ea044e4dbf4e86b8289d7e296
-  haybarn_ref: 127ec4f4f64403d1f4a08eb99dfe90ea499c2b9c
+  haybarn_ref: da058eff725a2ccad60c249160b8221a3ebedfc8
