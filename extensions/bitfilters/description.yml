@@ -15,4 +15,4 @@ repo:
   github: query-farm/bitfilters
   ref: 17ff3ae7348579cba9a70ce2f184243b1a503c56
   variegata: 9f6b837bde151e9bfb61e9e8297261cdf617b7f0
-  haybarn_ref: 0901a9537c5bd53d9792fc424cd265775759cc95
+  haybarn_ref: c4f81bed926abf66130f1a0f8b55c6e8ec014824
