@@ -45,5 +45,5 @@ extension:
 repo:
   github: Query-farm/httpserver
   ref: 647d099778dac1fced7d442b7f46c75413c7d8a3
-  haybarn_ref: a33d631f41bea4c4a989c2d466da1ec95fe5dbda
+  haybarn_ref: 36444f1f7c31006eca69f1a8e2c32075ad7e528c
   variegata: bb04a75a66c80b29c7ef8fccaff9dbb40b7b9f86
