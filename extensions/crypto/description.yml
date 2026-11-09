@@ -15,4 +15,4 @@ repo:
   github: query-farm/crypto
   ref: cbcc152b6cbe53ae7876af24060c26df0488a2a6
   variegata: 2f9163474e3d0c22e2a69573fbb456d7e106dcf6
-  haybarn_ref: ebab774b5db47b4c81a9a6037bdaf8e0502c0cfa
+  haybarn_ref: 8f15b225a45547b58b2a2fc51f1ed20a774da9ac
