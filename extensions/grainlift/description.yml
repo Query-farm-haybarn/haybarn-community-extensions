@@ -17,7 +17,7 @@ extension:
 repo:
   github: query-farm/duckdb-grainlift
   # ref = 2.0 (branch v2.0), variegata = 1.5 (main).
-  ref: db3c234cd4a6741d584af2a23698cfb805b7cc2c
+  ref: a5b1b74f81a70866f8c68cb95e27080d1ad00633
   variegata: 0f55d16bd367e2c1482a4da3c1e96d9d3d32c332
 
 docs:
