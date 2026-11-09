@@ -2,7 +2,7 @@ extension:
   name: tessera
   description: Fast join-aggregates (pair counts and sums of self-joins and two-relation
     joins) over skewed sparse relations, with a sparse product and a CPU matrix accelerator
-  version: 1.2.1
+  version: 1.4.1
   language: C++
   build: cmake
   license: Apache-2.0
@@ -12,7 +12,7 @@ extension:
   - GyuyeongKim
 repo:
   github: GyuyeongKim/Tessera-public
-  ref: dd3efd594a5954dd3abc6661cd7892b77c81924e
+  ref: fc8259cdeebd91b5f4c9647ecb0a55819bebf4ef
 docs:
   hello_world: "CREATE TABLE r AS\n  SELECT (random() * 20000)::INTEGER AS k, floor(power(random(),\
     \ 3) * 5000)::INTEGER AS x FROM range(2000000);\n-- the five pairs of values that\
@@ -27,21 +27,33 @@ docs:
     pair of values: `SELECT a.x, b.x, COUNT(*) FROM R a JOIN R b ON a.k = b.k GROUP
     BY a.x, b.x`, also with
 
-    `SUM(a.v * b.v)`, `a.x < b.x`, `HAVING`, `ORDER BY ... LIMIT`, or a second relation.
-    It never builds the joined
+    `SUM(a.v * b.v)`, `AVG`, `COUNT(DISTINCT a.k)`, `a.x < b.x`, `a.x <> b.x`, `HAVING`,
+    `ORDER BY ... LIMIT`, the top
 
-    rows. It computes each pair once on a sparse path, drops the values that cannot
-    reach a `HAVING` or top-k threshold
+    values of each group (`RANK() OVER (PARTITION BY a.x ORDER BY ...) <= k`), several
+    sums in one query such as a
 
-    before any product, and runs the dense block of the most frequent values on Intel
-    AMX where the CPU has it. The rule
+    cosine, further group columns, keys of several columns, NULLs in group and summed
+    columns, filters on the inputs, or
+
+    a second relation, over tables, pandas DataFrames, and Parquet and CSV files.
+    It never builds the joined rows. It
+
+    computes each pair once on a sparse path, drops the values that cannot reach a
+    `HAVING` or top-k threshold before
+
+    any product, and runs the dense block of the most frequent values on Intel AMX
+    where the CPU has it. The rule
 
     replaces matching plans by itself, so the SQL stays unchanged. Settings: `tessera_enabled`,
     `tessera_frontier`,
 
-    `tessera_min_expansion`, `tessera_min_expansion_cross`. See https://github.com/GyuyeongKim/Tessera-public
-    for the
+    `tessera_min_expansion`, `tessera_min_expansion_cross`, `tessera_min_expansion_measured`.
+    See
 
-    supported queries, the PostgreSQL, SQLite, and Spark adapters, and the C interface.
+    https://github.com/GyuyeongKim/Tessera-public for the supported queries, the PostgreSQL,
+    SQLite, and Spark adapters,
+
+    and the C interface.
 
     '
