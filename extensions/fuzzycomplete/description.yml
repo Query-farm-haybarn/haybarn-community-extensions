@@ -15,4 +15,4 @@ repo:
   github: query-farm/fuzzycomplete
   ref: b632926cf27221b3afbbdd7b7f2dcc3e55f21601
   variegata: 040136c2f5148f1dcd4f4ac60921ed2c40c615bb
-  haybarn_ref: cba8b3090ea8caaedb0e3bda62cb3b605913b82d
+  haybarn_ref: 5e208fbfbb17904de3425894e6fe53a2239cbcde
