@@ -15,4 +15,4 @@ repo:
   github: query-farm/adbc_scanner
   ref: c0f05dc21f808a528e1797806759a9c7d3b80377
   variegata: d76672f3a87b490467a01dbcc767610f9ecd849e
-  haybarn_ref: a956fc85ad8659d4eae9dfadc3d0d378c5fb2ea6
+  haybarn_ref: 097baeb372d9a47f90feee4022bc0b31599f3782
