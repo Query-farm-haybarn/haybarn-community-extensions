@@ -15,4 +15,4 @@ repo:
   github: query-farm/inflector
   ref: 69e604e8d73bb5b40b03d024d04572ba3a9fac49
   variegata: c161cab900fe007f1a3ec049a5ba3faa6b68e196
-  haybarn_ref: 1d96d9a68b6f679e8edc5e7b185a83d8ca678316
+  haybarn_ref: e77af8e2f7166ee411a65862214afdfa8d18b6df
