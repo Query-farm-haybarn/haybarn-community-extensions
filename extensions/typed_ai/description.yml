@@ -12,8 +12,8 @@ extension:
   - hfmsio
 repo:
   github: hfmsio/duckdb-typed-ai
-  ref: 00d03a08936f2edf86f72cd77a8986b500796506
-  ref_next: 00d03a08936f2edf86f72cd77a8986b500796506
+  ref: ee44975f75acc111dc58e4c8e2d2b2fe82882e36
+  ref_next: ee44975f75acc111dc58e4c8e2d2b2fe82882e36
 docs:
   hello_world: "-- Sort a lost-and-found desk with TypeSafe Jev. The key comes from\
     \ TYPESAFE_API_KEY.\nCREATE SECRET jev (TYPE typed_ai, PROVIDER 'jev', API_KEY\
@@ -102,22 +102,23 @@ docs:
     \ of photos into rows. Each\nside must be 280 to 1568 pixels; shrink big phone\
     \ photos first with `magick mogrify -resize '1568x1568>' *.jpg`.\nA 1024 x 768\
     \ photo costs about $0.0001. Photo support is a Jev preview, so its limits may\
-    \ change. Other\nproviders stop with a clear message instead of sending a photo.\n\
-    \n```sql\nCREATE TABLE found AS SELECT parse_filename(filename, true) AS item,\
-    \ content FROM read_blob('found/*.jpg');\n\n-- Ask about the photo\nSELECT item,\
-    \ typed_pick(content, 'which shelf?', ['medical', 'electronics', 'valuables',\
-    \ 'animals',\n                                                  'food and rubbish',\
-    \ 'general']) AS shelf FROM found;\n-- hearing_aid      medical\n-- leather_wallet\
-    \   valuables\n\n-- Photo and text together: does the desk note match the photo?\n\
-    SELECT item, typed_prob({photo: content, note: note}, 'the note correctly describes\
-    \ the photo') AS matches\nFROM found JOIN desk USING (item);\n-- teddy_bear  \
-    \ (note: teddy bear in a red jumper)   0.96\n-- wristwatch   (note: silver digital\
-    \ watch)         0.01   it is a gold watch\n\n-- Options as pictures: which lost-item\
-    \ report, each one the owner's photo?\nSELECT item, typed_pick(content, 'which\
-    \ lost-item report is the item in this photo?',\n         (SELECT map_concat(map(list(report),\
-    \ list(photo)), MAP {'no report matches': NULL::BLOB})\n          FROM reports))\
-    \ AS report FROM found;\n-- found_bottle_blue   bottle_blue\n-- sandwich     \
-    \       no report matches\n\n-- Where is it? Edges are fractions of the photo's\
-    \ width and height\nSELECT typed_box(content, 'the winding crown') FROM found\
-    \ WHERE item = 'wristwatch';\n-- {'left': 0.1, 'top': 0.73, 'right': 0.22, 'bottom':\
-    \ 0.88, 'confidence': 0.89}\n```\n"
+    \ change. Other\nproviders stop with a clear message instead of sending a photo.\
+    \ The community store has this version for\nDuckDB 2.0 and later; older DuckDB\
+    \ gets 0.1.0, which cannot send photos.\n\n```sql\nCREATE TABLE found AS SELECT\
+    \ parse_filename(filename, true) AS item, content FROM read_blob('found/*.jpg');\n\
+    \n-- Ask about the photo\nSELECT item, typed_pick(content, 'which shelf?', ['medical',\
+    \ 'electronics', 'valuables', 'animals',\n                                   \
+    \               'food and rubbish', 'general']) AS shelf FROM found;\n-- hearing_aid\
+    \      medical\n-- leather_wallet   valuables\n\n-- Photo and text together: does\
+    \ the desk note match the photo?\nSELECT item, typed_prob({photo: content, note:\
+    \ note}, 'the note correctly describes the photo') AS matches\nFROM found JOIN\
+    \ desk USING (item);\n-- teddy_bear   (note: teddy bear in a red jumper)   0.96\n\
+    -- wristwatch   (note: silver digital watch)         0.01   it is a gold watch\n\
+    \n-- Options as pictures: which lost-item report, each one the owner's photo?\n\
+    SELECT item, typed_pick(content, 'which lost-item report is the item in this photo?',\n\
+    \         (SELECT map_concat(map(list(report), list(photo)), MAP {'no report matches':\
+    \ NULL::BLOB})\n          FROM reports)) AS report FROM found;\n-- found_bottle_blue\
+    \   bottle_blue\n-- sandwich            no report matches\n\n-- Where is it? Edges\
+    \ are fractions of the photo's width and height\nSELECT typed_box(content, 'the\
+    \ winding crown') FROM found WHERE item = 'wristwatch';\n-- {'left': 0.1, 'top':\
+    \ 0.73, 'right': 0.22, 'bottom': 0.88, 'confidence': 0.89}\n```\n"
