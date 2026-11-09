@@ -13,4 +13,4 @@ repo:
   github: query-farm/json_schema
   ref: c0b5fc48d1d2654e804a7b0ea6aad877044dc4ba
   variegata: 5a07ae7c3bddddb05dcae8a00b15a836ccfcdb1a
-  haybarn_ref: f467ee6672be3c3bf78a19266be47ba084fd0685
+  haybarn_ref: 837f39dcd9fc699bfaa8eaafa174d6e4e7d46236
