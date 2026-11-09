@@ -15,4 +15,4 @@ repo:
   github: query-farm/tera
   ref: 03d55bba1ada61e05d7100e53c19baf61f8ed786
   variegata: 70949802be8d7e426b860167d5e1452450e1b8db
-  haybarn_ref: 5523e1c26954bd5369e55041d2c1f82fd9c3bf6e
+  haybarn_ref: 265a8b426bd834b83314537813906f59449056d1
