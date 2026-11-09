@@ -2,7 +2,7 @@ extension:
   name: bigquery
   description: Integrates DuckDB with Google BigQuery, allowing direct querying and
     management of BigQuery datasets
-  version: 0.12.2
+  version: 0.13.0
   language: C++
   build: cmake
   license: MIT
@@ -14,7 +14,7 @@ extension:
   - hafenkran
 repo:
   github: hafenkran/duckdb-bigquery
-  ref: 1568f8e93fd40f58fb39d37a016a422e0260aebb
+  ref: 5439a6a58439af4c05064f80a28b159c5a1424e7
 docs:
   hello_world: "-- Attach to your BigQuery Project\nD ATTACH 'project=my_gcp_project'\
     \ AS bq (TYPE bigquery, READ_ONLY);\n\n-- Show all tables in all datasets in the\
@@ -49,13 +49,33 @@ docs:
     D SELECT * FROM bq.quacking_dataset.duck_tbl;\n\u250C\u2500\u2500\u2500\u2500\u2500\
     \u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
     \u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502   i   \u2502       s      \
-    \  \u2502\n\u2502 int32 \u2502    varchar     \u2502\n\u251C\u2500\u2500\u2500\
+    \  \u2502\n\u2502 int64 \u2502    varchar     \u2502\n\u251C\u2500\u2500\u2500\
     \u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
     \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502    12 \u2502 quack\
     \ \U0001F986       \u2502\n\u2502    13 \u2502 quack quack \U0001F986 \u2502\n\
     \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\
     \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\
-    \n"
+    \n\n-- Scan a BigQuery table directly without attaching a project\nD SELECT *\
+    \ FROM bigquery_scan('my_gcp_project.quacking_dataset.duck_tbl') ORDER BY i;\n\
+    \u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\
+    \n\u2502   i   \u2502       s        \u2502\n\u2502 int64 \u2502    varchar  \
+    \   \u2502\n\u251C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2524\n\u2502    12 \u2502 quack \U0001F986       \u2502\n\u2502    13\
+    \ \u2502 quack quack \U0001F986 \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2518\n\n-- Execute GoogleSQL in BigQuery and read\
+    \ the results in DuckDB\nD SELECT * FROM bigquery_query('my_gcp_project', 'SELECT\
+    \ i, s FROM quacking_dataset.duck_tbl WHERE i = 13');\n\u250C\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502   i   \u2502  \
+    \     s        \u2502\n\u2502 int64 \u2502    varchar     \u2502\n\u251C\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502   \
+    \ 13 \u2502 quack quack \U0001F986 \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\
+    \u2500\u2500\u2500\u2500\u2500\u2500\u2518\n"
   extended_description: "This community-maintained extension allows DuckDB to connect\
     \ to Google BigQuery using the BigQuery Storage (read/write) and REST APIs. \n\
     It enables users to read, write, and manage their BigQuery datasets/tables directly\

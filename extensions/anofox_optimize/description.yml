@@ -1,6 +1,6 @@
 extension:
   name: anofox_optimize
-  version: 2026.09.26
+  version: 2026.11.7
   description: "Combinatorial decision algorithms as SQL \u2014 bin packing, knapsack,\
     \ wave batching, sequencing, scheduling, assortment and portfolio selection"
   language: C++
@@ -11,7 +11,8 @@ extension:
   excluded_platforms: windows_amd64_rtools;windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
 repo:
   github: DataZooDE/anofox-optimize
-  ref: 5ea8943bf6052489ff3ae824e9a657d2e0ba8c14
+  ref: 7d1f61390d76657b25d6d1090eceb26b98a35efc
+  variegata: 7d1f61390d76657b25d6d1090eceb26b98a35efc
 docs:
   hello_world: "-- Cartons waiting to ship, and a container that holds 1000 units.\n\
     CREATE TABLE cartons AS SELECT * FROM VALUES\n  (1, 420.0), (2, 380.0), (3, 260.0),\
@@ -20,11 +21,11 @@ docs:
     -- algorithm in the family and returns whichever used the fewest bins.\nSELECT\
     \ opt_pack_best_of(list(size ORDER BY carton_id), 1000.0).bins_used AS containers\n\
     FROM cartons;\n\n-- Which shipments go on a cheaper carrier that only takes 1000\
-    \ units?\n-- Value == weight, so this is subset-sum, and `exact` finds the perfect\n\
-    -- fill that greedy rules miss.\nSELECT opt_knapsack_exact(\n         list(weight\
-    \ ORDER BY shipment_id),\n         list(weight ORDER BY shipment_id),\n      \
-    \   1000.0\n       ).total_weight AS loaded_on_cheap_carrier\nFROM (VALUES (1,\
-    \ 505.0), (2, 380.0), (3, 260.0), (4, 240.0), (5, 115.0))\n     AS s(shipment_id,\
+    \ units?\n-- Value == weight, so this is subset-sum, and `best_of`'s dynamic program\n\
+    -- finds the perfect fill that greedy rules miss.\nSELECT opt_knapsack_best_of(\n\
+    \         list(weight ORDER BY shipment_id),\n         list(weight ORDER BY shipment_id),\n\
+    \         1000.0\n       ).total_weight AS loaded_on_cheap_carrier\nFROM (VALUES\
+    \ (1, 505.0), (2, 380.0), (3, 260.0), (4, 240.0), (5, 115.0))\n     AS s(shipment_id,\
     \ weight);\n"
   extended_description: "**anofox_optimize** puts combinatorial decision algorithms\
     \ behind DuckDB\nfunctions. Pack containers, choose an assortment, sequence a\
@@ -34,7 +35,7 @@ docs:
     \ arguments, so swapping one\nidentifier swaps the algorithm and nothing else:\n\
     \n| Family | Decision | Example |\n|---|---|---|\n| `pack_*` | fit items into\
     \ the fewest containers | `opt_pack_best_of` |\n| `knapsack_*` | pick a subset\
-    \ under one capacity | `opt_knapsack_exact` |\n| `wave_*` | group orders into\
+    \ under one capacity | `opt_knapsack_best_of` |\n| `wave_*` | group orders into\
     \ capacity-limited waves | `opt_wave_best_of` |\n| `sequence_*` | order jobs to\
     \ cut changeover cost | `opt_sequence_two_opt` |\n| `schedule_*` | order jobs\
     \ against due dates with setups | `opt_schedule_best_of` |\n| `assortment_*` |\
@@ -44,12 +45,17 @@ docs:
     \ \u2014 |\n\nEvery function has a canonical `anofox_optimize_*` name and a short\
     \ `opt_*`\nalias \u2014 they are the same function. `opt_*_best_of` runs every\
     \ algorithm in\nits family and returns the winner; that is the place to start.\n\
-    \n### Honesty about guarantees\n\nTwo functions return a **proven optimum** and\
-    \ say so in their names:\n`knapsack_exact` and `schedule_exact`. Everything else\
-    \ is heuristic and\ncarries no guarantee. Functions that would blow up refuse\
-    \ rather than hang \u2014\n`schedule_exact` rejects more than 14 jobs with an\
-    \ error naming the\nheuristic to use instead.\n\nEach family also ships a deliberately\
-    \ **weak** member (`pack_next_fit`,\n`portfolio_top_return`, `assortment_top_margin`,\
+    \n### Honesty about guarantees\n\n`schedule_exact` returns a **proven optimum**\
+    \ and refuses what it cannot\nsolve. `knapsack_best_of` (also callable as `knapsack_exact`,\
+    \ an alias)\nreturns one only when its dynamic program ran, inside a cell and\
+    \ memory\nlimit, with weights in multiples of 0.0001 whose sums are exact in doubles\n\
+    (a selection fits when its weights, summed in doubles, are within\ncapacity, so\
+    \ 0.1 + 0.2 does not fit 0.3). Past the limits it silently\nreturns its best greedy\
+    \ answer, and nothing in the result says which case\noccurred; see\n[docs/theory/02](https://github.com/DataZooDE/anofox-optimize/blob/main/docs/theory/02-packing-and-knapsack.md).\n\
+    Everything else is heuristic and carries no guarantee. Functions that would blow\
+    \ up refuse rather than hang \u2014\n`schedule_exact` rejects more than 14 jobs\
+    \ with an error naming the\nheuristic to use instead.\n\nEach family also ships\
+    \ a deliberately **weak** member (`pack_next_fit`,\n`portfolio_top_return`, `assortment_top_margin`,\
     \ `sequence_as_given`),\nbecause you need an honest baseline to know whether optimizing\
     \ bought you\nanything \u2014 and \"what we do today\" is usually a greedy rule.\n\
     \n### Two ways to pick the wrong function\n\nBoth are silent, so they are worth\

@@ -1,0 +1,46 @@
+extension:
+  name: decide
+  description: Filter, classify, and score text with OpenAI Decisions, TypeSafe Jev,
+    or Cloudflare Clef
+  version: 0.2.1
+  language: C++
+  build: cmake
+  license: MIT
+  excluded_platforms: osx_amd64;wasm_mvp;wasm_eh;wasm_threads
+  maintainers:
+  - gzheng92
+repo:
+  github: gzheng92/duckdb-decide
+  ref: a520e4b0a4aa9e7a1ed20e8fd825108f7e6ecd3a
+docs:
+  hello_world: "-- OpenAI example; use your own API key.\nSET decisions_provider =\
+    \ 'openai';\nCREATE OR REPLACE SECRET openai_key (TYPE decisions, API_KEY 'your-key',\
+    \ SCOPE 'decisions://openai');\nSELECT decision_prob('The parcel arrived crushed.',\n\
+    \                     'Does this report physical damage?') AS probability;\n"
+  extended_description: "`decide` asks decision models yes/no, multiple-choice, and\
+    \ rubric questions\nfrom SQL. It supports OpenAI Decisions (the default, `gpt-6-luna`),\n\
+    TypeSafe Jev, and Cloudflare Clef (Workers AI) with the same functions:\nboolean\
+    \ predicates, probabilities, categorical choices, rubric scores, and\nexplicit\
+    \ multi-question JSON answers. `SELECT * FROM decision_providers()`\nlists the\
+    \ providers, models, and credential names.\nTyped functions batch 20 rows per\
+    \ request by default; set\n`decisions_batch_size = 1` for independent row evaluation.\n\
+    Non-NULL inputs and instructions are sent to the selected provider and can\nincur\
+    \ API charges.\n\n### Credentials\n\nKeep one `decisions` secret per provider,\
+    \ scoped to it, so each key is sent\nonly to its own provider. Each provider also\
+    \ reads an environment variable.\n\n```sql\nCREATE OR REPLACE SECRET openai_key\
+    \ (TYPE decisions, API_KEY 'sk-...', SCOPE 'decisions://openai');\nCREATE OR REPLACE\
+    \ SECRET jev_key (TYPE decisions, API_KEY 'your-typesafe-key', SCOPE 'decisions://jev');\n\
+    CREATE OR REPLACE SECRET cf_key (TYPE decisions, API_KEY 'workers-ai-token',\n\
+    \                      ACCOUNT_ID 'your-account-id', SCOPE 'decisions://cloudflare');\n\
+    ```\n\nThe environment variables are `OPENAI_API_KEY`, `TYPESAFE_API_KEY`, and\n\
+    `CLOUDFLARE_API_TOKEN` with `CLOUDFLARE_ACCOUNT_ID`.\n\n### TypeSafe Jev and Cloudflare\
+    \ Clef\n\n```sql\nSET decisions_provider = 'jev';        -- default model jev-latest\n\
+    SET decisions_provider = 'cloudflare'; -- default model clef; also 'clef-flash'\n\
+    SET decisions_model = 'jev-1.14.0';    -- optional override; RESET when switching\n\
+    SELECT decision_prob('The parcel arrived crushed.',\n                     'Does\
+    \ this report physical damage?') AS probability;\n```\n\nClef caps requests at\
+    \ 64 questions. Neither Jev nor Clef returns refusal\nanswers. All providers accept\
+    \ text only.\n\nNo API key is required to build or run the offline tests.\nThis\
+    \ is an independent integration, not an official extension of OpenAI,\nTypeSafe,\
+    \ or Cloudflare.\nSee the [README](https://github.com/gzheng92/duckdb-decide#readme)\n\
+    for function signatures, limits, refusal handling, and batching semantics.\n"

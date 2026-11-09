@@ -1,7 +1,7 @@
 extension:
   name: scalarfs
   description: A collection of virtual filesystems for working with scalars
-  version: 1.6.2
+  version: 1.7.0
   language: C++
   build: cmake
   license: MIT
@@ -10,7 +10,9 @@ extension:
   excluded_platforms: windows_amd64;windows_amd64_mingw
 repo:
   github: teaguesterling/duckdb_scalarfs
-  ref: 6fc4d68397c521e1fda56bd164ce4f2f3aabda5c
+  ref: 16a2637eaab656d3b94e7a25f612573f8e056769
+  variegata: 16a2637eaab656d3b94e7a25f612573f8e056769
+  ref_next: 16a2637eaab656d3b94e7a25f612573f8e056769
 docs:
   hello_world: "LOAD scalarfs;\n\n-- Read JSON from a variable\nSET VARIABLE config\
     \ = '{\"debug\": true, \"port\": 8080}';\nSELECT * FROM read_json('variable:config');\n\

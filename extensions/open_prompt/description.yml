@@ -58,4 +58,4 @@ extension:
   version: '2025120401'
 repo:
   github: quackscience/duckdb-extension-openprompt
-  ref: a99c1f62d72eb46d3b632b76a6534540ff297254
+  ref: 725b1a99a20c1f627b81fa86c026f7d2b9146576

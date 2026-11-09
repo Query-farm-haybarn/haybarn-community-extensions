@@ -4,7 +4,7 @@ extension:
     \ DuckDB's built-ins diverge from Trino on Unicode and byte-level inputs \u2014\
     \ Trino's simple per-code-point case mapping, code-point reverse, Java-whitespace\
     \ trim, NFC normalize, and raw-bytes xxhash64/sha512/hmac_sha256"
-  version: 0.5.0
+  version: 0.5.2
   language: C++
   build: cmake
   license: MIT
@@ -12,7 +12,8 @@ extension:
   - apatrida
 repo:
   github: brikk/duckdb-trino-parity-extension
-  ref: dbdb85c502f82ddecab0779df092a6d1817f0b5a
+  ref: 0d6f9a1b2ca5a93f4ff813c2fdab9ef0b5a9c4ed
+  variegata: dbdb85c502f82ddecab0779df092a6d1817f0b5a
 docs:
   hello_world: "INSTALL trino_parity FROM community;\nLOAD trino_parity;\n\n-- Trino's\
     \ upper()/lower() are simple per-code-point mappings\n-- (Character.toUpperCase(int)),\
@@ -24,26 +25,36 @@ docs:
     SELECT trino_trim(E'\\tx\\n');       -- 'x'\n\n-- Code-point reverse (DuckDB's\
     \ built-in reverse is grapheme-aware):\nSELECT trino_reverse('a\U0001F600b');\
     \     -- 'b\U0001F600a'\n\n-- The catalog of functions this extension provides:\n\
-    SELECT trino_name, arg_count, category FROM trino_meta();  -- 10 rows\n"
+    SELECT trino_name, arg_count, category FROM trino_meta();  -- 10 rows\n\n-- Discover\
+    \ descriptions, argument names, runnable examples and categories:\nSELECT function_name,\
+    \ parameters, description, examples, categories\nFROM duckdb_functions()\nWHERE\
+    \ starts_with(function_name, 'trino_');  -- 10 scalars + trino_meta\n"
   extended_description: "`trino_parity` provides native `trino_<name>(...)` scalar\
     \ functions for the\nspecific cases where DuckDB's built-ins diverge from Trino's\
-    \ documented\nbehaviour on Unicode and byte-level inputs.\n\nVersion 0.5.0 vendors\
-    \ ICU 76.1 / Unicode 16.0, fixing newer case mappings\nand NFC normalization data\
-    \ missing from the previous Unicode 13 snapshot.\nThe compatibility target is\
-    \ Trino 483 on JDK 25. Matching version labels\nalone does not guarantee parity\
-    \ with other Trino/JDK combinations.\n\nIt is designed to be loaded server-side\
-    \ by anything that pushes Trino-shaped\npredicates down to DuckDB. If a Trino\
-    \ connector naively pushes\n`WHERE lower(name) = 'apple'` down to DuckDB, the\
-    \ filter runs with different\nUnicode semantics in each engine, and rows visible\
-    \ to Trino can silently\ndisappear from the result. This extension supplies **only\
-    \ the functions\nwhere that actually happens** \u2014 where DuckDB's built-in\
-    \ genuinely diverges\nand a native C++ reimplementation is required to match Trino.\
-    \ For the large\nmajority of Trino functions DuckDB's built-in is already equivalent\
-    \ (or a\ntrivial rename / operator / one-line rewrite), so a caller emits those\n\
-    directly against DuckDB \u2014 no extension needed.\n\n### Concrete divergences\
-    \ fixed\n\n| Function | DuckDB built-in | Trino spec | `trino_*` result |\n|---|---|---|---|\n\
-    | `upper('\xDF')` (U+00DF) | `'\u1E9E'` (U+1E9E, utf8proc special case) | `'\xDF\
-    '` unchanged (simple per-code-point mapping) | matches Trino |\n| `reverse('cafe'+U+0301)`\
+    \ documented\nbehaviour on Unicode and byte-level inputs.\n\nVersion 0.5.2 targets\
+    \ DuckDB 2.0.0 and adds SQL catalog documentation for\nall ten scalars and the\
+    \ `trino_meta()` table macro in `duckdb_functions()`:\nimplementation-grounded\
+    \ descriptions, meaningful scalar argument names\n(including HMAC's `data, key`\
+    \ order), runnable examples and short categories.\nFunction behavior, signatures\
+    \ and the ten-row, three-column `trino_meta()`\nresult are unchanged. The legacy\
+    \ v1.5.6 source remains preserved in the\ndescriptor's `variegata` pin; this update\
+    \ selects new source only for 2.0.\n\nThe extension vendors ICU 76.1 / Unicode\
+    \ 16.0, fixing newer case mappings\nand NFC normalization data missing from the\
+    \ previous Unicode 13 snapshot.\nThe compatibility target is Trino 483 on JDK\
+    \ 25. Matching version labels\nalone does not guarantee parity with other Trino/JDK\
+    \ combinations.\n\nIt is designed to be loaded server-side by anything that pushes\
+    \ Trino-shaped\npredicates down to DuckDB. If a Trino connector naively pushes\n\
+    `WHERE lower(name) = 'apple'` down to DuckDB, the filter runs with different\n\
+    Unicode semantics in each engine, and rows visible to Trino can silently\ndisappear\
+    \ from the result. This extension supplies **only the functions\nwhere that actually\
+    \ happens** \u2014 where DuckDB's built-in genuinely diverges\nand a native C++\
+    \ reimplementation is required to match Trino. For the large\nmajority of Trino\
+    \ functions DuckDB's built-in is already equivalent (or a\ntrivial rename / operator\
+    \ / one-line rewrite), so a caller emits those\ndirectly against DuckDB \u2014\
+    \ no extension needed.\n\n### Concrete divergences fixed\n\n| Function | DuckDB\
+    \ built-in | Trino spec | `trino_*` result |\n|---|---|---|---|\n| `upper('\xDF\
+    ')` (U+00DF) | `'\u1E9E'` (U+1E9E, utf8proc special case) | `'\xDF'` unchanged\
+    \ (simple per-code-point mapping) | matches Trino |\n| `reverse('cafe'+U+0301)`\
     \ | grapheme-aware | code-point-only | matches Trino |\n| `trim` (tab/LF/CR/FF/VT)\
     \ | not stripped | Java `Character.isWhitespace` strips them | matches Trino |\n\
     | `xxhash64(varbinary)` | no direct built-in | XXH64, big-endian bytes | matches\
@@ -62,9 +73,10 @@ docs:
     \ schema are\nunchanged. Validation against pinned OpenJDK 25 covers all 1,112,064\
     \ valid\nUnicode scalar values and 99,825 NFC conformance column checks, with\
     \ zero\nmismatches. See the [Unicode 16 validation report](https://github.com/brikk/duckdb-trino-parity-extension/blob/main/docs/REPORT-unicode16-validation.md)\n\
-    for provenance, commands, and the limits of that validation.\n\nAligned Trino\
-    \ functions (e.g. `length`, `abs`, `year`, `substring`,\n`regexp_extract`) are\
-    \ intentionally NOT shipped \u2014 a caller emits them as\nbare DuckDB SQL. The\
-    \ full per-function Trino\u2194DuckDB mapping and the\nempirical audits that justify\
-    \ each decision are in the repository's `docs/`.\n\nSource and full divergence\
+    for provenance, commands, and the limits of that validation. These checks\nalso\
+    \ pass on final DuckDB 2.0.0; see the\n[2.0 readiness report](https://github.com/brikk/duckdb-trino-parity-extension/blob/main/docs/REPORT-duckdb-2-readiness.md).\n\
+    \nAligned Trino functions (e.g. `length`, `abs`, `year`, `substring`,\n`regexp_extract`)\
+    \ are intentionally NOT shipped \u2014 a caller emits them as\nbare DuckDB SQL.\
+    \ The full per-function Trino\u2194DuckDB mapping and the\nempirical audits that\
+    \ justify each decision are in the repository's `docs/`.\n\nSource and full divergence\
     \ catalog:\nhttps://github.com/brikk/duckdb-trino-parity-extension\n"

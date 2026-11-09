@@ -1,16 +1,18 @@
 extension:
   name: gorz
-  description: Read GORpipe .gorz and .gord files and write .gorz as native DuckDB
-    tables
-  version: 0.2.0
+  description: Read and write GORpipe .gorz files and .gord dictionary folders as
+    native DuckDB tables
+  version: 1.0.0
   language: C++
   build: cmake
   license: MIT
   maintainers:
   - gorfather
+  opt_in_platforms: osx_amd64
 repo:
   github: gorfather/duckdb-gorz
-  ref: 1d86719faf3efc07ef4c269a2ad60cf49ef514f5
+  ref: 5c51c4734e432cf645232bc6a59899ace464b7ed
+  variegata: 40b5ec3be5dfe17b460566528aa0ad3aab6daeed
 docs:
   hello_world: "-- Write a query result out as a GORZ file (rows must be in GOR order),\n\
     -- then read it back \u2014 with an optional GOR -p style range filter.\nCOPY\
@@ -19,15 +21,19 @@ docs:
     \ gorz);\n\nSELECT * FROM read_gor('variants.gorz', range := 'chr1:1500-2500');\n\
     -- Equivalently, in plain SQL on the bare file name (the chrom / pos\n-- predicates\
     \ are pushed down into a block seek):\nSELECT * FROM 'variants.gorz' WHERE chrom\
-    \ = 'chr1' AND pos BETWEEN 1500 AND 2500;\n\n-- Read a partitioned .gord dictionary\
-    \ table (not shown here), keeping only\n-- the partitions tagged sample1 or sample99\
-    \ (GOR's -f). See the GORpipe paper\n-- (Gu\xF0bjartsson et al., Bioinformatics\
-    \ 2016, doi:10.1093/bioinformatics/btw199)\n-- and \"Ultra-fast joint-genotyping\
-    \ with SparkGOR\" (Gu\xF0bjartsson et al.,\n-- bioRxiv 2022, doi:10.1101/2022.10.25.513331):\n\
-    SELECT * FROM read_gord('example.gord', f := ['sample1', 'sample99']);\n"
+    \ = 'chr1' AND pos BETWEEN 1500 AND 2500;\n\n-- Write a .gord dictionary folder:\
+    \ one sorted .gorz per genomic range (here\n-- 1 Mb per file) plus thedict.gord.\
+    \ The input needs no ORDER BY.\nCOPY (SELECT * FROM 'variants.gorz') TO 'variants.gord'\
+    \ (FORMAT gord, SPLIT 1000000);\nSELECT * FROM 'variants.gord' WHERE chrom = 'chr1';\n\
+    \n-- Read a partitioned .gord dictionary table (not shown here), keeping only\n\
+    -- the partitions tagged sample1 or sample99 (GOR's -f). See the GORpipe paper\n\
+    -- (Gu\xF0bjartsson et al., Bioinformatics 2016, doi:10.1093/bioinformatics/btw199)\n\
+    -- and \"Ultra-fast joint-genotyping with SparkGOR\" (Gu\xF0bjartsson et al.,\n\
+    -- bioRxiv 2022, doi:10.1101/2022.10.25.513331):\nSELECT * FROM read_gord('example.gord',\
+    \ f := ['sample1', 'sample99']);\n"
   extended_description: "The `gorz` extension reads and writes [GORpipe](https://github.com/gorpipe/gor)\n\
-    genomic files \u2014 block-compressed `.gorz` and `.gord` dictionaries \u2014\
-    \ as native\nDuckDB tables. Files it writes are read and seeked natively by `gorpipe`,\
+    genomic files \u2014 block-compressed `.gorz` and `.gord` dictionary folders \u2014\
+    \ as\nnative DuckDB tables. Files it writes are read and seeked natively by `gorpipe`,\
     \ and\nvice-versa.\n\n### Reading\n\n- `read_gor(path)` \u2014 auto-detects `.gorz`\
     \ vs `.gord` by extension.\n- `read_gorz(path)` / `read_gord(path)` \u2014 force\
     \ the kind.\n- A **replacement scan**, so a bare literal works: `SELECT count(*)\
@@ -42,13 +48,33 @@ docs:
     \ column: `f := ['A','B']` is an inline tag list, `ff := 'tags.txt'` is a *tag\
     \ file* (one tag per line / first tab-delimited column, `#` lines skipped). `source\
     \ := 'PN'` renames the exposed column.\n- **Object stores** \u2014 paths resolve\
-    \ through DuckDB's FileSystem, so `s3://\u2026` works when `httpfs` is loaded.\n\
-    \n### Writing\n\n```sql\nCOPY (SELECT chrom, pos, ref, alt FROM my_variants ORDER\
-    \ BY chrom, pos)\n  TO 'out.gorz' (FORMAT gorz);   -- or (FORMAT gor) for plain\
-    \ sorted TSV\n```\n\nSingle-threaded, standard block-zip; validates GOR order\
-    \ (chromosomes ascend\nlexicographically, positions non-decreasing) and errors\
-    \ out otherwise.\n\n### References\n\n- Gu\xF0bjartsson H. et al. [GORpipe: a\
-    \ query tool for working with sequence data based on a Genomic Ordered Relational\
-    \ (GOR) architecture](https://doi.org/10.1093/bioinformatics/btw199). *Bioinformatics*\
-    \ 32(20):3081\u20133088, 2016.\n- Gu\xF0bjartsson H. et al. [Ultra-fast joint-genotyping\
-    \ with SparkGOR](https://doi.org/10.1101/2022.10.25.513331). *bioRxiv*, 2022.\n"
+    \ through DuckDB's FileSystem, so `s3://\u2026` works for reads and writes when\
+    \ `httpfs` is loaded.\n\n### Writing\n\n```sql\nCOPY (SELECT chrom, pos, ref,\
+    \ alt FROM my_variants ORDER BY chrom, pos)\n  TO 'out.gorz' (FORMAT gorz);  \
+    \ -- or (FORMAT gor) for plain sorted TSV\n```\n\nSingle-threaded, standard block-zip;\
+    \ validates GOR order (chromosomes ascend\nlexicographically, positions non-decreasing)\
+    \ and errors out otherwise. `META`\nalso writes the `.gorz.meta` sidecar (columns,\
+    \ types, line count, range, MD5),\nwhich `read_gor` uses to hand the column types\
+    \ back.\n\n```sql\nCOPY (SELECT * FROM my_variants) TO 'out.gord' (FORMAT gord,\
+    \ SPLIT 100);\n```\n\nWrites a dictionary **folder**, as `pgor \u2026 | write\
+    \ out.gord` does: one sorted\n`.gorz` + `.gorz.meta` per genomic range and `out.gord/thedict.gord`.\
+    \ The query\nneeds no `ORDER BY`; it runs once and each range is sorted on its\
+    \ own, so\nmemory follows the size of a range rather than the size of the input.\n\
+    \n- `SPLIT 'chrom'` (default) \u2014 one file per chromosome.\n- `SPLIT n`, `n`\
+    \ \u2264 1000 \u2014 `n` genome partitions (a step of 3,000,000,000 / `n` bases\
+    \ within each chromosome, as `pgor -split=n`).\n- `SPLIT n`, `n` > 1000 \u2014\
+    \ `n` bases per file.\n- `OVERWRITE` \u2014 replace an existing `.gord` folder.\n\
+    - `STAGING 'dir'` \u2014 local directory for the temporary files (default: next\
+    \ to the output; DuckDB's `temp_directory` for an object-store target).\n\n###\
+    \ Object stores\n\n```sql\nLOAD httpfs;\nCREATE SECRET (TYPE s3, KEY_ID '\u2026\
+    ', SECRET '\u2026', REGION 'eu-west-1');\nCOPY (SELECT * FROM my_variants) TO\
+    \ 's3://bucket/out.gord' (FORMAT gord, SPLIT 100);\nSELECT count(*) FROM 's3://bucket/out.gord'\
+    \ WHERE chrom = 'chr17';\n```\n\n`.gorz` files and `.gord` folders can be read\
+    \ from and written to\nS3-compatible stores (`s3://\u2026`). For a folder write\
+    \ the temporary files stay\non local disk and only the finished `.gorz`, `.meta`\
+    \ and `thedict.gord`\nobjects are uploaded, the dictionary last.\n\n### References\n\
+    \n- Gu\xF0bjartsson H. et al. [GORpipe: a query tool for working with sequence\
+    \ data based on a Genomic Ordered Relational (GOR) architecture](https://doi.org/10.1093/bioinformatics/btw199).\
+    \ *Bioinformatics* 32(20):3081\u20133088, 2016.\n- Gu\xF0bjartsson H. et al. [Ultra-fast\
+    \ joint-genotyping with SparkGOR](https://doi.org/10.1101/2022.10.25.513331).\
+    \ *bioRxiv*, 2022.\n"
