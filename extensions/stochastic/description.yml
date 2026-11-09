@@ -15,4 +15,4 @@ repo:
   github: query-farm/stochastic
   ref: 50fb2aeb031c26a10b099b4dcfb0729010a7d91f
   variegata: 4f9f691e2e9cf8abab3d481061eadbd97ef59675
-  haybarn_ref: a57e93536fde65e4760989a161f3c7009d10f976
+  haybarn_ref: 0d6e191d680cb432715b1ef0ae3db599d9a824ef
