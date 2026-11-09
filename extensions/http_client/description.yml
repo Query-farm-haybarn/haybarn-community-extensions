@@ -52,4 +52,4 @@ repo:
   github: query-farm/httpclient
   ref: f8885ec49e233d0d246f3aad5406ca11fd148868
   variegata: 9db208efbb157cd481d64b23b95b0fca1a86887f
-  haybarn_ref: f05207bf00ce047108f273c4944b778d38df139a
+  haybarn_ref: ef3d812f6435717b52d511a5f4c6aa08f70f4101
