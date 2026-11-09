@@ -12,5 +12,5 @@ extension:
 repo:
   github: Query-farm/geosilo
   ref: 41cb7be30f5568b3675ac4ec34abd57bfedbf53f
-  haybarn_ref: 527a9af22e55e97427f7476d7aece8abf63d1825
+  haybarn_ref: 60b975c28b269be959c95f78ee4e746b1222cb15
   variegata: b08d5d26620a193785e40668c839a861db4be6ce
