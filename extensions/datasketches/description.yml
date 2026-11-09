@@ -15,4 +15,4 @@ repo:
   github: query-farm/datasketches
   ref: 2770b12cf880f88cab0e83848e0d37d29ee31733
   variegata: 414a4c145dfacecb66028f8d0148c44067630206
-  haybarn_ref: 83c7224816ae9b0f43c24b9215d5bc85e5032c64
+  haybarn_ref: 3c136a7fe36f08f68ad706e85e77a97ad35b6501
