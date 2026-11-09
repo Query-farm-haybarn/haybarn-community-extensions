@@ -2,7 +2,7 @@ extension:
   name: improv
   description: Improv's spreadsheet formula language (681 functions) and multidimensional
     models (categories, measures, formulas over them) on DuckDB tables
-  version: 0.12.2
+  version: 0.13.0
   language: Rust
   build: cargo
   license: MIT OR Apache-2.0
@@ -12,7 +12,7 @@ extension:
   excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_mingw;linux_amd64_musl
 repo:
   github: gburd/improv
-  ref: b7fc53b5651901c0336e33b9df1327f80e737f43
+  ref: 6aa70f7f388126e42cb82b8fcd93ce65da870904
 docs:
   hello_world: "LOAD improv;\n-- Any of Improv's 681 built-in functions, on named\
     \ inputs.\nSELECT improv_calc('ROUND(PMT(rate/12, n, -pv), 2)',\n            \
