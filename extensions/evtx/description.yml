@@ -1,0 +1,43 @@
+extension:
+  name: evtx
+  description: "Windows Event Log (.evtx) inspection in SQL \u2014 validate a log\
+    \ and count its event records straight from read_blob(), no evtxparse or plaso"
+  version: 0.1.0
+  language: Rust
+  build: cargo
+  license: MIT
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_rtools;windows_amd64_mingw;linux_amd64_musl
+  requires_toolchains: rust;python3
+  maintainers:
+  - alitrack
+repo:
+  github: alitrack/duckdb-evtx
+  ref: a223ab1b778230b4a3b02a9e23fed4ad6aea678f
+  ref_next: a223ab1b778230b4a3b02a9e23fed4ad6aea678f
+docs:
+  hello_world: 'INSTALL evtx FROM community;
+
+    LOAD evtx;
+
+
+    -- Wire it to your own logs: an .evtx file is just a BLOB
+
+    --   SELECT evtx_is_valid(read_blob(''security.evtx''));
+
+    --   SELECT evtx_record_count(read_blob(''security.evtx''));
+
+
+    -- Self-contained probe: a non-evtx blob is invalid, zero records
+
+    SELECT evtx_is_valid(CAST(''not an evtx'' AS BLOB));       -- false
+
+    SELECT evtx_record_count(CAST(''not an evtx'' AS BLOB));    -- 0
+
+    '
+  extended_description: "## evtx \u2014 Windows Event Log inspection in SQL\n\nThe\
+    \ two cheap primitives every DFIR triage starts with \u2014 is it a valid\nEvent\
+    \ Log, and how many records \u2014 as SQL functions over a BLOB column.\n\n| Function\
+    \ | Returns | Notes |\n|---|---|---|\n| `evtx_is_valid(bytes)` | BOOLEAN | Magic\
+    \ + structure check |\n| `evtx_record_count(bytes)` | BIGINT | Event record count\
+    \ (capped at 5,000,000) |\n| `evtx_parse(bytes)` | table | One row per event record\
+    \ with lifted fields |\n\n\u2192  [GitHub](https://github.com/alitrack/duckdb-evtx)\n"

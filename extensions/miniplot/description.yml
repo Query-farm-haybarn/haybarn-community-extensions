@@ -1,8 +1,8 @@
 extension:
   name: miniplot
-  description: Interactive chart visualization for DuckDB - faster than pandas with
-    Plotly-like charts
-  version: 0.0.4
+  description: SQL-driven interactive charts, narrative HTML reports, and optional
+    native PNG/PDF export
+  version: 0.0.5
   language: C++
   build: cmake
   license: MIT
@@ -10,27 +10,69 @@ extension:
   - nkwork9999
 repo:
   github: nkwork9999/miniplot
-  ref: 60763272df9b7f2171044ac76c2e26e7a562ad39
+  ref: 01eb3f812f1503edf79a99cd29cfded3892ae85e
 docs:
-  hello_world: "-- Arbitrary Plotly traces, layout and configuration as JSON\nSELECT\
-    \ plotly_new_html(\n    '[{\"x\":[1,2],\"y\":[3,5],\"type\":\"scatter\",\"name\"\
-    :\"Series A\"}]',\n    '{\"title\":\"Custom Plotly chart\",\"showlegend\":true}',\n\
-    \    '{\"displayModeBar\":false}'\n);\n\n-- Date values on a scatter axis; return\
-    \ HTML without opening a browser\nSELECT scatter_chart_html(\n    [DATE '2026-01-01',\
-    \ DATE '2026-01-02'],\n    [10.0, 20.0],\n    'Daily measurements'\n);\n\n-- Discover\
-    \ descriptions, parameter names and examples\nSELECT function_name, description,\
-    \ parameters, examples\nFROM duckdb_functions()\nWHERE function_name IN ('plotly_new_html',\
-    \ 'scatter_chart_html');\n\n-- Bar chart (opens in browser)\nSELECT bar_chart(\n\
-    \    ['Q1', 'Q2', 'Q3', 'Q4'],\n    [100.0, 150.0, 200.0, 180.0],\n    'Quarterly\
-    \ Sales'\n);\n\n-- Line chart\nSELECT line_chart(\n    ['Mon', 'Tue', 'Wed', 'Thu',\
-    \ 'Fri'],\n    [5000.0, 6500.0, 4800.0, 7200.0, 8500.0],\n    'Weekly Revenue'\n\
-    );\n\n-- Scatter chart\nSELECT scatter_chart(\n    [1.0, 2.0, 3.0, 4.0, 5.0, 6.0,\
-    \ 7.0, 8.0],\n    [10.0, 25.0, 30.0, 45.0, 60.0, 75.0, 85.0, 95.0],\n    'Performance\
-    \ vs Time'\n);\n\n-- Area chart\nSELECT area_chart(\n    ['Jan', 'Feb', 'Mar',\
-    \ 'Apr', 'May'],\n    [1000.0, 1500.0, 1200.0, 1800.0, 2100.0],\n    'Monthly\
-    \ Growth'\n);\n\n-- Save to file without opening browser\nSELECT bar_chart(\n\
-    \    ['A', 'B', 'C'],\n    [10.0, 20.0, 15.0],\n    'Sample Chart',\n    'output.html'\n\
-    );\n\n-- 3D Scatter chart\nSELECT scatter_3d_chart(\n    [1.0, 2.0, 3.0, 4.0,\
-    \ 5.0, 6.0],\n    [2.0, 4.0, 1.0, 5.0, 3.0, 6.0],\n    [3.0, 1.0, 4.0, 2.0, 5.0,\
-    \ 3.5],\n    '3D Data Visualization'\n);\n\n-- Visualize CSV data\nSELECT line_chart(\n\
-    \    list(month),\n    list(sales),\n    'Monthly Sales from CSV'\n) FROM read_csv('sales.csv');\n"
+  hello_world: "-- Pure HTML: no file writes or browser launch\nSELECT pie_chart_html(['A',\
+    \ 'B'], [1.0, 2.0], 'Shares');\n\n-- Numeric/time x axes are supported for line\
+    \ and area charts\nSELECT line_chart_html(\n    [TIMESTAMP '2026-01-01 10:00:00',\
+    \ TIMESTAMP '2026-01-01 12:00:00'],\n    [12.5, 15.0], 'Measurements'\n);\n\n\
+    -- A structured narrative report with a chart\nSELECT chart_report_html(\n   \
+    \ '{\"title\":\"Summary\",\"sections\":[{\"heading\":\"Findings\",\"text\":\"\
+    B is twice A.\",\"data\":[{\"type\":\"bar\",\"x\":[\"A\",\"B\"],\"y\":[1,2]}]}]}'\n\
+    );\n\n-- Discover installed overloads, types, and runnable examples\nSELECT function_name,\
+    \ parameters, parameter_types, description, examples\nFROM duckdb_functions()\n\
+    WHERE function_name IN ('chart_report_html', 'scatter_gl_chart_html', 'chart_export');\n"
+  extended_description: 'Interactive visualization from DuckDB SQL using Plotly.js.
+    Includes bar, line,
+
+    area, scatter, 3D scatter, histogram, box, pie, donut, horizontal bar, violin,
+
+    bubble, heatmap, contour, step, radar, and WebGL scatter charts. Numeric and
+
+    date/time axes preserve numeric spacing and UTC handling for zoned timestamps.
+
+
+    HTML-returning functions work without file writes or browser launches. Native
+
+    file/browser functions support temporary or explicit output paths and respect
+
+    DuckDB''s external-access setting. Plotly.js is loaded from a CDN for ordinary
+
+    HTML viewing; a browser connection or cached bundle is needed.
+
+
+    Narrative reports accept a documented JSON specification (title and sections
+
+    containing escaped prose plus optional Plotly data/layout/config). Reports
+
+    retain their non-executable JSON specification for agent workflows and
+
+    reproducibility. Function signatures, descriptions and examples are available
+
+    through duckdb_functions().
+
+
+    Optional chart_export(html, output_path) creates PNG or PDF on a native host.
+
+    This requires a separately installed local Node.js/Playwright/Chromium tool and
+
+    MINIPLOT_EXPORTER pointing to scripts/export-chart.cjs from the source checkout.
+
+    It uses the installed local Plotly bundle without network requests. These tools
+
+    are not bundled in the community extension. Wasm users should use HTML output;
+
+    Wasm cannot spawn the local exporter.
+
+
+    WebGL scatter supports large point sets without silently sampling data, subject
+
+    to browser/GPU memory limits. Array values must be finite and non-NULL, with
+
+    documented length and grid-shape validation. Measured serialization results,
+
+    report JSON schema, source-build instructions and export setup are in the
+
+    repository README and docs directory.
+
+    '

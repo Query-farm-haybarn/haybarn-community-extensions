@@ -12,9 +12,10 @@ extension:
   - mlafeldt
 repo:
   github: duckdb/extension-template-rs
-  ref: abb7b2f3f954a47f90fc37a99cda3ce0618e6094
+  ref: e2492247ab8e8176aab7ab95ef1c9afa346f4938
+  variegata: abb7b2f3f954a47f90fc37a99cda3ce0618e6094
 docs:
-  hello_world: 'FROM rusty_quack(''world'');
+  hello_world: 'FROM rusty_quack([''world'']);
 
     '
   extended_description: 'The quack extension is based on DuckDB''s [Rust Extension
