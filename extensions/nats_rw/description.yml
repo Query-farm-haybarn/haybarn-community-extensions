@@ -1,0 +1,33 @@
+extension:
+  name: nats_rw
+  description: Read and write NATS JetStream streams with SQL
+  version: 0.1.0
+  language: C++
+  build: cmake
+  license: BSL 1.1
+  requires_toolchains: rust
+  excluded_platforms: osx_amd64;osx_arm64;wasm_mvp;wasm_eh;wasm_threads
+  maintainers:
+  - robert-guangzhou
+  - xiehuiqiang
+repo:
+  github: robert-guangzhou/duckdb-nats-rw
+  ref: 34776855201e614ed4f94ab3a861c34285698569
+docs:
+  hello_world: "-- Write query results to a NATS JetStream stream\nCOPY (SELECT 'hello'\
+    \ AS v) TO 'my_stream'\n  (FORMAT nats_rw, url 'nats://localhost:4222', create_stream\
+    \ 'true');\n\n-- Read it back\nSELECT * FROM nats_rw_scan('my_stream', url :=\
+    \ 'nats://localhost:4222');\n\n-- Extract JSON fields as columns\nSELECT device_id,\
+    \ location_zone\nFROM nats_rw_scan('my_stream', url := 'nats://localhost:4222',\n\
+    \    json_extract := ['device_id', 'location.zone']);\n"
+  extended_description: "The nats_rw extension provides bidirectional NATS JetStream\
+    \ access from DuckDB:\n\n- **Read**: `nats_rw_scan()` table function \u2014 bounded\
+    \ snapshot scan with\n  subject filtering, sequence/time ranges, JSON field extraction,\
+    \ and\n  predicate pushdown (WHERE seq/ts_nats automatically narrows the scan\
+    \ range)\n- **Write**: `COPY \u2026 TO '<stream>' (FORMAT nats_rw)` \u2014 publish\
+    \ query results\n  with optional payload_column, subject_prefix, and auto stream\
+    \ creation\n- **Auth**: `CREATE SECRET (TYPE nats_rw, \u2026)` \u2014 user/password,\
+    \ token, nkey,\n  or credentials file, with scope-based auto-matching\n- **Metadata**:\
+    \ `nats_rw_streams()` and `nats_rw_stream_info()` for inspection\n- **Performance**:\
+    \ connection pooling (per-url cache) + predicate pushdown\n\nConnections are cached\
+    \ per (url, auth) for efficient repeated queries.\n\nDocumentation: https://github.com/robert-guangzhou/duckdb-nats-rw\n"

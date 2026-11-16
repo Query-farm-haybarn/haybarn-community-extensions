@@ -1,0 +1,33 @@
+extension:
+  name: jasp_ext
+  description: "Read JASP project files (.jasp) as SQL tables \u2014 data, column\
+    \ metadata and analysis registry"
+  version: 0.1.0
+  language: Rust
+  build: cargo
+  license: MIT
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;linux_amd64_musl;windows_amd64_rtools;windows_amd64_mingw
+  requires_toolchains: rust
+  maintainers:
+  - alitrack
+repo:
+  github: alitrack/duckdb_jasp
+  ref: 29f495076d45b0bbb22cf3fa663bd339787f78f5
+docs:
+  extended_description: "The jasp_ext extension reads [JASP](https://www.jasp.org/)\
+    \ project files (`.jasp`) directly as SQL tables.\n\nA `.jasp` file is a ZIP archive\
+    \ containing `internal.sqlite` (the real data), `analyses.json`\n(analysis registry)\
+    \ and `resources/N/jaspResults.json` (per-analysis results). Data lives in\n`DataSet`\
+    \ / `DataSet_N` tables where every logical column is stored as a pair of physical\n\
+    columns (`Column_{id}_DBL` value, `Column_{id}_INT` categorical code). The extension\
+    \ maps\nthese back to logical typed columns:\n\n| JASP column type | DuckDB type\
+    \ | source |\n|---|---|---|\n| scale | DOUBLE | `_DBL` REAL value, `nan` \u2192\
+    \ NULL |\n| ordinal | DOUBLE | `_DBL` code |\n| nominal | VARCHAR | `Labels[_INT]`\
+    \ |\n| nominalText | VARCHAR | `_DBL` text value |\n\n**Table functions:**\n\n\
+    | function | description |\n|---|---|\n| `read_jasp(path)` | all data rows (typed),\
+    \ from the default DataSet |\n| `read_jasp(path, dataset)` | a specific `DataSet_N`\
+    \ |\n| `read_jasp_columns(path [, dataset])` | column metadata (id, name, columnType)\
+    \ |\n| `read_jasp_analyses(path)` | one row per registered analysis |\n\n**Example:**\n\
+    \n```sql\nSELECT * FROM read_jasp('/path/to/project.jasp');\nSELECT * FROM read_jasp_columns('/path/to/project.jasp');\n\
+    SELECT * FROM read_jasp_analyses('/path/to/project.jasp');\n```\n\n**Install:**\
+    \ `INSTALL jasp_ext FROM community;`\n\n**Source:** [alitrack/duckdb_jasp](https://github.com/alitrack/duckdb_jasp)\n"

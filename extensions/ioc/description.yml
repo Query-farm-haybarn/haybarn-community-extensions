@@ -1,0 +1,46 @@
+extension:
+  name: ioc
+  description: "Defang/refang and extract indicators of compromise in SQL \u2014 IPs,\
+    \ domains, URLs, e-mails, hashes and CVEs from threat-intel text, plus hash typing"
+  version: 0.1.0
+  language: Rust
+  build: cargo
+  license: MIT
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_rtools;windows_amd64_mingw;linux_amd64_musl
+  requires_toolchains: rust;python3
+  maintainers:
+  - alitrack
+repo:
+  github: alitrack/duckdb-ioc
+  ref: 12cb87a2186e3b2462a1a355eac4f093839029e2
+  ref_next: 12cb87a2186e3b2462a1a355eac4f093839029e2
+docs:
+  hello_world: 'INSTALL ioc FROM community;
+
+    LOAD ioc;
+
+
+    SELECT defang(''http://evil.example.com/a'');   -- hxxp[://]evil[.]example[.]com/a
+
+    SELECT refang(''hxxp[://]evil[.]example[.]com'');-- http://evil.example.com
+
+
+    SELECT hash_type(''d41d8cd98f00b204e9800998ecf8427e'');  -- md5
+
+    SELECT is_ioc(''1.2.3.4'');                               -- true
+
+
+    -- One row per distinct indicator
+
+    SELECT * FROM extract_iocs(''beacon to evil.example.com from 1.2.3.4'');
+
+    '
+  extended_description: "## ioc \u2014 threat-intel text in SQL\n\nPure Rust matching\
+    \ engine (lazy-compiled regexes, no VGI, no Arrow IPC,\nno JSON). Ported from\
+    \ the MIT-licensed Query-farm `vgi-ioc` worker.\n\n| Function | Returns | Notes\
+    \ |\n|---|---|---|\n| `defang(text)` | VARCHAR | `http`\u2192`hxxp`, `.`\u2192\
+    `[.]`, `@`\u2192`[at]`, `://`\u2192`[://]` |\n| `refang(text)` | VARCHAR | Inverse\
+    \ of `defang` |\n| `hash_type(s)` | VARCHAR | `md5`/`sha1`/`sha256`/`sha512`,\
+    \ NULL if not a hash |\n| `is_ioc(text)` | BOOLEAN | Is the whole string a single\
+    \ indicator? |\n| `extract_iocs(text)` | table | `type, value` \u2014 one row\
+    \ per distinct IOC |\n\n\u2192  [GitHub](https://github.com/alitrack/duckdb-ioc)\n"

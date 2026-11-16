@@ -1,8 +1,8 @@
 extension:
   name: opendal
-  description: Access S3, local filesystem, and other storage services through Apache
-    OpenDAL
-  version: 0.1.0
+  description: Access S3, GCS, Azure, HTTP, local filesystem, and other storage services
+    through Apache OpenDAL
+  version: 0.2.0
   language: C++ & Rust
   build: cmake
   license: MIT
@@ -12,7 +12,7 @@ extension:
   excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_rtools;windows_amd64_mingw
 repo:
   github: chitralverma/duckdb-opendal
-  ref: 6e998efad81618458518fbc061f1797354f13c56
+  ref: 6536e4d6e13bd09edee1b349fd30f775b074046d
 docs:
   hello_world: '-- Install and load the extension
 
@@ -52,25 +52,27 @@ docs:
     into DuckDB as a virtual filesystem, enabling transparent read and write access\n\
     to multiple storage services through a unified SQL interface.\n\n### Supported\
     \ Storage Services\n\n- **`fs://`** / **`file://`** \u2014 Local filesystem\n\
-    - **`s3://`** \u2014 Amazon S3 and S3-compatible stores (MinIO, R2, etc.)\n- **`memory://`**\
-    \ \u2014 In-memory storage (useful for testing)\n- more services coming soon\n\
-    \n### Key Features\n\n- **Read & write** Parquet, CSV, and JSON files through\
-    \ any supported service\n- **Glob patterns** work transparently (`read_parquet('s3://bucket/**/*.parquet')`)\n\
-    - **Table functions** for storage operations:\n  - `opendal_stat()` \u2014 file\
-    \ metadata\n  - `opendal_ls()` \u2014 directory listing with optional recursion\n\
-    \  - `opendal_glob()` \u2014 pattern-based file discovery\n  - `opendal_du()`\
-    \ \u2014 disk usage summaries\n  - `opendal_copy()` \u2014 cross-service and same-service\
-    \ file copy\n- **Scoped secrets** with per-service configuration via DuckDB's\
-    \ secret manager\n- **Configurable layers** \u2014 retry, timeout, I/O concurrency,\
-    \ and caching\n  (in-memory via foyer, optional on-disk tier)\n- **Global settings**\
-    \ for default I/O, retry, timeout, and cache configuration\n- **Coexistence**\
-    \ with DuckDB's native `httpfs` extension via\n  `opendal_override_native_filesystems`\
-    \ setting\n- **DuckDB FileSystem logging** integration for structured I/O tracing\n\
-    \n### Configuration Example\n\n```sql\nCREATE SECRET warehouse (\n    TYPE s3,\n\
-    \    SCOPE 's3://warehouse',\n    config MAP{\n        'access_key_id': '...',\n\
-    \        'secret_access_key': '...',\n        'region': 'us-east-1',\n       \
-    \ 'endpoint': 'http://localhost:9000'\n    },\n    io_config MAP{'read.concurrent':\
-    \ '4', 'write.chunk_size': '8 MiB'},\n    retry_config MAP{'max_times': '5', 'jitter':\
-    \ 'true'},\n    cache_config MAP{'memory_size': '256 MiB'}\n);\n\nSELECT * FROM\
-    \ read_parquet('s3://warehouse/data/*.parquet');\n```\n\nFor full documentation,\
-    \ see the\n[project repository](https://github.com/chitralverma/duckdb-opendal).\n"
+    - **`s3://`** \u2014 Amazon S3 and S3-compatible stores (MinIO, R2, etc.)\n- **`gcs://`**\
+    \ \u2014 Google Cloud Storage\n- **`azblob://`**, **`azdls://`**, **`azfile://`**\
+    \ \u2014 Azure Blob Storage, Data Lake Gen2, Files\n- **`http://`** / **`https://`**\
+    \ \u2014 HTTP servers (read-only)\n- **`memory://`** \u2014 In-memory storage\
+    \ (useful for testing)\n\n### Key Features\n\n- **Read & write** Parquet, CSV,\
+    \ and JSON files through any supported service\n- **Glob patterns** work transparently\
+    \ (`read_parquet('s3://bucket/**/*.parquet')`)\n- **Table functions** for storage\
+    \ operations:\n  - `opendal_stat()` \u2014 file metadata\n  - `opendal_ls()` \u2014\
+    \ directory listing with optional recursion\n  - `opendal_glob()` \u2014 pattern-based\
+    \ file discovery\n  - `opendal_du()` \u2014 disk usage summaries\n  - `opendal_copy()`\
+    \ \u2014 cross-service and same-service file copy\n- **Scoped secrets** with per-service\
+    \ configuration via DuckDB's secret manager\n- **Configurable layers** \u2014\
+    \ retry, timeout, I/O concurrency, and caching\n  (in-memory via foyer, optional\
+    \ on-disk tier)\n- **Global settings** for default I/O, retry, timeout, and cache\
+    \ configuration\n- **Coexistence** with other filesystem extensions such as `httpfs`\
+    \ via the\n  `opendal_override_schemes` setting\n- **DuckDB FileSystem logging**\
+    \ integration for structured I/O tracing\n\n### Configuration Example\n\n```sql\n\
+    CREATE SECRET warehouse (\n    TYPE s3,\n    SCOPE 's3://warehouse',\n    config\
+    \ MAP{\n        'access_key_id': '...',\n        'secret_access_key': '...',\n\
+    \        'region': 'us-east-1',\n        'endpoint': 'http://localhost:9000'\n\
+    \    },\n    io_config MAP{'read.concurrent': '4', 'write.chunk_size': '8 MiB'},\n\
+    \    retry_config MAP{'max_times': '5', 'jitter': 'true'},\n    cache_config MAP{'memory_size':\
+    \ '256 MiB'}\n);\n\nSELECT * FROM read_parquet('s3://warehouse/data/*.parquet');\n\
+    ```\n\nFor full documentation, see the\n[project repository](https://github.com/chitralverma/duckdb-opendal).\n"
