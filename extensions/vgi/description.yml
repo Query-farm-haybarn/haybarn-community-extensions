@@ -17,4 +17,4 @@ repo:
   github: query-farm/vgi
   ref: 454fefa50b11f8bfe3065fb11aebf8f5761d7b3d
   variegata: 454fefa50b11f8bfe3065fb11aebf8f5761d7b3d
-  haybarn_ref: 64cc3321e4e04007b1e2d62cd458669728669ef6
+  haybarn_ref: f9e5df356dcc8fd18f545a3a348ca364ae58fe0e
