@@ -75,6 +75,9 @@ with open('env.sh', 'w+') as hdl:
     hdl.write(f"COMMUNITY_EXTENSION_GITHUB={repo.get('haybarn_fork') or repo['github']}\n")
     if 'canonical_name' in repo:
         hdl.write(f"COMMUNITY_EXTENSION_CANONICAL_NAME={repo['canonical_name']}\n")
+    # Upstream: an extension built from a subdirectory of its repository (e.g. sirius-duckdb).
+    if repo.get('build_directory'):
+        hdl.write(f"COMMUNITY_EXTENSION_BUILD_DIRECTORY={repo['build_directory']}\n")
 
     # Haybarn: compare the plain engine semver, not the Haybarn tag.
     duckdb_version = re.sub(r'^haybarn-(v\d+\.\d+\.\d+).*$', r'\1', os.environ['DUCKDB_VERSION'])
@@ -130,8 +133,14 @@ with open('env.sh', 'w+') as hdl:
     # context (e.g. h5db's cert-chain test, magic's remote-URL fetch).
     # The build leg still runs end-to-end and produces a valid signed
     # binary; only the test step is bypassed.
-    if desc['extension'].get('haybarn_skip_tests') is True:
+    # Upstream's `skip_tests` (e.g. the Sirius CUDA backends, whose tests need a GPU) skips them too.
+    if desc['extension'].get('haybarn_skip_tests') is True or desc['extension'].get('skip_tests'):
         hdl.write("COMMUNITY_EXTENSION_SKIP_TESTS=true\n")
+    # Upstream: CUDA extensions (sirius_cuda12/13) name their toolkit version and GPU architectures.
+    if desc['extension'].get('cuda_archs'):
+        hdl.write(f"COMMUNITY_EXTENSION_CUDA_ARCHS={desc['extension']['cuda_archs']}\n")
+    if desc['extension'].get('cuda_version'):
+        hdl.write(f"COMMUNITY_EXTENSION_CUDA_VERSION={desc['extension']['cuda_version']}\n")
     # Haybarn-specific: `haybarn_job_timeout_minutes: <n>` raises ci-tools'
     # 45-minute per-platform job limit for extensions whose cold build is
     # longer (grpc, arrow and google-cloud from vcpkg source).

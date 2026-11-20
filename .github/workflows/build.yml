@@ -141,6 +141,10 @@ jobs:
       COMMUNITY_EXTENSION_SOURCE_REPO: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_SOURCE_REPO }}
       # `haybarn_skip_tests: true` in the descriptor (environment-sensitive tests).
       COMMUNITY_EXTENSION_SKIP_TESTS: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_SKIP_TESTS }}
+      # Upstream descriptor fields: repo.build_directory, extension.cuda_archs / cuda_version.
+      COMMUNITY_EXTENSION_BUILD_DIRECTORY: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_BUILD_DIRECTORY }}
+      COMMUNITY_EXTENSION_CUDA_ARCHS: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_CUDA_ARCHS }}
+      COMMUNITY_EXTENSION_CUDA_VERSION: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_CUDA_VERSION }}
       # `haybarn_job_timeout_minutes: <n>` in the descriptor (long cold builds).
       COMMUNITY_EXTENSION_JOB_TIMEOUT_MINUTES: ${{ steps.parse.outputs.COMMUNITY_EXTENSION_JOB_TIMEOUT_MINUTES }}
       # `haybarn_wasm_cmake_flags` in the descriptor (extra CMake flags, wasm legs only).
@@ -216,6 +220,9 @@ jobs:
       test_config: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_TEST_CONFIG }}
       extension_canonical: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_CANONICAL_NAME }}
       extra_toolchains: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_REQUIRES_TOOLCHAINS }}
+      build_directory: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_BUILD_DIRECTORY || '.' }}
+      cuda_archs: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_CUDA_ARCHS }}
+      cuda_version: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_CUDA_VERSION || '13' }}
       extension_name: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_NAME }}
       override_repository: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_GITHUB }}
       override_ref: ${{ needs.prepare.outputs.COMMUNITY_EXTENSION_REF }}
