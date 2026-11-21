@@ -2,6 +2,7 @@ extension:
   name: sirius_cuda13
   description: CUDA 13 backend selected by the Sirius core loader
   version: 0.0.0
+  haybarn_job_timeout_minutes: 360
   language: C++
   build: cmake
   license: Apache-2.0
