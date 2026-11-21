@@ -1,8 +1,8 @@
 extension:
   name: boilstream
-  description: Remote secret storage with OPAQUE authentication, MFA login, and managed
-    catalog discovery
-  version: 0.8.2
+  description: Encrypted remote secret storage with pinned server identity, OPAQUE
+    authentication, and MFA
+  version: 0.9.0
   language: C++, Rust
   build: cmake
   license: MIT
@@ -12,7 +12,7 @@ extension:
   excluded_platforms: wasm_mvp
 repo:
   github: dforsber/boilstream-extension
-  ref: 94e2885365525a56320cac04c1661c244ee935ff
+  ref: f35cb56fc3473bb5bdbb3b5a3c45cb14eb68bb8a
 docs:
   hello_world: 'INSTALL httpfs; LOAD httpfs;
 
@@ -21,13 +21,18 @@ docs:
     LOAD boilstream;
 
 
+    -- Obtain this public key independently from trusted installation configuration.
+
+    -- Configure the exact server authority and its 64-character hexadecimal X25519
+    key.
+
+    PRAGMA boilstream_server_key(''https://api.example.com'', ''<installation-public-key>'');
+
     -- Use your server and credentials; avoid retaining credentials in SQL history.
 
     PRAGMA boilstream_login(''https://api.example.com/user@example.com'', ''your-password'',
     ''123456'');
 
-
-    -- Discover catalogs and inspect available secret metadata.
 
     -- Login does not automatically attach catalogs.
 
@@ -38,50 +43,62 @@ docs:
     PRAGMA boilstream_help;
 
     '
-  extended_description: 'BoilStream provides remote secret storage with OPAQUE password
-    authentication,
+  extended_description: 'BoilStream 0.9.0 is a breaking client protocol release for
+    DuckDB 2.0.
 
-    email/password registration, MFA login, and bootstrap-token authentication.
+    It requires a compatible BoilStream server and an independently provisioned
 
-    It supports per-connection session state, signed requests, encrypted responses,
+    installation public key on every DuckDB connection. Older client/server
 
-    and managed catalog discovery with explicit attachment.
-
-
-    Version 0.8.2 hardens URL validation and credential cleanup and qualifies a
-
-    pinned DuckDB 2.0 WASM baseline. Native macOS/Linux ARM64 and browser EH Quack
-
-    integration were tested. Threaded Quack compatibility passes with the pinned,
-
-    source-built shared-memory artifact included in the regression workflow''s
-
-    downloads. DuckDB''s public threaded Quack artifact is still incompatible;
-
-    browser deployments must serve the compatible paired artifact as described
-
-    in the compatibility guide. Load threaded extensions before enabling query
-
-    workers. MVP WASM is excluded.
+    protocol combinations are unsupported; there is no legacy fallback.
 
 
-    Remote operations require a compatible BoilStream server and HTTPS (HTTP is
+    A pinned Noise channel authenticates the server before passwords, bootstrap
 
-    allowed only for exact loopback hosts). Native HTTP uses httpfs; managed Quack
+    tokens or OPAQUE messages are sent. Authentication and remote-secret requests,
 
-    attachment requires the core quack extension. Authentication does not provide
+    replies, status and session metadata use authenticated encrypted bodies, so
 
-    blanket protection against compromised TLS endpoints or embedding processes.
+    security does not depend on browser access to HTTP response headers or TLS
+
+    confidentiality. HTTPS remains the deployment policy. This does not encrypt
+
+    all Quack query traffic or protect a compromised embedding process.
 
 
-    The upstream OPAQUE dependency upgrade resolves the production Rust audit
+    Registration, MFA, bootstrap login, remote secret storage, explicit session
 
-    advisory and is tested against existing OPAQUE 3 password records. Host-library
+    renewal and managed catalog discovery are available. Credentials remain in
 
-    findings and full browser server-authentication coverage remain separate.
+    connection memory; logout, replacement and teardown retire that connection''s
 
-    See the [compatibility and deployment guide](https://github.com/dforsber/boilstream-extension/blob/94e2885365525a56320cac04c1661c244ee935ff/test/wasm/QUACK_COMPATIBILITY.md)
+    authority. Restart requires login again. Server hosting is separate from this
 
-    and [dependency upgrade evidence](https://github.com/dforsber/boilstream-extension/blob/94e2885365525a56320cac04c1661c244ee935ff/scripts/security/OPAQUE_UPGRADE.txt).
+    public client extension.
+
+
+    Actual native, WASM EH and pthread clients pass the private-server protocol
+
+    gate over plaintext loopback with response security headers removed. Public
+
+    CI covers native security, Rust dependency audits, both browser variants and
+
+    the distribution matrix. MVP WASM is excluded.
+
+
+    Threaded Quack needs the paired source-built shared-memory artifact; the
+
+    currently pinned public Quack artifact is incompatible with the threaded
+
+    runtime. Load dynamic extensions before enabling query workers. Native HTTP
+
+    uses httpfs; managed attachment requires the compatible quack extension.
+
+
+    See the [client setup guide](https://github.com/dforsber/boilstream-extension/blob/f35cb56fc3473bb5bdbb3b5a3c45cb14eb68bb8a/docs/application-protocol-client.md),
+
+    [security requirements](https://github.com/dforsber/boilstream-extension/blob/f35cb56fc3473bb5bdbb3b5a3c45cb14eb68bb8a/SECURITY_SPECIFICATION.md),
+
+    and [WASM compatibility guide](https://github.com/dforsber/boilstream-extension/blob/f35cb56fc3473bb5bdbb3b5a3c45cb14eb68bb8a/test/wasm/QUACK_COMPATIBILITY.md).
 
     '

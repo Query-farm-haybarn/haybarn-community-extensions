@@ -1,7 +1,7 @@
 extension:
   name: oracle_scanner
   description: Read and write Oracle Database with no Oracle client
-  version: 0.6.2
+  version: 0.8.0
   language: C++
   build: cmake
   license: Apache-2.0
@@ -11,7 +11,7 @@ extension:
   requires_toolchains: vcpkg
 repo:
   github: krokozyab/quack-oracle
-  ref: aee367eaec18b338ea047dc7e534afe1cd7a4a0b
+  ref: e2989f8baf901e42fe1c45be577619041c60b52e
   variegata: d4aa50f9bf23ca44b44f0df48fb0065ba751f5be
 docs:
   hello_world: "-- The connection lives in a secret, so credentials stay out of SQL\
@@ -49,24 +49,30 @@ docs:
 
     **Read** with `oracle_query` (bind parameters supported) or `ATTACH` a
 
-    schema and query its tables and views by name. Filters, `ORDER BY ...
+    database and query the tables and views of any schema you can see by name
 
-    LIMIT`, aggregates, joins between two attached tables, and JSON path
+    (`o.hr.employees`). Filters, `LIMIT` and `ORDER BY ... LIMIT`, aggregates
 
-    filters are sent to Oracle when its answer is provably the same; large
+    including `avg` and `count(DISTINCT ...)`, inner joins of attached tables,
 
-    tables are read through several sessions by ROWID ranges at one SCN;
+    and JSON path filters are sent to Oracle when its answer is provably the
 
-    heavy columns are fetched only for rows that pass the filter.
+    same; large tables are read through several sessions by ROWID ranges at one
+
+    SCN; heavy columns are fetched only for rows that pass the filter.
 
     `EXPLAIN ANALYZE` shows the SQL Oracle ran and the bytes it moved.
 
 
-    **Write** with `INSERT`, `UPDATE`, `DELETE` (including `RETURNING`)
+    **Write** with `INSERT`, `UPDATE`, `DELETE` (including `RETURNING`) and
 
-    through the attached schema, in DuckDB transactions that commit or roll
+    upserts (`ON CONFLICT`, `INSERT OR REPLACE`, `MERGE INTO`, run as Oracle
 
-    back on Oracle, or with `oracle_execute` for batches.
+    `MERGE`) through the attached schema, in DuckDB transactions that commit or
+
+    roll back on Oracle, or with `oracle_execute` for batches. `CREATE TABLE`,
+
+    `CREATE TABLE AS`, `ALTER TABLE` and `DROP TABLE` run in Oracle too.
 
 
     **Call** procedures and functions (`oracle_call_auto`, `oracle_call_named`,

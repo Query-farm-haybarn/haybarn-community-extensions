@@ -2,7 +2,7 @@ extension:
   name: sitting_duck
   description: Parse and analyze source code ASTs from 28 programming languages with
     tree-sitter grammars, pattern matching, and structural search
-  version: 1.18.1
+  version: 1.18.4
   language: C++
   build: cmake
   license: Apache-2.0
@@ -12,9 +12,9 @@ extension:
   haybarn_test_timeout_minutes: 120
 repo:
   github: teaguesterling/sitting_duck
-  ref: 30704be97ef09c416ea97bfd2071e2894fabec2a
+  ref: c2a386367fb3e4c0d5b55866322c2ba34fe7db9a
   variegata: cee95ef6eeb33aa6c25527769d3ebf97898aa994
-  ref_next: 30704be97ef09c416ea97bfd2071e2894fabec2a
+  ref_next: c2a386367fb3e4c0d5b55866322c2ba34fe7db9a
 docs:
   hello_world: "-- Parse Python code and find function definitions\nSELECT name, start_line,\
     \ peek\nFROM parse_ast('\ndef hello():\n    return \"hello world\"\ndef greet(name):\n\

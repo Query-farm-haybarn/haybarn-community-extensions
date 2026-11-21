@@ -14,6 +14,7 @@ extension:
 repo:
   github: Query-farm/clickhouse-sql
   ref: 7c871adf7990631ecdca77fb2cd0fc7e5c5b5665
+  haybarn_ref: d600fc42814703bdc55d482559a6ec6b2ce2a432
 
 docs:
   hello_world: |

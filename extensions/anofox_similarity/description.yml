@@ -1,13 +1,15 @@
 extension:
   name: anofox_similarity
-  version: 2026.10.31
+  version: 2026.11.14
   description: 'Multi-modal product similarity search for manufacturing supply chain
     planning. Find similar materials by BOM component overlap (Jaccard), graph-structural
     similarity (Weisfeiler-Lehman kernel), text embeddings, and transactional patterns,
     with predecessor detection and cold-start analog matching for demand forecasting.
     Requirements coverage matching: direction-aware value checks with units (EN/DE),
     property trees from JSON, a traced coverage kernel with gap lists, catalogue classification
-    with your own vectors, vocabulary review, evaluation, and MinHash/LSH recall.'
+    with your own vectors, vocabulary review, evaluation, and MinHash/LSH recall.
+    Asset Administration Shell (AAS v3): read JSON/XML/AASX, match on ECLASS / IEC
+    CDD ids, check data quality, and write results back as AAS.'
   language: C++
   build: cmake
   license: BSL 1.1
@@ -16,8 +18,8 @@ extension:
   - jrosskopf
 repo:
   github: DataZooDE/anofox-similarity
-  ref: 1f34228d15d7e17bd92d61c65dc16b52cc402a37
-  variegata: 1f34228d15d7e17bd92d61c65dc16b52cc402a37
+  ref: 4b5e49f79bf210a800ca5e8e7bce26c179a3a548
+  variegata: 4b5e49f79bf210a800ca5e8e7bce26c179a3a548
 docs:
   hello_world: "-- Components (BOM) for each product\nCREATE TABLE bom_items (parent_id\
     \ VARCHAR, child_id VARCHAR);\nINSERT INTO bom_items VALUES\n  ('PUMP-A', 'SEAL-001'),\
@@ -27,9 +29,10 @@ docs:
     \ most similar to PUMP-A by shared components\nSELECT material_id, similarity,\
     \ shared_components, total_components\nFROM find_similar_materials_jaccard('PUMP-A',\
     \ 3, bom_table := 'bom_items')\nORDER BY similarity DESC;\n-- PUMP-B   0.75  3\
-    \  4   (high overlap)\n-- PUMP-C   0.0   0  5   (disjoint)\n\n-- Structural similarity\
-    \ that also weighs BOM topology, not just component sets\nSELECT wl_kernel_similarity('PUMP-A',\
-    \ 'PUMP-B', iterations := 3, bom_table := 'bom_items');\n"
+    \  4   (PUMP-C shares nothing and is left out; min_similarity := 0 keeps it)\n\
+    \n-- Structural similarity that also weighs BOM topology, not just component sets\n\
+    SELECT wl_kernel_similarity('PUMP-A', 'PUMP-B', iterations := 3, bom_table :=\
+    \ 'bom_items');\n"
   extended_description: "anofox_similarity helps manufacturers answer \"which existing\
     \ product is this\nnew one most like?\" directly against ERP master data (SAP,\
     \ Microsoft\nDynamics 365, or a plain `bom_items` table), which is the key input\
@@ -45,13 +48,21 @@ docs:
     \ products to seed a forecast for a\n  brand-new material with no history at all.\n\
     - `compute_fused_embeddings` combines structural, transactional, and text\n  embedding\
     \ signals into one fusable vector, indexable with DuckDB's `vss`\n  extension\
-    \ via the bundled HNSW index helpers.\n\nSAP (MARA/MAKT/MAST/STKO/STPO) and Dynamics\
-    \ 365 transformation macros\n(`sap_to_bom_items`, `sap_to_materials_with_desc`,\
-    \ ...) normalize common\nERP exports into the BOM/material schema the rest of\
-    \ the extension expects,\nso integration is mostly `SELECT * FROM sap_to_bom_items(...)`.\n\
-    \nAll table functions accept a fully qualified read-only DuckDB database and\n\
-    degrade gracefully when optional companion extensions (`anofox_forecast`\nfor\
-    \ time-series features, `duckpgq` for property-graph BOM queries) are\nnot loaded.\n\
-    \nThe extension collects anonymous usage telemetry (an envelope-only\n`extension_loaded`\
-    \ event; never table names, keys, or SQL). Disable with\n`SET anofox_telemetry_enabled\
+    \ via the bundled HNSW index helpers.\n\nSAP (MARA/MAKT/MAST/STKO/STPO/STAS) and\
+    \ Dynamics 365 (BOMVersion, BOM\nlines) readers (`sap_to_bom_items`, `dynamics365_to_bom_header`,\
+    \ ...) turn\nERP exports into the BOM/material schema the rest of the extension\
+    \ expects,\napplying BOM categories, alternatives, versions on a reference date\
+    \ and\ndeletion flags, so integration is mostly `SELECT * FROM sap_to_bom_items(...)`.\n\
+    \nRequirements coverage matching answers \"which past programme or supplier\n\
+    offer covers this request, and what is missing\": `tree_coverage` scores\nproperty\
+    \ trees with unit- and direction-aware value checks and returns a\ngap list. Supplier\
+    \ offers and requests can come straight from Asset\nAdministration Shells (`aas_to_trees`,\
+    \ `aas_issues`, `aas_quality`), and a\nmatch can be written back as an AAS CoverageResult\
+    \ submodel.\n\nA Claude Code plugin with six skills (in the repository) teaches\
+    \ an AI\nassistant to write correct SQL for the extension.\n\nAll table functions\
+    \ accept a fully qualified read-only DuckDB database and\ndegrade gracefully when\
+    \ optional companion extensions (`anofox_forecast`\nfor time-series features,\
+    \ `duckpgq` for property-graph BOM queries) are\nnot loaded.\n\nThe extension\
+    \ collects anonymous usage telemetry (an envelope-only\n`extension_loaded` event;\
+    \ never table names, keys, or SQL). Disable with\n`SET anofox_telemetry_enabled\
     \ = false` or `DATAZOO_DISABLE_TELEMETRY=1`;\nsee TELEMETRY.md in the repository.\n"

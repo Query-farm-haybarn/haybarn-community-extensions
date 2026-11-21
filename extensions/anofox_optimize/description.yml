@@ -1,6 +1,6 @@
 extension:
   name: anofox_optimize
-  version: 2026.11.7
+  version: 2026.11.13
   description: "Combinatorial decision algorithms as SQL \u2014 bin packing, knapsack,\
     \ wave batching, sequencing, scheduling, assortment and portfolio selection"
   language: C++
@@ -11,8 +11,8 @@ extension:
   excluded_platforms: windows_amd64_rtools;windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
 repo:
   github: DataZooDE/anofox-optimize
-  ref: 7d1f61390d76657b25d6d1090eceb26b98a35efc
-  variegata: 7d1f61390d76657b25d6d1090eceb26b98a35efc
+  ref: 108c1cc5eeb9befd7631268c95f4d39c558bbc26
+  variegata: 108c1cc5eeb9befd7631268c95f4d39c558bbc26
 docs:
   hello_world: "-- Cartons waiting to ship, and a container that holds 1000 units.\n\
     CREATE TABLE cartons AS SELECT * FROM VALUES\n  (1, 420.0), (2, 380.0), (3, 260.0),\
@@ -63,12 +63,16 @@ docs:
     \ arguments and model opposite\neconomics \u2014 products cannibalising each other,\
     \ versus demand flowing to the\nsurvivors when you delist. And `sequence_*` and\
     \ `schedule_*` both order\njobs, but only `schedule_*` knows about due dates.\n\
-    \n### Testing\n\nThe suite asserts against optima computed **outside** the extension:\n\
-    Falkenauer triplets whose optimum is fixed by construction, subset-sum\nsolved\
-    \ by DP, Held-Karp scheduling, and portfolio enumeration over all\n15,504 subsets.\
-    \ That standard has already paid for itself \u2014 it caught a\nlocal search returning\
-    \ 168 against a proven optimum of 60, and an \"exact\"\nscheduler that was not\
-    \ exact.\n\nThe extension collects anonymous usage telemetry, switched off with\n\
-    `SET anofox_telemetry_enabled = false`. See the\n[project repository](https://github.com/DataZooDE/anofox-optimize)\
+    \n### Claude Code plugin\n\nThe repository is also a Claude Code plugin marketplace:\n\
+    `/plugin marketplace add DataZooDE/anofox-optimize`, then\n`/plugin install anofox-optimize@anofox-optimize`.\
+    \ Five skills (formulate,\ndata-prep, solve, evaluate, visualize) take an assistant\
+    \ from a business\nproblem to a solved, checked and plotted decision.\n\n### Testing\n\
+    \nThe suite asserts against optima computed **outside** the extension:\nFalkenauer\
+    \ triplets whose optimum is fixed by construction, subset-sum\nsolved by DP, Held-Karp\
+    \ scheduling, and portfolio enumeration over all\n15,504 subsets. That standard\
+    \ has already paid for itself \u2014 it caught a\nlocal search returning 168 against\
+    \ a proven optimum of 60, and an \"exact\"\nscheduler that was not exact.\n\n\
+    The extension collects anonymous usage telemetry, switched off with\n`SET anofox_telemetry_enabled\
+    \ = false`. See the\n[project repository](https://github.com/DataZooDE/anofox-optimize)\
     \ for\nguides, the theory notes, and an API reference generated from\n`duckdb_functions()`\
     \ of the built extension.\n"

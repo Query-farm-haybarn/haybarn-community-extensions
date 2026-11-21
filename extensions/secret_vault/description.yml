@@ -1,0 +1,44 @@
+extension:
+  name: secret_vault
+  description: 'Encrypted local storage for persistent secrets: a drop-in SecretStorage
+    (local_encrypted) that writes AES-256-GCM ciphertext instead of plaintext, with
+    keyring/passphrase/env key providers, migration, rotation, and one-time-envelope
+    export/import'
+  version: 0.2.0
+  language: C++
+  build: cmake
+  license: BSL 1.1
+  excluded_platforms: linux_amd64_musl;osx_amd64;osx_arm64;wasm_mvp;wasm_eh;wasm_threads;windows_amd64_mingw;windows_amd64_rtools
+  requires_toolchains: rust
+  maintainers:
+  - robert-guangzhou
+  - xiehuiqiang
+repo:
+  github: robert-guangzhou/duckdb-secret-vault
+  ref: 6a625a54cfb6b634e953e316391295f3225711ca
+docs:
+  hello_world: "INSTALL secret_vault FROM community;\nLOAD secret_vault;\n\n-- choose\
+    \ where the encryption key lives (keyring | passphrase | env)\nSET secret_vault_provider\
+    \ = 'env';        -- e.g. SECRET_VAULT_KEY injected by your scheduler\n\n-- persistent\
+    \ secrets are now written encrypted (DSVLT + AES-256-GCM)\nCREATE PERSISTENT SECRET\
+    \ my_s3 IN local_encrypted (\n    TYPE s3, KEY_ID 'AKIA...', SECRET 'shhh', REGION\
+    \ 'us-east-1');\n\nSELECT name, storage, secret_string FROM duckdb_secrets();\n\
+    -- my_s3 | local_encrypted | ... secret=redacted ...\n"
+  extended_description: "DuckDB stores persistent secrets on disk in **unencrypted**\
+    \ binary form\n(`~/.duckdb/stored_secrets`). secret_vault registers an alternative\
+    \ storage,\n`local_encrypted`, that writes every secret as AES-256-GCM ciphertext\
+    \ with a\nper-file random nonce and an AEAD tag bound to the secret name (rename/tamper\n\
+    fails loudly). Files keep 600 permissions; the key never touches disk:\n\n- **keyring**\
+    \ (default): a random 256-bit master key in the OS keychain\n  (Windows Credential\
+    \ Manager / macOS Keychain / Linux Secret Service),\n  generated on first use.\n\
+    - **passphrase**: Argon2id (64 MiB, t=3) with a per-file random salt.\n- **env**:\
+    \ a base64 32-byte key injected per run for schedulers/CI.\n\nAlso ships `secret_vault_status()`,\
+    \ `secret_vault_migrate()` (plaintext\nlocal_file secrets -> encrypted, conflict-safe),\
+    \ `secret_vault_rotate()`\n(re-encrypt everything under a new provider/key), and\
+    \ one-time encrypted\n**envelopes** (`secret_vault_export`/`import`) to move secrets\
+    \ between\ninstances without ever putting a key in the environment: the envelope\
+    \ is\nsealed under a single-use 256-bit transport code (base32, entered via stdin),\n\
+    and the importing instance re-encrypts with its own local key. Works with any\n\
+    secret type (s3, mysql, postgres, nats_rw, ...) because it encrypts DuckDB's\n\
+    own serialization blob.\n\nThreat model, key-generation guide and dev/repin docs\
+    \ live in the repo's\n`docs/` directory.\n"

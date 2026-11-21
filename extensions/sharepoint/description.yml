@@ -1,6 +1,6 @@
 extension:
   name: sharepoint
-  version: 2026.11.03
+  version: 2026.11.13
   description: SharePoint and OneDrive in SQL -- files (sharepoint://), Excel workbooks,
     SharePoint lists, search and change feeds
   language: C++
@@ -12,8 +12,8 @@ extension:
   - sipemu
 repo:
   github: DataZooDE/duckdb-sharepoint
-  ref: 9704b2b63de18beb1666872409d298e0edcc0229
-  variegata: 9704b2b63de18beb1666872409d298e0edcc0229
+  ref: a4426c0f600408465e2f13b30a1bee72e00d78e0
+  variegata: a4426c0f600408465e2f13b30a1bee72e00d78e0
 docs:
   hello_world: "-- App-only auth: an Entra ID app registration with the Sites.ReadWrite.All\n\
     -- APPLICATION permission and admin consent. Bind it to a document library\n--\
@@ -41,11 +41,17 @@ docs:
     \ reads SharePoint lists as typed tables (WHERE\npushed down to Graph on indexed\
     \ columns) and `COPY ... (FORMAT\nsharepoint_list)` creates or updates items;\
     \ `read_sharepoint_files` lists a\nlibrary with its metadata; `search_sharepoint`\
-    \ runs Microsoft Search;\n`sharepoint_changes` returns the files changed since\
-    \ a token;\n`?version=` reads an earlier version of a file.\nBesides app-only\
-    \ client credentials or a certificate, a user can sign in\nwith `device_code`\
-    \ or `authorization_code`. Also registers the\nscheme-generic `write_blob`, `remove_file`,\
-    \ `move_file` and `file_size` SQL\nfunctions, which work for any filesystem DuckDB\
-    \ can reach.\n\nThis is **SharePoint / OneDrive via Microsoft Graph**, not Azure\
-    \ Blob\nStorage \u2014 a different product with a different API. For `az://`/`abfss://`\n\
-    containers use the `azure` extension.\n"
+    \ runs Microsoft Search;\n`sharepoint_changes` / `sharepoint_list_changes` return\
+    \ what changed\nsince a token; `?version=` reads an earlier version of a file.\n\
+    `ATTACH` a site to see its lists (and, with `WORKBOOKS`, Excel tables) in\nthe\
+    \ catalog; the `excel` extension's `read_xlsx` / `FORMAT xlsx` work on\n`sharepoint://`\
+    \ paths;\n`read_docx` reads Word documents and `COPY ... (FORMAT docx, TEMPLATE\
+    \ ...)`\nfills templates; `read_onenote_pages`, `read_outlook_messages`,\n`read_planner_tasks`\
+    \ / `read_todo_tasks` and `sharepoint_permissions`\nreach OneNote, Outlook mail,\
+    \ tasks and sharing.\nBesides app-only client credentials or a certificate, a\
+    \ user can sign in\nwith `device_code` or `authorization_code`. Also registers\
+    \ the\nscheme-generic `write_blob`, `remove_file`, `move_file` and `file_size`\
+    \ SQL\nfunctions, which work for any filesystem DuckDB can reach.\n\nThis is **SharePoint\
+    \ / OneDrive via Microsoft Graph**, not Azure Blob\nStorage \u2014 a different\
+    \ product with a different API. For `az://`/`abfss://`\ncontainers use the `azure`\
+    \ extension.\n"

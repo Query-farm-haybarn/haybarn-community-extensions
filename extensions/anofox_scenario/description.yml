@@ -1,68 +1,78 @@
 extension:
   name: anofox_scenario
-  version: 2026.10.21
-  description: Git-like branching for analytical databases. Attach isolated what-if scenarios as catalogs, edit them with ordinary SQL on copy-on-write delta storage, branch, diff, and merge them back.
+  version: 2026.11.13
+  description: Git-like branching for analytical databases. Attach isolated what-if
+    scenarios as catalogs, edit them with ordinary SQL on copy-on-write delta storage,
+    branch, diff, and merge them back.
   language: C++
   build: cmake
-  excluded_platforms: "windows_amd64_rtools;windows_amd64_mingw;"
+  excluded_platforms: windows_amd64_rtools;windows_amd64_mingw;
   license: BSL 1.1
-  requires_toolchains: "cmake, openssl"
+  requires_toolchains: cmake, openssl
   maintainers:
-    - jrosskopf
-
+  - jrosskopf
 repo:
   github: DataZooDE/anofox-scenario
-  ref: 1813667992e470e4f775e2a5714ed6a23e213821
-  variegata: 1813667992e470e4f775e2a5714ed6a23e213821
-
+  ref: 2b25c9851831babc0d8512b7017a5f6c5b7c0731
+  variegata: 2b25c9851831babc0d8512b7017a5f6c5b7c0731
 docs:
-  hello_world: |
-    -- History as recorded
+  hello_world: '-- History as recorded
+
     CREATE TABLE sales_plan (region VARCHAR PRIMARY KEY, units INTEGER);
-    INSERT INTO sales_plan VALUES ('EMEA', 1000), ('AMER', 2000), ('APAC', 500);
 
-    -- Branch a what-if world: two statements, then it's just SQL
-    CALL scenario_create('aggressive_q4', 'push APAC hard');
-    ATTACH 'aggressive_q4' AS q4 (TYPE scenario);
+    INSERT INTO sales_plan VALUES (''EMEA'', 1000), (''AMER'', 2000), (''APAC'', 500);
 
-    UPDATE q4.sales_plan SET units = 1500 WHERE region = 'APAC';
-    DELETE FROM q4.sales_plan WHERE region = 'EMEA';
+
+    -- Branch a what-if world: two statements, then it''s just SQL
+
+    CALL scenario_create(''aggressive_q4'', ''push APAC hard'');
+
+    ATTACH ''aggressive_q4'' AS q4 (TYPE scenario);
+
+
+    UPDATE q4.sales_plan SET units = 1500 WHERE region = ''APAC'';
+
+    DELETE FROM q4.sales_plan WHERE region = ''EMEA'';
+
 
     -- Both worlds coexist; the base is never written
-    SELECT 'base' AS world, * FROM sales_plan
+
+    SELECT ''base'' AS world, * FROM sales_plan
+
     UNION ALL
-    SELECT 'scenario', * FROM q4.sales_plan ORDER BY world, region;
+
+    SELECT ''scenario'', * FROM q4.sales_plan ORDER BY world, region;
+
 
     -- Audit the changes, then promote them
-    SELECT * FROM scenario_diff('aggressive_q4', 'sales_plan');
-    SELECT * FROM scenario_merge('aggressive_q4');
-  extended_description: |
-    anofox_scenario brings git-like branching to DuckDB databases. A scenario is
-    an attached catalog (`ATTACH 'name' AS s (TYPE scenario)`) over your existing
-    tables: reads merge the base with the scenario's copy-on-write delta on the
-    fly, and INSERT / UPDATE / DELETE / `MERGE INTO` / `ON CONFLICT` (all with
-    RETURNING) land in the delta — the base tables are never modified.
 
-    Three isolation tiers: a live overlay (default), `mode := 'materialized'`
-    point-in-time copies, and DuckLake bases pinned to creation time via
-    `AT (TIMESTAMP)` for zero-copy snapshot isolation. Scenarios branch from each
-    other (`from_scenario :=`), inheriting changes, declared row identities, and
-    snapshot pins.
+    SELECT * FROM scenario_diff(''aggressive_q4'', ''sales_plan'');
 
-    A streaming diff engine (`scenario_diff`, `scenario_diff_summary`) audits any
-    world against its origin or another world, and
-    `scenario_merge(name, on_conflict := 'abort'|'ours'|'theirs')` promotes a
-    scenario into its base atomically — with true 3-way drift conflicts when a
-    creation snapshot exists. Views rebind inside scenarios, all base schemas
-    are mirrored, and tables without a primary key work either via
-    `key_columns :=` declared identity or bag semantics with multiplicity
-    tracking.
+    SELECT * FROM scenario_merge(''aggressive_q4'');
 
-    Scenario worlds compose with table-name-driven extensions: for example
-    `ts_forecast_by('s.demand', ...)` (anofox_forecast) forecasts a what-if
-    world directly, no copies needed.
-
-    The extension collects anonymous usage telemetry (an envelope-only
-    `extension_loaded` event; never table names, keys, or SQL). Disable with
-    `SET anofox_scenario_telemetry_enabled = false` or
-    `DATAZOO_DISABLE_TELEMETRY=1`; see TELEMETRY.md in the repository.
+    '
+  extended_description: "anofox_scenario brings git-like branching to DuckDB databases.\
+    \ A scenario is\nan attached catalog (`ATTACH 'name' AS s (TYPE scenario)`) over\
+    \ your existing\ntables: reads merge the base with the scenario's copy-on-write\
+    \ delta on the\nfly, and INSERT / UPDATE / DELETE / `MERGE INTO` / `ON CONFLICT`\
+    \ (all with\nRETURNING) land in the delta \u2014 the base tables are never modified.\n\
+    \nThree isolation tiers: a live overlay (default), `mode := 'materialized'`\n\
+    point-in-time copies, and DuckLake bases pinned to creation time via\n`AT (TIMESTAMP)`\
+    \ for zero-copy snapshot isolation. Scenarios branch from each\nother (`from_scenario\
+    \ :=`), inheriting changes, declared row identities, and\nsnapshot pins.\n\nA\
+    \ streaming diff engine (`scenario_diff`, `scenario_diff_summary`) audits any\n\
+    world against its origin or another world, and\n`scenario_merge(name, on_conflict\
+    \ := 'abort'|'ours'|'theirs')` promotes a\nscenario into its base atomically.\
+    \ Base rows edited after the scenario\ntouched them are reported as conflicts\
+    \ (pre-images for live overlays, 3-way\nagainst the snapshot otherwise), and `scenario_merge_preview`\
+    \ shows the plan\nfirst. Base `ALTER TABLE ... ADD COLUMN` carries into open scenarios.\
+    \ Views\nrebind inside scenarios, all base schemas are mirrored, and tables without\
+    \ a primary key work either via\n`key_columns :=` declared identity or bag semantics\
+    \ with multiplicity\ntracking.\n\nScenario worlds compose with table-name-driven\
+    \ extensions: for example\n`ts_forecast_by('s.demand', ...)` (anofox_forecast)\
+    \ forecasts a what-if\nworld directly, no copies needed.\n\nA Claude Code plugin\
+    \ with usage-pattern skills (what-if, safe change,\nsnapshot/audit, reference)\
+    \ ships in the repository:\n`/plugin marketplace add DataZooDE/anofox-scenario`.\n\
+    \nThe extension collects anonymous usage telemetry (an envelope-only\n`extension_loaded`\
+    \ event; never table names, keys, or SQL). Disable with\n`SET anofox_scenario_telemetry_enabled\
+    \ = false` or\n`DATAZOO_DISABLE_TELEMETRY=1`; see TELEMETRY.md in the repository.\n"

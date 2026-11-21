@@ -16,4 +16,4 @@ repo:
   github: query-farm/marisa
   ref: 3235fe43770ee93df1ff8d7f39d075da91dc76cf
   variegata: e51a6a0125424d5153063802505d6aaae85651d0
-  haybarn_ref: 4d9c60133042a7c046740e00f944e1c6a8aa78b1
+  haybarn_ref: fbc49ae157e0239c473e528c46d7dd84c5f6dc93

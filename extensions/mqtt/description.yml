@@ -1,0 +1,62 @@
+extension:
+  name: mqtt
+  description: "MQTT message ingestion for DuckDB \u2014 mqtt_scan() subscribes to\
+    \ any broker topic (wildcards supported) and returns messages as SQL rows, via\
+    \ pure-Rust rumqttc, no native broker library"
+  version: 0.1.0
+  language: Rust
+  build: cargo
+  license: MIT
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_rtools;windows_amd64_mingw;linux_amd64_musl
+  requires_toolchains: rust;python3
+  maintainers:
+  - alitrack
+repo:
+  github: alitrack/duckdb_mqtt
+  ref: 244c376534cdc1d10e6eb56aba705613723f8c27
+  ref_next: 244c376534cdc1d10e6eb56aba705613723f8c27
+docs:
+  hello_world: 'INSTALL mqtt FROM community;
+
+    LOAD mqtt;
+
+
+    -- Collect up to 100 messages on all topics within 10 seconds
+
+    SELECT * FROM mqtt_scan(''localhost'', ''#'', 100, 10);
+
+
+    -- Only sensor telemetry, as a table
+
+    SELECT received_at, topic, payload
+
+    FROM mqtt_scan(''test.mosquitto.org'', ''factory/+/temperature'', 50, 30);
+
+    '
+  extended_description: "## mqtt \u2014 MQTT Message Ingestion for DuckDB\n\nA native\
+    \ Rust DuckDB loadable extension that subscribes to any\n[MQTT](https://mqtt.org)\
+    \ broker and returns the received messages as SQL\nrows \u2014 powered by pure-Rust\
+    \ [rumqttc](https://github.com/bytebeamio/rumqttc)\n(MQTT 3.1.1/5), written against\
+    \ DuckDB's C Extension API (ABI v1.2.0)\nthrough [quack-rs](https://github.com/tomtom215/quack-rs).\
+    \ No native broker\nlibrary, no Python, no background services.\n\nEach `mqtt_scan`\
+    \ call is a bounded one-shot subscription: connect \u2192\nsubscribe \u2192 collect\
+    \ \u2192 disconnect. It fits DuckDB's table-function pull\nmodel \u2014 no threads\
+    \ outlive the query.\n\n### Functions\n\n| Function | Description |\n|---|---|\n\
+    | `mqtt_scan(url, topic, max_messages, timeout_secs)` | Subscribe to `topic` on\
+    \ `url`, collect up to `max_messages` within `timeout_secs` \u2192 table |\n|\
+    \ `mqtt_version()` | Build/engine info string |\n\n`mqtt_scan` columns: `received_at\
+    \ TIMESTAMP, topic VARCHAR, qos TINYINT,\nretain BOOLEAN, payload VARCHAR (lossy\
+    \ UTF-8), payload_bytes BLOB (lossless)`.\n\nArguments are bind-time constants\
+    \ (literals). `url` accepts `host`,\n`host:port`, `mqtt://\u2026`, `mqtts://\u2026\
+    ` (default ports 1883/8883). `topic`\nsupports MQTT wildcards (`+` single level,\
+    \ `#` multi-level). The scan\nstops at `max_messages` or `timeout_secs`, whichever\
+    \ hits first.\nRetained messages matching the filter are delivered on subscribe,\
+    \ which\nmakes deterministic one-shot tests easy. Connection failures yield zero\n\
+    rows, never an abort.\n\n```sql\n-- Per-topic message rates straight from the\
+    \ broker\nSELECT topic, count(*) AS n, avg(length(payload)) AS avg_len\nFROM mqtt_scan('localhost',\
+    \ '#', 1000, 60)\nGROUP BY topic ORDER BY n DESC;\n\n-- Raw bytes for binary payloads\
+    \ (protobufs, CBOR, \u2026)\nSELECT topic, payload_bytes FROM mqtt_scan('localhost',\
+    \ 'telemetry/#', 10, 5);\n```\n\nLong-running streaming ingest is out of scope\
+    \ for v1; the recommended\npattern is periodic incremental scans keyed on `received_at`.\n\
+    \nWindows and musl builds are excluded pending CI coverage, matching the\nother\
+    \ quack-rs based community extensions.\n\n\u2192  [GitHub](https://github.com/alitrack/duckdb_mqtt)\n"

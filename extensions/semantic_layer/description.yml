@@ -2,7 +2,7 @@ extension:
   name: semantic_layer
   description: Define metrics, dimensions and relationships once in SQL, then query
     them at the right grain
-  version: 0.1.0
+  version: 0.2.0
   language: C++
   build: cmake
   license: MIT
@@ -10,7 +10,7 @@ extension:
   - redox
 repo:
   github: altertable-ai/duckdb-semantic_layer
-  ref: d03fcadc22627eae229e5a416d31289e3bc70873
+  ref: 2b2a186cfb94f6f90ee70fc24e61469975fa1ab7
   variegata: 1cea189f6d4f9e6af30c09ecb085883784cd04e0
 docs:
   hello_world: "INSTALL semantic_layer FROM community;\nLOAD semantic_layer;\n\n--\
@@ -38,7 +38,17 @@ docs:
     \ = 1998\nGROUP BY segment\nORDER BY revenue DESC;\n\n-- TIME (o_orderdate) adds\
     \ a calendar every metric reaching orders can group by.\nSELECT * FROM SEMANTIC_VIEW(\n\
     \  sales\n  DIMENSIONS metric_time.month\n  METRICS lines.revenue, lines.revenue_ytd,\
-    \ revenue_growth\n  WHERE metric_time.year = DATE '1997-01-01'\n)\nORDER BY month;\n"
+    \ revenue_growth\n  WHERE metric_time.year = DATE '1997-01-01'\n)\nORDER BY month;\n\
+    \n-- Query-time filters and transforms, without defining a metric first.\nSELECT\
+    \ * FROM SEMANTIC_VIEW(\n  sales\n  DIMENSIONS metric_time.year\n  METRICS lines.revenue,\n\
+    \          AGG(lines.revenue) FILTER (WHERE customers.segment = 'BUILDING') AS\
+    \ building_revenue,\n          time_shift(lines.revenue, INTERVAL 1 YEAR)    \
+    \                   AS revenue_last_year,\n          cumulative(lines.revenue)\
+    \                                        AS running_revenue\n)\nORDER BY year;\n\
+    \n-- Window functions and QUALIFY work in queries by name.\nSELECT segment, order_year,\
+    \ AGG(revenue) AS revenue,\n       RANK() OVER (PARTITION BY order_year ORDER\
+    \ BY AGG(revenue) DESC) AS rnk\nFROM sales\nGROUP BY ALL\nQUALIFY rnk <= 2\nORDER\
+    \ BY order_year, rnk;\n"
   extended_description: "**semantic_layer** is a semantic layer inside DuckDB. Describe\
     \ logical tables, the\nrelationships between them, and the facts, dimensions and\
     \ metrics that matter, with\n`CREATE SEMANTIC VIEW`. Then query any combination\
@@ -51,8 +61,11 @@ docs:
     \ / `month` / `quarter` / `year`), with period-over-period\n  offsets, running\
     \ totals, to-date and trailing windows.\n- Many-to-many relationships, semi-additive\
     \ metrics, role-playing relationships,\n  time-dependent and range joins, metric\
-    \ filters and window metrics.\n- Materializations pre-aggregate metrics at a chosen\
-    \ grain. Matching queries read\n  them, and DuckLake sources can be refreshed\
+    \ filters and window metrics.\n- At query time, without defining a metric first:\
+    \ `time_shift(...)` and\n  `cumulative(...)` shift or accumulate a metric, and\
+    \ `AGG(<metric>) FILTER (WHERE ...)`\n  filters one. Queries by name also take\
+    \ window functions and `QUALIFY`.\n- Materializations pre-aggregate metrics at\
+    \ a chosen grain. Matching queries read\n  them, and DuckLake sources can be refreshed\
     \ incrementally.\n- Semantic views show up in `information_schema` like regular\
     \ views, with one typed\n  column per dimension, fact and metric.\n- The syntax\
     \ follows [Snowflake semantic views](https://docs.snowflake.com/en/user-guide/views-semantic/overview).\n\

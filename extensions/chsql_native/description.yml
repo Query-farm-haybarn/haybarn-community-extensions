@@ -15,6 +15,7 @@ extension:
 repo:
   github: Query-farm/duckdb-extension-clickhouse-native
   ref: b4eb00a862edb20cd5b8c8dc05aa683385c8dfa1
+  haybarn_ref: a043b44cb96b8063d327ec334d3f5bea1311fb33
 
 docs:
   hello_world: |
