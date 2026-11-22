@@ -7,6 +7,9 @@ extension:
   build: cmake
   license: MIT
   excluded_platforms: windows_amd64_mingw
+  # Haybarn builds the full extension at haybarn_ref (native Iroh is Rust),
+  # not upstream's placeholder, so it keeps the Rust toolchain.
+  requires_toolchains: parser_tools;rust
   maintainers:
   - rustyconover
 repo:
