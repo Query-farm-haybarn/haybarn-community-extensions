@@ -5,7 +5,7 @@ extension:
     \ in the query, from hosted (TypeSafe Jev, Liquid AI D1, Cloudflare Clef, OpenAI\
     \ Decisions, Gemini Decisions), local-server and in-process ONNX decision models,\
     \ plus calibration metrics"
-  version: 2026.11.13
+  version: 2026.11.22
   language: C++
   build: cmake
   license: MIT
@@ -15,8 +15,8 @@ extension:
   excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_mingw;linux_amd64_musl;osx_amd64
 repo:
   github: DataZooDE/anofox-decide
-  ref: 9dc6229ed59c035f2ad5cb5da218e48a47c0194f
-  variegata: 9dc6229ed59c035f2ad5cb5da218e48a47c0194f
+  ref: 342580440c6478618818fd126ec9e69a78ced970
+  variegata: 342580440c6478618818fd126ec9e69a78ced970
 docs:
   hello_world: "-- Try the SQL with the built-in test model: no key, no network. It\
     \ returns\n-- constants (0.5, the first option), so it can never pass for a real\

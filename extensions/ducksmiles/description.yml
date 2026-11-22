@@ -3,7 +3,7 @@ extension:
   description: Cheminformatics and CPU numerical analytics for DuckDB - molecular
     formats, descriptors, fingerprints, similarity, regression, statistical inference,
     experimental design, time series, reliability and model evaluation from SQL
-  version: 0.7.0
+  version: 0.8.0
   language: C++
   build: cmake
   requires_toolchains: rust
@@ -14,14 +14,15 @@ extension:
   - nkwork9999
 repo:
   github: nkwork9999/duckSMILES
-  ref: bc898ea130d08fc02136e226fb55e9887f6cd27c
+  ref: 15324f9f49108299d41267c03c4696aa8e09d11e
 docs:
   hello_world: "-- Parse SMILES and get molecular formula\nSELECT mol_formula('CCO');\n\
-    -- C2H6O\n\n-- Calculate molecular weight\nSELECT round(mol_weight('c1ccccc1'),\
-    \ 2);\n-- 78.11\n\n-- Wildman-Crippen LogP and molar refractivity (match RDKit)\n\
-    SELECT round(logp_crippen('CCO'), 4), round(mol_mr('c1ccccc1'), 3);\n-- -0.0014,\
-    \ 26.442\n\n-- QED drug-likeness score (RDKit Chem.QED, weights_mean)\nSELECT\
-    \ round(qed('CC(=O)Oc1ccccc1C(=O)O'), 3);\n-- 0.550   (aspirin)\n\n-- Drug-likeness\
+    -- C2H6O\n\n-- All 291 molecular descriptors in catalog order\nSELECT mol_descriptor_catalog_json(),\
+    \ mol_descriptor_values_json('CCO');\n\n-- Calculate molecular weight\nSELECT\
+    \ round(mol_weight('c1ccccc1'), 2);\n-- 78.11\n\n-- Wildman-Crippen LogP and molar\
+    \ refractivity (match RDKit)\nSELECT round(logp_crippen('CCO'), 4), round(mol_mr('c1ccccc1'),\
+    \ 3);\n-- -0.0014, 26.442\n\n-- QED drug-likeness score (RDKit Chem.QED, weights_mean)\n\
+    SELECT round(qed('CC(=O)Oc1ccccc1C(=O)O'), 3);\n-- 0.550   (aspirin)\n\n-- Drug-likeness\
     \ rule panels + toxicophore alerts\nSELECT lipinski_violations('CC(=O)Oc1ccccc1C(=O)O'),\n\
     \       druglikeness_pass('CC(=O)Oc1ccccc1C(=O)O', 'veber'),\n       structural_alerts_json('O=Cc1ccccc1');\n\
     -- 0, 1, [\"aldehyde\",\"aldehyde_any\"]\n\n-- Morgan/ECFP fingerprint + similarity\
@@ -115,4 +116,10 @@ docs:
     \ mixing with optional binary Grunberg-Nissan G12.\n- No new runtime dependencies.\
     \ Units, assumptions and reference validation:\n  [MATERIALS.md](https://github.com/nkwork9999/duckSMILES/blob/bc898ea130d08fc02136e226fb55e9887f6cd27c/MATERIALS.md).\n\
     \n**Architecture:** Rust (core logic, zero external chemistry crates) + C++ (DuckDB\n\
-    integration via FFI).\n"
+    integration via FFI).\n\nThe native mol_descriptor_summary(smiles) function returns\
+    \ average molecular weight,\nheavy-atom count and ring count in one STRUCT from\
+    \ a single parse. The source\nrepository also includes a Python typed mass-window\
+    \ join and a batched descriptor\nreader.\n\nUse sdf_projected_properties_json(sdf,\
+    \ names) to read selected tags with original SDF record numbers.\nThe source repository\
+    \ also includes typed molecular search, versioned fingerprint indexes,\ndescriptor\
+    \ caching, and scaffold-based dataset splitting.\n\n[English project documentation](https://nkwork9999.github.io/duckSMILES/).\n"

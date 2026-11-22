@@ -1,17 +1,16 @@
 extension:
   name: anofox_forecast
-  # Haybarn: its CMake pins Rust 1.86.0 for wasm (upstream's emscripten 3.1.71 needs it, Haybarn's 6.0.13 does not);
-  # build with ci-tools' nightly so std is rebuilt for wasm_threads atomics and native wasm EH.
-  haybarn_wasm_cmake_flags: "-DANOFOX_WASM_RUST_TOOLCHAIN="
-  version: 2026.10.22
-  description: Statistical timeseries forecasting in DuckDB. Supports ARIMA, ETS, Theta, TBATS, MFLES, MSTL, Croston, GARCH, and other models.
+  version: 2026.11.19
+  description: Statistical timeseries forecasting in DuckDB. Supports ARIMA, ETS,
+    Theta, TBATS, MFLES, MSTL, Croston, GARCH, and other models.
   language: C++
   build: cmake
-  excluded_platforms: "windows_amd64;windows_amd64_rtools;windows_amd64_mingw;"
+  excluded_platforms: windows_amd64;windows_amd64_rtools;windows_amd64_mingw;
   license: BSL 1.1
   requires_toolchains: rust
   maintainers:
-    - sipemu
+  - sipemu
+  haybarn_wasm_cmake_flags: -DANOFOX_WASM_RUST_TOOLCHAIN=
 repo:
   github: DataZooDE/anofox-forecast
-  ref: b2fbfbe2b7c1f55b9081d77029d484012ff5fd11
+  ref: 3e15b3f4d76a9f190f85ac8792f04a449d42a554

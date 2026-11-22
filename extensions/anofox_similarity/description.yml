@@ -1,6 +1,6 @@
 extension:
   name: anofox_similarity
-  version: 2026.11.14
+  version: 2026.11.22
   description: 'Multi-modal product similarity search for manufacturing supply chain
     planning. Find similar materials by BOM component overlap (Jaccard), graph-structural
     similarity (Weisfeiler-Lehman kernel), text embeddings, and transactional patterns,
@@ -18,8 +18,8 @@ extension:
   - jrosskopf
 repo:
   github: DataZooDE/anofox-similarity
-  ref: 4b5e49f79bf210a800ca5e8e7bce26c179a3a548
-  variegata: 4b5e49f79bf210a800ca5e8e7bce26c179a3a548
+  ref: d7f8e29ce54c8f3984e5c325ccba0cacba48dfaa
+  variegata: d7f8e29ce54c8f3984e5c325ccba0cacba48dfaa
 docs:
   hello_world: "-- Components (BOM) for each product\nCREATE TABLE bom_items (parent_id\
     \ VARCHAR, child_id VARCHAR);\nINSERT INTO bom_items VALUES\n  ('PUMP-A', 'SEAL-001'),\

@@ -2,7 +2,7 @@ extension:
   name: miniplot
   description: SQL-driven interactive charts, narrative HTML reports, and optional
     native PNG/PDF export
-  version: 0.0.5
+  version: 0.0.6
   language: C++
   build: cmake
   license: MIT
@@ -10,7 +10,7 @@ extension:
   - nkwork9999
 repo:
   github: nkwork9999/miniplot
-  ref: 01eb3f812f1503edf79a99cd29cfded3892ae85e
+  ref: 484d907e2f7654966c6319ae6c05d1b52d0cfce3
 docs:
   hello_world: "-- Pure HTML: no file writes or browser launch\nSELECT pie_chart_html(['A',\
     \ 'B'], [1.0, 2.0], 'Shares');\n\n-- Numeric/time x axes are supported for line\
@@ -74,5 +74,22 @@ docs:
     report JSON schema, source-build instructions and export setup are in the
 
     repository README and docs directory.
+
+
+    The source repository includes host-side Python classes for time-bin reduction,
+
+    gap-separated time series and fixed-boundary histogram counts. The Python module
+    is
+
+    distributed as source and works with a host-provisioned DuckDB connection.
+
+
+    The embedded Python API also includes grouped statistics, sparse heatmaps, market
+    bars,
+
+    treemaps, revision comparison, and 3D point aggregation.
+
+
+    [English project documentation](https://nkwork9999.github.io/miniplot/).
 
     '

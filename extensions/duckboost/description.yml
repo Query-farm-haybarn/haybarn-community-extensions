@@ -2,7 +2,7 @@ extension:
   name: duckboost
   description: SQL-native histogram GBDT in DuckDB with vendor dump import and plain-SQL
     export
-  version: 0.0.5
+  version: 0.1.0
   language: C++
   build: cmake
   license: MIT
@@ -10,7 +10,7 @@ extension:
   - JavOrraca
 repo:
   github: JavOrraca/duckboost
-  ref: 0c9dc402641c7c6a25faee93e8aeb5bb70123a27
+  ref: 0ef5c3ef8fd058b4e56f518ad12ced3c2437a2e3
 docs:
   hello_world: "LOAD duckboost;\nCREATE TABLE penguins AS\nSELECT\n  body_mass_g::DOUBLE\
     \ AS body_mass_g,\n  [bill_length_mm, bill_depth_mm, flipper_length_mm, (sex =\
@@ -32,6 +32,14 @@ docs:
     imports XGBoost / LightGBM / CatBoost dumps, and exports orbital-style SQL
 
     (`duckboost_to_sql`) for inference without the extension.
+
+
+    Save fitted categorical dictionaries and numeric imputation with named-column
+    models.
+
+    Calibrate quantile models on a held-out set and export lower, median and upper
+
+    predictions as SQL.
 
 
     The [Getting Started](https://javorraca.github.io/duckboost/getting-started.html)
