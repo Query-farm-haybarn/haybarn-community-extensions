@@ -116,6 +116,9 @@ def merge_for_haybarn(upstream: dict, current: dict | None) -> tuple[dict, bool]
           Haybarn-only: a longer limit than ci-tools' 30 minutes on the
           test step, for extensions with long test suites.
 
+      extension.requires_toolchains (only with haybarn_fork / haybarn_ref)
+          The build compiles Haybarn's commit, so its toolchains are ours.
+
     NOTE on the comment block: yaml.dump (used downstream by the
     caller) doesn't preserve comments — that's a separate concern. The
     `excluded_platforms` field carries the actual semantic; the comment
@@ -137,6 +140,12 @@ def merge_for_haybarn(upstream: dict, current: dict | None) -> tuple[dict, bool]
     for key in ('excluded_platforms', 'opt_in_platforms', 'haybarn_skip_tests', 'haybarn_job_timeout_minutes', 'haybarn_wasm_cmake_flags', 'haybarn_test_timeout_minutes'):
         if key in current_ext:
             new.setdefault('extension', {})[key] = current_ext[key]
+
+    # A haybarn_fork/haybarn_ref build compiles Haybarn's commit, not upstream's,
+    # so its toolchains follow ours (vgi: upstream now ships a placeholder, ours
+    # builds the full extension with Rust).
+    if any(key in current_repo for key in ('haybarn_fork', 'haybarn_ref')) and 'requires_toolchains' in current_ext:
+        new.setdefault('extension', {})['requires_toolchains'] = current_ext['requires_toolchains']
 
     changed = current != new
     return new, changed
