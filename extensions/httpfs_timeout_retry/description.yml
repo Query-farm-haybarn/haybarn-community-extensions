@@ -1,7 +1,7 @@
 extension:
   name: httpfs_timeout_retry
   description: Add per-operation timeout and retry for httpfs extension
-  version: 0.1.4
+  version: 0.2.0
   language: C++
   build: cmake
   license: MIT
@@ -10,7 +10,7 @@ extension:
   - dentiny
 repo:
   github: dentiny/duckdb-httpfs-timeout-retry
-  ref: 079a5c60de70e64d6b37672daece4c8a38cd4029
+  ref: 39408501afde61b6257b9f610fbf2f523e90e6e1
 docs:
   hello_world: 'SET httpfs_timeout_file_operation_ms = 30000;      -- 30 seconds
 

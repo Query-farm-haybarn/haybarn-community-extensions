@@ -3,7 +3,7 @@ extension:
   description: GPU-accelerated plain DuckDB SQL on Apple Silicon Metal and NVIDIA
     CUDA - GROUP BY, joins, filters and top-k run on the GPU when measured faster,
     with the same answers. First SQL execution engine that targets Apple Silicon GPUs.
-  version: 0.7.0
+  version: 0.7.1
   language: C++
   build: cmake
   license: Apache-2.0
@@ -13,7 +13,7 @@ extension:
   - singhpratech
 repo:
   github: singhpratech/duckdbgpumetaldbram
-  ref: b712f4b7624b83873ca9c221f70a4a9b5ce5f3f7
+  ref: 80a632e381ff155fad06916a7f328efe26bf2f0a
 docs:
   hello_world: "LOAD gpudb;\n\n-- which processor will run, and what this build can\
     \ do\nSELECT gpu_build_info();\n\n-- make a (key, value) pair resident on the\
@@ -60,41 +60,42 @@ docs:
     \ planned. `gpu_upload` / `gpu_upload_pair`\nmake columns resident once; `gpu_sum_resident`,\
     \ `gpu_groupby_sum_resident`\n(`_having`, `_topk`), `gpu_topk_resident`, `gpu_inner_join`\
     \ and the exact\n`gpu_groupby_exact_*` family read them from GPU memory. `gpu_last_stats()`\
-    \ reports\nwhich processor ran and for how long.\n\n### What runs on the device\n\
-    \n| SQL | On the GPU |\n|---|---|\n| `GROUP BY` with `sum` `count` `min` `max`\
-    \ `avg`, `count(DISTINCT)` | yes \u2014 integer, `DATE`, `TIMESTAMP`, `DECIMAL`,\
-    \ `VARCHAR` keys, several keys, `GROUP BY ALL` |\n| `WHERE` | yes \u2014 one fused\
-    \ pass on the device |\n| `HAVING`, `ORDER BY ... LIMIT k` | yes |\n| Joins |\
-    \ inner, left, right, many-to-many; several payload columns |\n| Subqueries |\
-    \ `EXISTS`, `IN`, scalar subqueries as `WHERE` terms; derived tables; CTEs; views\
-    \ |\n| Aggregates without `GROUP BY` | yes |\n| Window functions, `FULL` joins,\
-    \ `median` / `stddev` / quantiles, `sum(DOUBLE)`, prepared-statement parameters,\
-    \ statements inside an explicit transaction | stay on DuckDB |\n\n`sum(DOUBLE)`\
-    \ stays on DuckDB by design: DuckDB's own result depends on the order the\nvalues\
-    \ are added, so there is no single answer for a GPU to match. The explicit `gpu_sum`\n\
-    functions remain available for it, with a stated 1e-9 relative tolerance.\n\n\
-    ### Measured (TPC-H, every row compared with native DuckDB)\n\nRelease build of\
-    \ 2026-09-20, default memory budget, N=5. A statement reaches the\nGPU through\
-    \ `execute()` or through `sql()` \u2014 two different code paths, timed\nseparately:\n\
-    \n| | asked through | on the GPU | rows differing | speed-up on those queries\
-    \ |\n|---|---|---|---|---|\n| Apple M4 Max (Metal), SF1 | execute() | 17 of 22\
-    \ | 0 | 1.52x - 15.32x |\n| Apple M4 Max (Metal), SF1 | sql() | 17 of 22 | 0 |\
-    \ 1.37x - 9.49x |\n| Apple M4 Max (Metal), SF10 | execute() | 19 of 22 | 0 | 1.06x\
-    \ - 48.10x |\n| Apple M4 Max (Metal), SF10 | sql() | 19 of 22 | 0 | 0.92x - 26.39x\
-    \ |\n| RTX 4090 Laptop (CUDA), SF1 | execute() | 17 of 22 | 0 | 1.21x (Q15) -\
-    \ 31.44x (Q9) |\n| RTX 4090 Laptop (CUDA), SF1 | sql() | 17 of 22 | 0 | 1.66x\
-    \ (Q15) - 16.27x (Q9) |\n\nPlain SQL runs on the GPU by default on both backends.\
-    \ One row is below 1.0x\nand is printed rather than dropped: TPC-H Q11 at SF10\
-    \ on Metal, a 6-7 ms\nstatement measuring 1.06x through execute() and 0.92x through\
-    \ sql(), which\nstraddles parity - the per-process measured rule is what declines\
-    \ such a\nstatement where it loses. Nothing on CUDA is below 1.0x in these runs:\
-    \ Q1\nfirst measured 0.96x and 0.98x there on the release build, the cause was\n\
-    found (a few-group key was being answered by sorting the whole column),\nCUDA\
-    \ got a direct grouped reduce for such keys, and Q1 now measures 1.99x\nand 2.07x.\n\
-    \nThe remaining queries are declined on purpose (correlated subqueries, or shapes\n\
-    where DuckDB was measured faster) and run on DuckDB unchanged. Every measurement,\n\
-    **including the shapes where the GPU loses**, is in `BENCHMARK.md`; every trade-off\n\
-    is in `KNOWN_ISSUES.md`; the dated engineering journal is `docs/RESEARCH_NOTES.md`.\n\
+    \ reports\nwhich processor ran and for how long. `SELECT * FROM gpu_functions()`\
+    \ lists every\nfunction with its parameters, a description and an example.\n\n\
+    ### What runs on the device\n\n| SQL | On the GPU |\n|---|---|\n| `GROUP BY` with\
+    \ `sum` `count` `min` `max` `avg`, `count(DISTINCT)` | yes \u2014 integer, `DATE`,\
+    \ `TIMESTAMP`, `DECIMAL`, `VARCHAR` keys, several keys, `GROUP BY ALL` |\n| `WHERE`\
+    \ | yes \u2014 one fused pass on the device |\n| `HAVING`, `ORDER BY ... LIMIT\
+    \ k` | yes |\n| Joins | inner, left, right, many-to-many; several payload columns\
+    \ |\n| Subqueries | `EXISTS`, `IN`, scalar subqueries as `WHERE` terms; derived\
+    \ tables; CTEs; views |\n| Aggregates without `GROUP BY` | yes |\n| Window functions,\
+    \ `FULL` joins, `median` / `stddev` / quantiles, `sum(DOUBLE)`, prepared-statement\
+    \ parameters, statements inside an explicit transaction | stay on DuckDB |\n\n\
+    `sum(DOUBLE)` stays on DuckDB by design: DuckDB's own result depends on the order\
+    \ the\nvalues are added, so there is no single answer for a GPU to match. The\
+    \ explicit `gpu_sum`\nfunctions remain available for it, with a stated 1e-9 relative\
+    \ tolerance.\n\n### Measured (TPC-H, every row compared with native DuckDB)\n\n\
+    Release build of 2026-09-20, default memory budget, N=5. A statement reaches the\n\
+    GPU through `execute()` or through `sql()` \u2014 two different code paths, timed\n\
+    separately:\n\n| | asked through | on the GPU | rows differing | speed-up on those\
+    \ queries |\n|---|---|---|---|---|\n| Apple M4 Max (Metal), SF1 | execute() |\
+    \ 17 of 22 | 0 | 1.52x - 15.32x |\n| Apple M4 Max (Metal), SF1 | sql() | 17 of\
+    \ 22 | 0 | 1.37x - 9.49x |\n| Apple M4 Max (Metal), SF10 | execute() | 19 of 22\
+    \ | 0 | 1.06x - 48.10x |\n| Apple M4 Max (Metal), SF10 | sql() | 19 of 22 | 0\
+    \ | 0.92x - 26.39x |\n| RTX 4090 Laptop (CUDA), SF1 | execute() | 17 of 22 | 0\
+    \ | 1.21x (Q15) - 31.44x (Q9) |\n| RTX 4090 Laptop (CUDA), SF1 | sql() | 17 of\
+    \ 22 | 0 | 1.66x (Q15) - 16.27x (Q9) |\n\nPlain SQL runs on the GPU by default\
+    \ on both backends. One row is below 1.0x\nand is printed rather than dropped:\
+    \ TPC-H Q11 at SF10 on Metal, a 6-7 ms\nstatement measuring 1.06x through execute()\
+    \ and 0.92x through sql(), which\nstraddles parity - the per-process measured\
+    \ rule is what declines such a\nstatement where it loses. Nothing on CUDA is below\
+    \ 1.0x in these runs: Q1\nfirst measured 0.96x and 0.98x there on the release\
+    \ build, the cause was\nfound (a few-group key was being answered by sorting the\
+    \ whole column),\nCUDA got a direct grouped reduce for such keys, and Q1 now measures\
+    \ 1.99x\nand 2.07x.\n\nThe remaining queries are declined on purpose (correlated\
+    \ subqueries, or shapes\nwhere DuckDB was measured faster) and run on DuckDB unchanged.\
+    \ Every measurement,\n**including the shapes where the GPU loses**, is in `BENCHMARK.md`;\
+    \ every trade-off\nis in `KNOWN_ISSUES.md`; the dated engineering journal is `docs/RESEARCH_NOTES.md`.\n\
     \n### Platforms\n\n| Platform | From this registry |\n|---|---|\n| macOS, Apple\
     \ Silicon | Metal GPU |\n| Linux x86_64 / arm64 | `SELECT gpu_build_info();` says\
     \ which backends the binary you received carries and which one it chose. Where\

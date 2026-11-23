@@ -1,0 +1,53 @@
+extension:
+  name: decide
+  description: Filter, classify, and score text with OpenAI Decisions, TypeSafe Jev,
+    or Cloudflare Clef
+  version: 0.2.2
+  language: C++
+  build: cmake
+  license: MIT
+  excluded_platforms: osx_amd64;wasm_mvp;wasm_eh;wasm_threads
+  maintainers:
+  - gzheng92
+repo:
+  github: gzheng92/duckdb-decide
+  ref: 03e8fe1da3153f9eb3cac2eb692fc876d2bdf08e
+docs:
+  hello_world: "-- OpenAI example; use your own API key.\nSET decisions_provider =\
+    \ 'openai';\nCREATE OR REPLACE SECRET openai_key (TYPE decisions, API_KEY 'your-key',\
+    \ SCOPE 'decisions://openai');\nSELECT decision_prob('The parcel arrived crushed.',\n\
+    \                     'Does this report physical damage?') AS probability;\n"
+  extended_description: "`decide` asks decision models yes/no, multiple-choice, and\
+    \ rubric questions\nfrom SQL. It supports OpenAI Decisions (the default, `gpt-6-luna`),\n\
+    TypeSafe Jev, and Cloudflare Clef (Workers AI) with the same functions:\nboolean\
+    \ predicates, probabilities, categorical choices, rubric scores, and\nexplicit\
+    \ multi-question JSON answers. `SELECT * FROM decision_providers()`\nlists the\
+    \ providers, models, and credential names.\nTyped functions batch 20 rows per\
+    \ request by default; set\n`decisions_batch_size = 1` for independent row evaluation.\
+    \ Identical rows\nin a chunk are sent once, and requests run 4 at a time by default\n\
+    (`decisions_concurrency`, 1 to 32); Ctrl-C cancels requests in flight.\n\n`decision_choice_detail`\
+    \ and `decision_score_detail` also return the\nprovider's confidence, a probability\
+    \ for each label, and the model version\nthat answered, for routing uncertain\
+    \ rows to review:\n\n```sql\nSELECT d.choice, d.confidence, d.probabilities['billing']\
+    \ AS billing, d.model\nFROM (SELECT decision_choice_detail('I was charged twice.',\
+    \ 'Which team?',\n                                    ['support', 'billing', 'shipping'])\
+    \ AS d);\n```\n\nNon-NULL inputs and instructions are sent to the selected provider\
+    \ and can\nincur API charges.\n\n### Credentials\n\nKeep one `decisions` secret\
+    \ per provider, scoped to it, so each key is sent\nonly to its own provider. Each\
+    \ provider also reads an environment variable.\n\n```sql\nCREATE OR REPLACE SECRET\
+    \ openai_key (TYPE decisions, API_KEY 'sk-...', SCOPE 'decisions://openai');\n\
+    CREATE OR REPLACE SECRET jev_key (TYPE decisions, API_KEY 'your-typesafe-key',\
+    \ SCOPE 'decisions://jev');\nCREATE OR REPLACE SECRET cf_key (TYPE decisions,\
+    \ API_KEY 'workers-ai-token',\n                      ACCOUNT_ID 'your-account-id',\
+    \ SCOPE 'decisions://cloudflare');\n```\n\nThe environment variables are `OPENAI_API_KEY`,\
+    \ `TYPESAFE_API_KEY`, and\n`CLOUDFLARE_API_TOKEN` with `CLOUDFLARE_ACCOUNT_ID`.\n\
+    \n### TypeSafe Jev and Cloudflare Clef\n\n```sql\nSET decisions_provider = 'jev';\
+    \        -- default model jev-latest\nSET decisions_provider = 'cloudflare'; --\
+    \ default model clef; also 'clef-flash'\nSET decisions_model = 'jev-1.14.0'; \
+    \   -- optional override; RESET when switching\nSELECT decision_prob('The parcel\
+    \ arrived crushed.',\n                     'Does this report physical damage?')\
+    \ AS probability;\n```\n\nRequests respect provider-specific limits; Clef caps\
+    \ requests at 64 questions.\nNeither Jev nor Clef returns refusal answers. All\
+    \ providers accept text only.\n\nThis is an independent integration, not an official\
+    \ extension of OpenAI,\nTypeSafe, or Cloudflare.\nSee the [README](https://github.com/gzheng92/duckdb-decide#readme)\n\
+    for function signatures, limits, refusal handling, and batching semantics.\n"

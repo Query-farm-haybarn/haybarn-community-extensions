@@ -1,7 +1,7 @@
 extension:
   name: qvd
   description: Read (streaming) and write Qlik QVD files
-  version: 1.0.3
+  version: 1.0.10
   language: Rust
   build: cmake
   license: Apache-2.0
@@ -11,7 +11,8 @@ extension:
   - snouhaud
 repo:
   github: snouhaud/DuckDB-QVD-Extension
-  ref: f9870d64292f5a065e67b636ff714e966ea46536
+  variegata: 2aa71d2b35ffe0c27825504711dd54a9412dd214
+  ref: 3b7e8d55f20263dd3c398ec47bfe5bcb1a9c00cd
 docs:
   hello_world: 'INSTALL qvd FROM community;
 
@@ -25,9 +26,10 @@ docs:
     SELECT * FROM read_qvd(''data/*.qvd'');         -- glob
 
 
-    -- Write
+    -- Write (field names via FIELD_NAMES, one per column)
 
-    COPY (SELECT * FROM sales) TO ''output.qvd'' (FORMAT qvd, FIELD_NAMES (a, b));
+    COPY (SELECT id, amount FROM sales) TO ''output.qvd'' (FORMAT qvd, FIELD_NAMES
+    (id, amount));
 
 
     -- Import
@@ -41,4 +43,7 @@ docs:
     \  queries over large files). Native typing `BIGINT`/`DOUBLE`/`VARCHAR`/`DATE`/\n\
     \  `TIMESTAMP`/`TIME`/`INTERVAL`, projection pushdown and multi-file glob.\n-\
     \ `COPY ... TO (FORMAT qvd)` write with `FIELD_NAMES` option, and\n  `COPY tbl\
-    \ FROM 'x.qvd' (FORMAT qvd)` import.\n"
+    \ FROM 'x.qvd' (FORMAT qvd)` import (fields by position; target\n  column types\
+    \ must match the inferred ones).\n- QVD headers are treated as untrusted: sizes\
+    \ and offsets are validated\n  against the file before reading, so corrupt files\
+    \ fail cleanly.\n- Stable C ABI: one binary for DuckDB 1.5.6 and 2.0.x.\n"

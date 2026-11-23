@@ -1,8 +1,8 @@
 extension:
   name: cityjson
   description: Read, write, and query CityJSON, CityJSONSeq, FlatCityBuf, and CityParquet
-    3D city model files.
-  version: 0.4.0
+    3D city model files, with OBJ and glTF interchange.
+  version: 0.5.0
   language: C++
   build: cmake
   license: MIT
@@ -11,13 +11,14 @@ extension:
   excluded_platforms: linux_amd64;linux_arm64;linux_amd64_musl;linux_arm64_musl;osx_amd64;osx_arm64;windows_amd64;windows_arm64;windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
 repo:
   github: cityjson/duckdb-cityjson
-  ref: a1455e1a0896160660f4646d240f2fb85be34617
+  ref: df6f0e1c07642191a05b1e576b44926597a7eec8
+  variegata: 8ff774648f815e25de08a0e0adb0f636dab91359
 docs:
   hello_world: "-- Read a CityJSON file\nSELECT * FROM read_cityjson('buildings.city.json');\n\
     \n-- Read a CityJSONSeq (line-delimited) file\nSELECT * FROM read_cityjsonseq('buildings.city.jsonl');\n\
     \n-- Read a FlatCityBuf file, pushing a bounding box into its spatial index\n\
-    SELECT * FROM read_flatcitybuf('buildings.fcb',\n  min_x => 84000, min_y => 444000,\
-    \ max_x => 84500, max_y => 444500);\n\n-- Extract geometries as WKB at a specific\
+    SELECT * FROM read_flatcitybuf('buildings.fcb',\n  xmin => 84000, ymin => 444000,\
+    \ xmax => 84500, ymax => 444500);\n\n-- Extract geometries as WKB at a specific\
     \ Level of Detail\nSELECT * FROM read_cityjson('buildings.city.json', lod=>'1.2');\n\
     \n-- Write query results to CityJSONSeq; the source CRS and metadata travel too\n\
     COPY (SELECT * FROM read_cityjson('buildings.city.json'))\n  TO 'output.city.jsonl'\
@@ -26,7 +27,7 @@ docs:
     \n-- Build a CityParquet package: a schema you can validate, mutate and write\
     \ out\nCREATE SCHEMA city;\nCREATE TABLE city.building AS SELECT * FROM read_cityjson('buildings.city.json');\n\
     PRAGMA cityparquet_init('city');\nPRAGMA cityparquet_validate('city');\nSELECT\
-    \ * FROM cityparquet_write('city', 'out/city');\n"
+    \ * FROM cityparquet_write('city', 'city_package');\n"
   extended_description: "The CityJSON extension provides table functions for reading\
     \ and writing 3D city model files\nin CityJSON (.city.json), CityJSONSeq (.city.jsonl),\
     \ and FlatCityBuf (.fcb) formats, and for\nbuilding CityParquet packages. CityJSON\
@@ -36,7 +37,7 @@ docs:
     \ objects\n- `cityjson_metadata`, `cityjsonseq_metadata`, `flatcitybuf_metadata`\
     \ \u2014 inspect file headers\n- `COPY ... TO` with formats `cityjson`, `cityjsonseq`,\
     \ and `flatcitybuf` \u2014 write query results\n\nAppearance:\n- `cityjson_materials`,\
-    \ `cityjson_textures`, `cityjson_geometry_templates` \u2014 sidecar readers\n\
+    \ `cityjson_textures`, `cityjson_implicit_geometries` \u2014 sidecar readers\n\
     - Per-LoD `material_lod*` / `texture_lod*` reference columns, or `appearance :=\
     \ 'sidecar'`\n  to normalise appearance into sidecar tables with global ids and\
     \ inlined UV coordinates\n\nCityParquet packages \u2014 a package is a DuckDB\
@@ -46,15 +47,18 @@ docs:
     \ module\n- `cityparquet_validate`, `cityparquet_reconcile`, `cityparquet_orphans`,\
     \ `cityparquet_vacuum`\n- `cityparquet_delete` (with cascade) and `cityparquet_merge`\n\
     - `cityjson_geoparquet_geo` \u2014 the GeoParquet `geo` and CityParquet `city`\
-    \ footer objects\n\nAdditional features:\n- Automatic schema inference from CityJSON\
-    \ attributes\n- Wide columnar layout: one WKB geometry column per Level of Detail,\
-    \ plus a per-object `bbox` extent\n- `geometry_properties_lod*` as a native STRUCT,\
-    \ so semantic surfaces and shells are columns\n- Spatial and attribute-query pushdown\
-    \ on FlatCityBuf, using the file's R-tree and B+tree indexes\n- Selective deserialisation:\
-    \ a query projecting no geometry never decodes it\n- Filter pushdown on `id`,\
-    \ `feature_id`, and `object_type`\n- Streaming reads of large CityJSONSeq files\
-    \ and remote files over HTTP/S3/GCS\n- CRS handling follows GeoParquet's tri-state\
-    \ convention, so a georeferenced file never\n  silently claims OGC:CRS84\n- Support\
-    \ for CityJSON v2.0 and CityJSONSeq formats\n\nFull documentation \u2014 every\
-    \ function, its parameters and its output schema \u2014 is at\n[cityjson.github.io/duckdb-cityjson](https://cityjson.github.io/duckdb-cityjson/).\n\
+    \ footer objects\n\nMesh interchange:\n- `read_obj`, `obj_materials`, `obj_textures`,\
+    \ `obj_metadata` \u2014 read OBJ with its `.mtl` and textures\n- `COPY ... TO`\
+    \ with formats `obj`, `gltf`, and `glb`\n\nAdditional features:\n- Automatic schema\
+    \ inference from CityJSON attributes\n- Wide columnar layout: one WKB geometry\
+    \ column per Level of Detail, plus a per-object `bbox` extent\n- `geometry_properties_lod*`\
+    \ as a native STRUCT, so semantic surfaces and shells are columns\n- Spatial and\
+    \ attribute-query pushdown on FlatCityBuf, using the file's R-tree and B+tree\
+    \ indexes\n- Selective deserialisation: a query projecting no geometry never decodes\
+    \ it\n- Filter pushdown on `id`, `feature_id`, and `object_type`\n- Streaming\
+    \ reads of large CityJSONSeq files and remote files over HTTP/S3/GCS\n- CRS handling\
+    \ follows GeoParquet's tri-state convention, so a georeferenced file never\n \
+    \ silently claims OGC:CRS84\n- Support for CityJSON v2.0 and CityJSONSeq formats\n\
+    \nFull documentation \u2014 every function, its parameters and its output schema\
+    \ \u2014 is at\n[cityjson.github.io/duckdb-cityjson](https://cityjson.github.io/duckdb-cityjson/).\n\
     For more information on the CityJSON format, see https://www.cityjson.org/.\n"

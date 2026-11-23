@@ -1,0 +1,48 @@
+extension:
+  name: orkidea
+  description: Read, write, upsert, and alter Oracle Database tables through a Rust
+    ADBC driver, with no Oracle client
+  version: 0.4.1
+  language: C++
+  build: cmake
+  license: Apache-2.0
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_mingw;linux_amd64_musl;linux_arm64_musl
+  opt_in_platforms: osx_amd64;windows_arm64
+  requires_toolchains: rust
+  maintainers:
+  - hc12r
+repo:
+  github: Tnsor-Labs/duckdb-orkidea
+  ref: 9991acda12c087ce933c0cea941f95abe4d43680
+docs:
+  hello_world: "-- Store the connection in a secret (or use CONNECT_STRING with a\
+    \ TNS alias)\nCREATE SECRET ora (\n    TYPE orkidea,\n    HOST 'db.example.com',\
+    \ PORT 1521, SERVICE 'FREEPDB1',\n    USER 'scott', PASSWORD 'tiger'\n);\n\n--\
+    \ Attach the database: filters, projections, LIMIT, and top-N run in Oracle\n\
+    ATTACH 'ora' AS ora (TYPE orkidea);\nSELECT ename, sal FROM ora.emp WHERE deptno\
+    \ = 10 ORDER BY sal DESC LIMIT 5;\n\n-- Write to it, inside DuckDB transactions\n\
+    CREATE TABLE ora.top_earners AS SELECT * FROM ora.emp WHERE sal > 3000;\nUPDATE\
+    \ ora.emp SET sal = sal * 1.1 WHERE deptno = 20;\nINSERT INTO ora.dept VALUES\
+    \ (50, 'RESEARCH', 'BOSTON') ON CONFLICT DO NOTHING;\n\n-- Or run Oracle SQL directly\n\
+    FROM orkidea_query('ora', 'SELECT * FROM emp WHERE deptno = :dept', params :=\
+    \ {'dept': 10});\nFROM orkidea_execute('ora', 'BEGIN dbms_stats.gather_table_stats(USER,\
+    \ ''EMP''); END;');\n"
+  extended_description: "Orkidea makes an Oracle schema behave like a DuckDB database\
+    \ you can\nchange, not just read: `INSERT`, `CREATE TABLE ... AS`, `UPDATE`,\n\
+    `DELETE`, `RETURNING`, `ON CONFLICT`, `INSERT OR REPLACE`, `MERGE INTO`,\n`CREATE`/`DROP\
+    \ TABLE`, and `ALTER TABLE` (add, drop, and rename columns,\nchange types, defaults,\
+    \ `NOT NULL`, primary keys), all inside DuckDB\ntransactions that commit or roll\
+    \ back on Oracle. Defaults and identity\ncolumns are left to Oracle, and `RETURNING`\
+    \ gives the rows as Oracle\nstored them.\n\nIt is built on the [Orkidea ADBC driver](https://github.com/Tnsor-Labs/orkidea-adbc),\n\
+    a standalone Rust implementation of Oracle's network protocol that is\nlinked\
+    \ into the extension, so there is no Instant Client, OCI, or ODBC to\ninstall.\
+    \ Results stream into DuckDB as Arrow record batches with exact\ntypes (`NUMBER(p,s)`\
+    \ as `DECIMAL`, `TIMESTAMP WITH TIME ZONE` as\n`TIMESTAMPTZ`, LOBs, intervals,\
+    \ `JSON`, and `VECTOR`).\n\n- **Secrets**: host/port/service, connect strings,\
+    \ `tnsnames.ora`\n  aliases, wallets, and TLS.\n- **ATTACH**: filters, projections,\
+    \ `LIMIT`, top-N queries, and\n  `GROUP BY` aggregates are pushed down to Oracle.\n\
+    - **Parallel scans**: large tables are read by several sessions over\n  ROWID\
+    \ ranges at one SCN, so the result is a consistent snapshot.\n- **Federation**:\
+    \ join Oracle with Postgres, Parquet, or any other source\n  DuckDB reads.\n-\
+    \ `orkidea_query` and `orkidea_execute` run Oracle SQL and PL/SQL, with\n  bind\
+    \ parameters.\n\nNot affiliated with, sponsored by, or endorsed by Oracle Corporation.\n"

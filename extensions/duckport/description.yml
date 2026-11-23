@@ -1,0 +1,76 @@
+extension:
+  name: duckport
+  description: Read files and dataset services into DuckDB and stream query results
+    to Lance, Parquet datasets, and Iceberg tables
+  version: 0.2.0
+  language: C++ & Rust
+  build: cmake
+  license: MIT
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64;windows_amd64_mingw;osx_amd64
+  requires_toolchains: rust
+  maintainers:
+  - dentiny
+repo:
+  github: dentiny/duckport
+  ref: 3f89cd7464c7c9d04bcc7d9d847b6314dd6de26a
+docs:
+  hello_world: 'INSTALL duckport FROM community;
+
+    LOAD duckport;
+
+
+    COPY (SELECT 1 AS id, ''hello'' AS body)
+
+    TO ''duckport_demo_dataset'' (FORMAT duckport_parquet);
+
+
+    SELECT * FROM read_parquet(''duckport_demo_dataset/*.parquet'');
+
+    '
+  extended_description: "DuckPort reads files and dataset services as DuckDB tables\
+    \ and streams any\nSQL query result to Lance, Parquet dataset directories, or\
+    \ Iceberg REST tables.\nDuckDB evaluates filters, joins, casts and expressions\
+    \ before writing.\n\n### Sources\n\n- Files: CSV, TSV, JSON/JSONL/NDJSON, Parquet,\
+    \ XML and WARC. Standard file\n  readers support local/file/HTTP(S)/S3 objects,\
+    \ same-schema file lists, and\n  local/S3 directories and globs.\n- Datasets and\
+    \ archives: Hugging Face Parquet exports, Common Crawl releases\n  and segments,\
+    \ ATIF trajectories, arXiv bulk TAR shards and MECA packages.\n- Metadata: arXiv/DOAB/OAPEN\
+    \ OAI-PMH, Gutenberg RDF, PMC article metadata,\n  inventory and article shards,\
+    \ and dated CourtListener bulk exports.\n- Selected attachments: Zenodo, Dataverse,\
+    \ Figshare, Internet Archive,\n  Federal Register, GovInfo, HathiFiles, Library\
+    \ of Congress, Semantic Scholar,\n  OpenStax, BHL, Regulations.gov, USPTO and\
+    \ bioRxiv/medRxiv.\n\n```sql\nSELECT * FROM duckport_scan_csv('people.csv', header\
+    \ := true);\nSELECT * FROM duckport_scan_parquet('data/**/*.parquet');\nSELECT\
+    \ * FROM duckport_scan_huggingface('lhoestq/demo1', split := 'train');\n```\n\n\
+    Provider readers have explicit selection rules; metadata scans do not\nautomatically\
+    \ download linked content. See the\n[reader catalog](https://github.com/dentiny/duckport/blob/main/docs/readers/README.md)\n\
+    for function names and required arguments.\n\n### Sinks and COPY options\n\n|\
+    \ Format | Destination | Modes |\n| --- | --- | --- |\n| `duckport_lance` | Local/file/S3\
+    \ Lance dataset | Create, APPEND, OVERWRITE |\n| `duckport_parquet` | Local/file/S3\
+    \ Parquet dataset directory | Create, APPEND |\n| `duckport_iceberg` | Unpartitioned\
+    \ Iceberg REST table | Create, APPEND |\n\n```sql\nCOPY (SELECT id, upper(body)\
+    \ AS body FROM events)\nTO 'events.lance' (FORMAT duckport_lance);\n\nCOPY events\
+    \ TO 'events_dataset'\n(FORMAT duckport_parquet, APPEND, TARGET_FILE_SIZE 268435456);\n\
+    ```\n\nAll sinks accept `TARGET_FILE_SIZE`, `PRESERVE_ORDER`, `READ_CONCURRENCY`,\n\
+    `WRITE_CONCURRENCY`, `SAMPLE_PERCENT`, `SAMPLE_ROWS`, `GENERATED_COLUMNS`\nand\
+    \ `EXTRA_OPTIONS`. Iceberg generated columns require compatible catalog\nmetadata.\
+    \ `EXTRA_OPTIONS` forwards named arguments to explicit DuckPort readers.\nWrites\
+    \ default to one writer and a 512 MiB soft file-size target;\n`WRITE_CONCURRENCY\
+    \ 'auto'` opts into automatic writer planning.\n\nLance additionally supports\
+    \ nested URL `BLOB_COLUMNS`, automatic tagged ATIF\nmedia downloads, `BLOB_INLINE_SIZE_THRESHOLD`,\
+    \ `BLOB_DEDICATED_SIZE_THRESHOLD`,\n`STORAGE_VERSION`, `COLUMN_STRUCTURAL_ENCODING`,\
+    \ `SCALAR_INDEX_COLUMNS`,\n`VECTOR_INDEX_COLUMNS`, `TEXT_INDEX_COLUMNS` and `BLOOM_FILTER_INDEX_COLUMNS`.\n\
+    Lance and Parquet accept `COLUMN_COMPRESSION` and `COLUMN_COMPRESSION_LEVEL`;\n\
+    Parquet restricts these to top-level columns. Iceberg requires `CATALOG_URI`\n\
+    and `STORAGE_ROOT`, with optional `WAREHOUSE`.\n\n```sql\nCOPY (SELECT id, image_url\
+    \ AS image FROM events)\nTO 'images.lance' (FORMAT duckport_lance, BLOB_COLUMNS\
+    \ ('image'));\n```\n\nCredentials come from URI-scoped DuckDB secrets, independently\
+    \ for source\nstorage, provider APIs, blob URLs, destinations and Iceberg catalogs.\
+    \ Load\n`httpfs` to register its S3 and Hugging Face secret types.\n\nParquet\
+    \ output is a directory; native `FORMAT PARQUET` writes a single file.\nParquet\
+    \ and Iceberg do not support OVERWRITE, Lance blob ingestion or indexes.\nExternal\
+    \ commits are not rolled back by a DuckDB transaction; failure and\npublication\
+    \ behavior depend on the sink.\n\nSee the [COPY reference](https://github.com/dentiny/duckport/blob/main/docs/writers/README.md)\n\
+    for all 24 options, defaults and sink restrictions, the\n[secrets guide](https://github.com/dentiny/duckport/blob/main/docs/secrets.md)\n\
+    for authentication, and the [changelog](https://github.com/dentiny/duckport/blob/main/CHANGELOG.md)\n\
+    for the initial release scope.\n"

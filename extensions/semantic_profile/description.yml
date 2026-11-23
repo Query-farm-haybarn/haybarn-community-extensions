@@ -3,7 +3,7 @@ extension:
   description: "Profiles what the values in a table mean rather than what shape they\
     \ are \u2014 semantic type per column, PII and format drift, and cross-column\
     \ contradictions"
-  version: 0.2.0
+  version: 0.3.0
   language: Rust
   build: cargo
   license: MIT
@@ -13,7 +13,8 @@ extension:
   - patricktrainer
 repo:
   github: patricktrainer/duckdb-semantic-profile
-  ref: ff9a481e322c9c984ceb7d038bace8df9461f36c
+  ref: 5d0a34f1972535ec42b1bada0c55c0b491951699
+  variegata: 5d0a34f1972535ec42b1bada0c55c0b491951699
 docs:
   hello_world: "-- Judgments come from TypeSafe's System One model, so the extension\
     \ needs an\n-- API key. It is read from TYPESAFE_API_KEY, or from a file -- never\
@@ -68,12 +69,12 @@ docs:
     \ also reports `needs_review`: rows near 0.5, where the model is\ngenuinely uncertain\
     \ rather than mildly suspicious. Every finding carries the\noffending values and\
     \ the rows they came from.\n\n### Functions\n\n`sem_profile`, `sem_columns`, `sem_probes`,\
-    \ `sem_values`, `sem_report`,\n`sem_row_fields`, `sem_findings`, `sem_cost`, `sem_catalog`;\
-    \ the primitives `ts_ask`, `ts_noul`,\n`ts_choice`, `ts_score`; and `sem_config`,\
-    \ `sem_settings`, `sem_stats`,\n`sem_status`, `sem_sql`.\n\n### Notes\n\n- Needs\
-    \ a [TypeSafe](https://docs.typesafe.ai) API key, and sends sampled values\n \
-    \ to that API. `sem_cost()` says how much will go before any of it does.\n- Responses\
-    \ are cached to disk, content-addressed, so re-runs are free and\n  deterministic.\
-    \ That cache holds the sampled values in plaintext.\n- The macro layer installs\
-    \ automatically only on an in-memory database, where\n  nothing persists. Profile\
-    \ a database file by attaching it `READ_ONLY`.\n"
+    \ `sem_values`, `sem_report`,\n`sem_report_rows`, `sem_row_fields`, `sem_findings`,\
+    \ `sem_cost`, `sem_catalog`; the primitives `ts_ask`, `ts_noul`,\n`ts_choice`,\
+    \ `ts_score`; and `sem_config`, `sem_settings`, `sem_stats`,\n`sem_status`, `sem_sql`.\n\
+    \n### Notes\n\n- Needs a [TypeSafe](https://docs.typesafe.ai) API key, and sends\
+    \ sampled values\n  to that API. `sem_cost()` says how much will go before any\
+    \ of it does.\n- Responses are cached to disk, content-addressed, so re-runs are\
+    \ free and\n  deterministic. That cache holds the sampled values in plaintext.\n\
+    - The macro layer installs automatically only on an in-memory database, where\n\
+    \  nothing persists. Profile a database file by attaching it `READ_ONLY`.\n"

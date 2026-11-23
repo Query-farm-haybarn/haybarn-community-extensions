@@ -2,17 +2,17 @@ extension:
   name: loki
   description: Query Grafana Loki from DuckDB in plain SQL, with label/time/line-filter
     pushdown into LogQL
-  version: 1.0.1
+  version: 2.0.0
   language: C++
   build: cmake
   license: MIT
   excluded_platforms: wasm_mvp;wasm_eh;wasm_threads
-  vcpkg_commit: 84bab45d415d22042bd0b9081aea57f362da3f35
   maintainers:
   - prochac
 repo:
   github: prochac/duckdb-loki
-  ref: v1.0.1
+  ref: c936b0faaf7819745a6de9dcd5385ca383641a23
+  variegata: eacf6cbcc15412e42b6f22f4f6e7051a03c626a7
 docs:
   hello_world: "-- Store the Loki endpoint and credentials once with the Secret Manager.\n\
     CREATE SECRET my_loki (\n    TYPE loki,\n    ENDPOINT 'https://logs-prod.example.net',\n\
@@ -24,7 +24,10 @@ docs:
     \ ['level'], secret := 'my_loki')\nWHERE level = 'error'\n  AND timestamp >= now()\
     \ - INTERVAL 2 HOUR\n  AND line LIKE '%timeout%';\n\n-- Or send raw LogQL through\
     \ untouched with loki_scan():\nSELECT * FROM loki_scan('{job=\"api\"} |= `timeout`',\
-    \ secret := 'my_loki');\n"
+    \ secret := 'my_loki');\n\n-- Or ATTACH the whole instance and reach logs by name.\
+    \ Loki requires a stream\n-- selector, so always filter on at least one label\
+    \ column.\nATTACH 'my_loki' AS lk (TYPE loki);\nSELECT timestamp, line FROM lk.public.logs\
+    \ WHERE job = 'api';\n"
   extended_description: "`loki` turns a Grafana Loki instance into a first-class,\
     \ queryable DuckDB data\nsource, so you can join your logs against Parquet, CSV,\
     \ Postgres, or anything\nelse DuckDB reads \u2014 without ever hand-writing an\
@@ -35,10 +38,15 @@ docs:
     \ are always correct.\n- **`loki_scan(query := ...)`** \u2014 a raw-LogQL escape\
     \ hatch for full control.\n- **`loki_labels()` / `loki_label_values()` / `loki_series()`**\
     \ \u2014 label discovery\n  helpers so the source is explorable and autocompletes\
-    \ well.\n\nConnection and auth (bearer token, basic auth, `X-Scope-OrgID` tenant,\
-    \ or arbitrary\nheaders) come from DuckDB's Secret Manager with per-call overrides.\
-    \ A\n`CREATE SECRET (TYPE loki, PROVIDER env)` seeds the connection from the standard\n\
-    logcli environment variables (`LOKI_ADDR`, `LOKI_BEARER_TOKEN`,\n`LOKI_USERNAME`/`LOKI_PASSWORD`,\
+    \ well.\n- **`ATTACH '...' AS lk (TYPE loki)`** \u2014 Loki as a read-only attached\
+    \ database:\n  `lk.<tenant>.logs` (plus `labels` and `series`) with the same pushdown,\
+    \ label\n  columns auto-discovered at attach time and refreshable via\n  `PRAGMA\
+    \ loki_refresh_labels`. Because Loki refuses a query without a stream\n  selector,\
+    \ a scan of `logs` must carry a `WHERE` on at least one label column.\n\nConnection\
+    \ and auth (bearer token, basic auth, `X-Scope-OrgID` tenant, or arbitrary\nheaders)\
+    \ come from DuckDB's Secret Manager with per-call overrides. A\n`CREATE SECRET\
+    \ (TYPE loki, PROVIDER env)` seeds the connection from the standard\nlogcli environment\
+    \ variables (`LOKI_ADDR`, `LOKI_BEARER_TOKEN`,\n`LOKI_USERNAME`/`LOKI_PASSWORD`,\
     \ `LOKI_ORG_ID`), with inline options overriding the\nenvironment. Results page\n\
     automatically over Loki's per-request entry cap, and projection pushdown skips\n\
     materialising the columns a query doesn't select. Timestamps keep Loki's nanosecond\n\

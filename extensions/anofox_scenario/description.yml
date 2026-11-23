@@ -1,6 +1,6 @@
 extension:
   name: anofox_scenario
-  version: 2026.09.26
+  version: 2026.11.23
   description: Git-like branching for analytical databases. Attach isolated what-if
     scenarios as catalogs, edit them with ordinary SQL on copy-on-write delta storage,
     branch, diff, and merge them back.
@@ -13,7 +13,8 @@ extension:
   - jrosskopf
 repo:
   github: DataZooDE/anofox-scenario
-  ref: 6bc258ce58d6162dddee8329b4f228ebb49827ba
+  ref: c15eea920f731379161826e1ddb62e29d726f1f1
+  variegata: c15eea920f731379161826e1ddb62e29d726f1f1
 docs:
   hello_world: '-- History as recorded
 
@@ -61,13 +62,17 @@ docs:
     \ :=`), inheriting changes, declared row identities, and\nsnapshot pins.\n\nA\
     \ streaming diff engine (`scenario_diff`, `scenario_diff_summary`) audits any\n\
     world against its origin or another world, and\n`scenario_merge(name, on_conflict\
-    \ := 'abort'|'ours'|'theirs')` promotes a\nscenario into its base atomically \u2014\
-    \ with true 3-way drift conflicts when a\ncreation snapshot exists. Views rebind\
-    \ inside scenarios, all base schemas\nare mirrored, and tables without a primary\
-    \ key work either via\n`key_columns :=` declared identity or bag semantics with\
-    \ multiplicity\ntracking.\n\nScenario worlds compose with table-name-driven extensions:\
-    \ for example\n`ts_forecast_by('s.demand', ...)` (anofox_forecast) forecasts a\
-    \ what-if\nworld directly, no copies needed.\n\nThe extension collects anonymous\
-    \ usage telemetry (an envelope-only\n`extension_loaded` event; never table names,\
-    \ keys, or SQL). Disable with\n`SET anofox_scenario_telemetry_enabled = false`\
-    \ or\n`DATAZOO_DISABLE_TELEMETRY=1`; see TELEMETRY.md in the repository.\n"
+    \ := 'abort'|'ours'|'theirs')` promotes a\nscenario into its base atomically.\
+    \ Base rows edited after the scenario\ntouched them are reported as conflicts\
+    \ (pre-images for live overlays, 3-way\nagainst the snapshot otherwise), and `scenario_merge_preview`\
+    \ shows the plan\nfirst. Base `ALTER TABLE ... ADD COLUMN` carries into open scenarios.\
+    \ Views\nrebind inside scenarios, all base schemas are mirrored, and tables without\
+    \ a primary key work either via\n`key_columns :=` declared identity or bag semantics\
+    \ with multiplicity\ntracking.\n\nScenario worlds compose with table-name-driven\
+    \ extensions: for example\n`ts_forecast_by('s.demand', ...)` (anofox_forecast)\
+    \ forecasts a what-if\nworld directly, no copies needed.\n\nA Claude Code plugin\
+    \ with usage-pattern skills (what-if, safe change,\nsnapshot/audit, reference)\
+    \ ships in the repository:\n`/plugin marketplace add DataZooDE/anofox-scenario`.\n\
+    \nThe extension collects anonymous usage telemetry (an envelope-only\n`extension_loaded`\
+    \ event; never table names, keys, or SQL). Disable with\n`SET anofox_scenario_telemetry_enabled\
+    \ = false` or\n`DATAZOO_DISABLE_TELEMETRY=1`; see TELEMETRY.md in the repository.\n"
