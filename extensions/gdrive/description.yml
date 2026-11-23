@@ -1,16 +1,20 @@
 extension:
   name: gdrive
-  version: 2026.09.26
-  description: Query files in Google Drive directly with a gdrive:// filesystem
+  version: 2026.11.22
+  description: Google Drive in SQL -- files and Sheets (gdrive://, browser links;
+    read and write a Sheet by tab or range), Drive's metadata, locks, versions, change
+    feeds and permissions
   language: C++
   build: cmake
   license: MIT
   excluded_platforms: windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads
   maintainers:
   - jrosskopf
+  - sipemu
 repo:
   github: DataZooDE/duckdb-gdrive
-  ref: 3755d9ea6f03387d8546e3eb1500ea58758a3528
+  ref: 2fa4817e82205b2db525378dd350cdc5943d4486
+  variegata: 2fa4817e82205b2db525378dd350cdc5943d4486
 docs:
   hello_world: "-- Unattended: a service account. To WRITE you need a Shared Drive\
     \ --\n-- service accounts have no personal Drive storage quota and get\n-- 403\
@@ -26,8 +30,16 @@ docs:
     \n-- Address a file by id instead: zero resolution calls. Prefer this in\n-- generated\
     \ or stored queries.\nSELECT * FROM read_csv('gdrive://id:1a2b3cDeFgHiJkLmNoPQrStUvWxYz');\n\
     \n-- Glob a folder.\nSELECT * FROM read_parquet('gdrive://exports/parts/*.parquet');\n\
+    \n-- Or paste an address from the browser: it names the file by id.\nSELECT *\
+    \ FROM read_csv('https://drive.google.com/file/d/1a2b3cDeFgHiJkLmNoPQrStUvWxYz/view');\n\
+    \n-- Drive's metadata as rows: owners, last change, links, revisions.\nSELECT\
+    \ name, size, modified, modified_by, web_url FROM read_gdrive_files('gdrive://exports/**');\n\
     \n-- A native Google Sheet is queryable with no manual export: it has no\n-- byte\
     \ stream, so it is served through Drive's CSV export.\nSELECT * FROM read_csv('gdrive://Finance/Budget');\n\
+    \n-- Any tab or A1 range of a Sheet, typed; and writing back into one, in\n--\
+    \ place, leaving its other tabs, formulas and formatting alone.\nSELECT * FROM\
+    \ read_sheet_range('gdrive://Finance/Budget', 'Q4!A1:F');\nCOPY (SELECT * FROM\
+    \ t) TO 'gdrive://Finance/Budget' (FORMAT sheet_range, RANGE 'Forecast!A1', OVERWRITE);\n\
     \n-- Write a whole file. Writes are sequential; Drive cannot write at a\n-- byte\
     \ offset, so positional writes raise an error rather than corrupt.\nCOPY (SELECT\
     \ * FROM t) TO 'gdrive://reports/out.parquet' (FORMAT parquet);\n\n-- Inspect\
@@ -37,29 +49,44 @@ docs:
     DuckDB dispatches file access through its virtual filesystem, everything\nlayered\
     \ on it inherits the scheme: `read_parquet`, `read_csv`, `COPY`,\n`glob`, and\
     \ table formats such as DuckLake \u2014 attaching a DuckLake whose\n`DATA_PATH`\
-    \ is on Drive works and is tested live.\n\n`ATTACH` of a DuckDB **database file**\
-    \ on `gdrive://` is NOT supported.\nDuckDB opens database files through a different\
-    \ path that does not consult\nthe virtual filesystem, so the attempt fails immediately\
-    \ rather than\nhalf-working.\n\nThis is **Google Drive**, not Google Cloud Storage\
-    \ \u2014 a different product\nwith a different API and access model. For `gs://`\
-    \ buckets use the `gcs`\nextension.\n\nReads are ranged, so a Parquet scan fetches\
-    \ footers and column chunks\nrather than whole files. Path resolution is cached\
-    \ per secret and per\ndrive, because Drive has no path addressing and each segment\
-    \ otherwise\ncosts an API call.\n\nCredentials come from Application Default Credentials\
-    \ by default, which\nnow includes **workload identity federation** \u2014 so a\
-    \ workload running in\nKubernetes or another federated environment authenticates\
-    \ with the\nshort-lived token its platform provides, and needs no downloaded\n\
-    service-account key to store, mount or rotate. A key file\n(`PROVIDER service_account`)\
-    \ and an interactive user credential\n(`gcloud auth application-default login`)\
-    \ both still work.\n\nTwo behaviours are deliberately strict. Drive permits two\
-    \ files with the\nsame name in one folder, so a path is not a unique identifier:\
-    \ rather than\npick one and make results depend on Drive's internal ordering,\
-    \ ambiguity\nis an error naming both file ids. And Drive cannot write at a byte\
-    \ offset,\nso positional writes raise an error instead of silently corrupting\
-    \ a file.\n\nDrive is slower than object storage by a wide margin, and enforces\n\
-    per-user API quotas that object storage does not. A ranged read costs\n~1.3 s\
-    \ regardless of how few bytes it requests, against ~1 ms for S3/GCS.\nUse this\
-    \ when Drive is the system of record for data you want to query and\nyou would\
-    \ rather not maintain a second copy \u2014 not as a substitute for\nobject storage\
-    \ under a hot workload. On a workstation, Google Drive for\ndesktop plus ordinary\
-    \ local paths is simpler and faster.\n"
+    \ is on Drive works and is tested live. A DuckDB database file\non `gdrive://`\
+    \ can be `ATTACH`ed read-only. A file's address from the\nbrowser (drive.google.com,\
+    \ docs.google.com) works wherever a path does.\n\nBeyond files, Drive's metadata\
+    \ as tables: `read_gdrive_files` lists files\nunder a path or glob with owner,\
+    \ last modifier, link, checksum and custom\nproperties; `search_gdrive` runs Drive's\
+    \ full-text search; `gdrive_drives`\nlists Shared Drives; `gdrive_versions` lists\
+    \ a file's revisions and\n`?version=<id>` reads one with any reader; `gdrive_changes`\
+    \ returns what\nchanged under a folder since a token (an incremental-sync feed);\n\
+    `gdrive_permissions` lists who can reach each file, including\nanyone-with-the-link\
+    \ sharing; and `read_gdrive_files` reports Drive's\nfile locks (`locked`, `locked_by`,\
+    \ `lock_reason`), which writes respect.\n\nNative Sheets read through the ordinary\
+    \ readers as CSV, and\n`read_sheet_range` reads any tab or A1 range with typed\
+    \ columns.\n`COPY ... (FORMAT sheet_range, RANGE 'Tab!A1')` writes into a tab\
+    \ in place\nthrough the Sheets API (`OVERWRITE` / `APPEND`; a missing tab, or\
+    \ a missing\nSheet at a `gdrive://` path, is created),\nnever replacing the spreadsheet.\
+    \ Every write is retry-safe: a lost reply\nnever leaves a duplicate file or folder\
+    \ behind.\n\nAlso registers the scheme-generic\n`write_blob`, `remove_file`, `move_file`\
+    \ and `file_size` SQL functions,\nshared with the sibling `sharepoint` extension.\n\
+    \nThis is **Google Drive**, not Google Cloud Storage \u2014 a different product\n\
+    with a different API and access model. For `gs://` buckets use the `gcs`\nextension.\n\
+    \nReads are ranged, so a Parquet scan fetches footers and column chunks\nrather\
+    \ than whole files. Path resolution is cached per secret and per\ndrive, because\
+    \ Drive has no path addressing and each segment otherwise\ncosts an API call.\n\
+    \nCredentials come from Application Default Credentials by default, which\nnow\
+    \ includes **workload identity federation** \u2014 so a workload running in\n\
+    Kubernetes or another federated environment authenticates with the\nshort-lived\
+    \ token its platform provides, and needs no downloaded\nservice-account key to\
+    \ store, mount or rotate. A key file\n(`PROVIDER service_account`) and an interactive\
+    \ user credential\n(`gcloud auth application-default login`) both still work.\n\
+    \nTwo behaviours are deliberately strict. Drive permits two files with the\nsame\
+    \ name in one folder, so a path is not a unique identifier: rather than\npick\
+    \ one and make results depend on Drive's internal ordering, ambiguity\nis an error\
+    \ naming both file ids. And Drive cannot write at a byte offset,\nso positional\
+    \ writes raise an error instead of silently corrupting a file.\n\nDrive is slower\
+    \ than object storage by a wide margin, and enforces\nper-user API quotas that\
+    \ object storage does not. A ranged read costs\n~1.3 s regardless of how few bytes\
+    \ it requests, against ~1 ms for S3/GCS.\nUse this when Drive is the system of\
+    \ record for data you want to query and\nyou would rather not maintain a second\
+    \ copy \u2014 not as a substitute for\nobject storage under a hot workload. On\
+    \ a workstation, Google Drive for\ndesktop plus ordinary local paths is simpler\
+    \ and faster.\n"

@@ -1,7 +1,7 @@
 extension:
   name: sshfs
   description: Allows reading and writing files over SSH
-  version: '2026091401'
+  version: '2026102301'
   language: C++
   build: cmake
   license: MIT
@@ -12,7 +12,8 @@ extension:
   vcpkg_commit: dd3097e305afa53f7b4312371f62058d2e665320
 repo:
   github: midwork-finds-jobs/duckdb-sshfs
-  ref: 34d3dddd08f29e7c40bda9a05d56a1b053f9ec7d
+  variegata: 34d3dddd08f29e7c40bda9a05d56a1b053f9ec7d
+  ref: b7ca495c21ea7cec2c59c1e890129a95fdd4a7c3
 docs:
   hello_world: "-- Install & load the extension\nINSTALL sshfs FROM community;\nLOAD\
     \ sshfs;\n\n-- Authenticate with SSH key file\nCREATE SECRET my_hetzner_storagebox\

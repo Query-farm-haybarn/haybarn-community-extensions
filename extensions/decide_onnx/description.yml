@@ -1,0 +1,58 @@
+extension:
+  name: decide_onnx
+  description: Classify rows, route messages and answer yes/no questions in SQL in
+    English, French, German, Spanish and Italian with the vela3-fast-multilingual
+    decision model, on CPU via ONNX Runtime
+  version: 0.2.0
+  language: C++
+  build: cmake
+  license: MIT
+  excluded_platforms: wasm_mvp;wasm_eh;wasm_threads;windows_amd64_mingw;linux_amd64_musl
+  requires_toolchains: vcpkg
+  maintainers:
+  - redox
+repo:
+  github: altertable-ai/duckdb-decide_onnx
+  ref: 8b64fcf52bef0d737ddda7fbd8c4bc512d982732
+docs:
+  hello_world: "INSTALL decide_onnx FROM community;\nLOAD decide_onnx;\n\n-- vela3-fast-multilingual\
+    \ (an ONNX export) is downloaded from assets.altertable.ai and cached on first\
+    \ use.\nCREATE TABLE tickets AS FROM (VALUES\n    ('Broken mug', 'The order arrived\
+    \ broken. I want my money back.'),\n    ('Double charge', 'I was charged twice\
+    \ this month.')\n) t(subject, message);\n\n-- Route every ticket and flag refund\
+    \ requests: an answer, its confidence and all probabilities per question.\nFROM\
+    \ tickets DECIDE (\n    CHOOSE 'Which team should handle this customer message?'\
+    \ AMONG (\n        billing  'Billing: charges, refunds, invoices',\n        shipping\
+    \ 'Shipping: delivery, lost or damaged packages',\n        tech     'Tech support:\
+    \ bugs, crashes, login problems') AS team,\n    ASK 'Is the customer asking for\
+    \ a refund or an exchange?' AS refund\n    GIVEN subject, message\n);\n\n-- The\
+    \ same decisions as functions.\nSELECT decision_choose(message, 'Which team?',\
+    \ ['billing', 'shipping', 'tech support']).choice,\n       decision_yes_no(message,\
+    \ 'Is the customer asking for a refund?')\nFROM tickets;\n"
+  extended_description: "**decide_onnx** runs [vela3-fast-multilingual](https://huggingface.co/altertable/vela3-fast-multilingual-onnx-int8)\n\
+    inside DuckDB: an English, French, German, Spanish and Italian fine-tune of the\
+    \ decision backbone of\n[vela3-fast](https://huggingface.co/vllm-sr/vela3-fast),\
+    \ a 380M-parameter encoder of the vLLM Semantic Router\nVela 3.0 family. You give\
+    \ it a state, a\nquestion and options; it picks an option and gives a probability\
+    \ for each, or gives P(yes) for a yes/no\nquestion, in one encoder pass. There\
+    \ is no prompt engineering of an LLM, no Python and no GPU: the network\nruns\
+    \ on CPU through a statically linked ONNX Runtime.\n\n- `FROM t DECIDE (CHOOSE\
+    \ question AMONG (key 'description', ...) AS name, ASK question AS name, ... GIVEN\n\
+    \  columns)` adds `name`, `name_confidence` and `name_probabilities` (a MAP of\
+    \ option to probability) per\n  question; filter on them with an ordinary WHERE.\n\
+    - `decision_choose(state, question, options)` returns the choice, its confidence\
+    \ and every option's\n  probability; options are a list of texts, or a MAP or\
+    \ STRUCT of key to description.\n  `decision_yes_no(state, question)` returns\
+    \ P(yes). Both also take the clause's words:\n  `decision_choose('Which team?'\
+    \ AMONG (billing, tech) GIVEN subject, message)`.\n- A STRUCT, MAP or JSON state\
+    \ is read as compact JSON, the way the reference reads a JSON state.\n- `decide_onnx_models()`\
+    \ lists the model files and whether they are cached. Set `decide_onnx_model_path`\n\
+    \  to use a local copy offline.\n\nSend `LOAD decide_onnx` and the first `DECIDE`\
+    \ as two statements. A connection that is already open picks\nup the new syntax\
+    \ when its current query ends.\n\nThe tokenizer is a C++ port of the Hugging Face\
+    \ one and matches it token for token; the probabilities match\nthe published PyTorch\
+    \ code, run with the fine-tuned weights, to within 0.01. Rows run in parallel\
+    \ on DuckDB's threads and repeated decisions are\nscored once.\n\nThe extension\
+    \ is MIT licensed. The vela3-fast-multilingual weights are Apache-2.0. The model's\
+    \ probabilities are not\ncalibrated; do not use it for high-risk decisions about\
+    \ people without independent validation.\n"

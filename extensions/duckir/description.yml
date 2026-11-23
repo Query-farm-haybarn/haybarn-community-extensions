@@ -1,0 +1,59 @@
+extension:
+  name: duckir
+  description: A DuckDB extension for Information Retrieval. Fast vector search fully
+    integrated with DuckDB, with filtered search on any predicate, indexes larger
+    than memory, and an index that updates alongside your table.
+  version: 0.3.0
+  language: C++
+  build: cmake
+  license: MIT
+  excluded_platforms: windows_amd64_mingw;wasm_threads
+  vcpkg_commit: cd61e1e26a038e82d6550a3ebbe0fbbfe7da78e3
+  maintainers:
+  - lkuffo
+  - Noorts
+  - peterboncz
+repo:
+  github: cwida/DuckIR
+  ref: 0d0417acde48fbe50a35a3378d6053a20144fd76
+docs:
+  hello_world: "-- Create a table with an empty vector index\nCREATE TABLE movies\
+    \ (\n  title VARCHAR,\n  genres VARCHAR[],\n  rating DOUBLE,\n  embedding FLOAT[1536]\n\
+    );\nCREATE INDEX movies_idx ON movies USING DUCKIR_VSS (embedding) WITH (metric\
+    \ = 'cosine');\n\n-- Insert the data directly from Hugging Face. The index updates\
+    \ alongside the table.\nINSERT INTO movies\n  SELECT title, genres, imdb.rating,\
+    \ plot_embedding::FLOAT[1536]\n  FROM 'hf://datasets/MongoDB/embedded_movies@~parquet/default/train/0000.parquet';\n\
+    \n-- Run a filtered vector search. The filters are evaluated first, pushing down\
+    \ the predicates whenever possible.\nSET VARIABLE q = (SELECT embedding FROM movies\
+    \ WHERE title = 'The Matrix');\n\nSELECT title, genres, rating\nFROM movies\n\
+    WHERE list_contains(genres, 'Comedy') AND rating > 7\nORDER BY array_cosine_distance(embedding,\
+    \ getvariable('q'))\nLIMIT 5;\n"
+  extended_description: 'DuckIR is a DuckDB extension for Information Retrieval. Vector
+    Search is ready, and Full Text Search and Hybrid Search are on their way.
+
+
+    Why DuckIR:
+
+
+    - **Vector search fully integrated with DuckDB**, from query execution and predicate
+    pushdown to transactional correctness, checkpoints, and crash recovery.
+
+    - **Fast vector indexing and search**. Index millions of vectors in seconds and
+    search them in milliseconds.
+
+    - **Out-of-core:** Create and search indexes larger than memory.
+
+    - **Filtered search** on any predicate DuckDB can evaluate.
+
+    - **Lightweight maintenance** of indexes alongside your table, with no full rebuilds.
+
+    - **Morsel-driven parallelism**, one row group at a time, as DuckDB does.
+
+
+    > **Status: Alpha. Indexes might need to be recreated after an extension update.**
+
+
+    See our [documentation](https://github.com/cwida/DuckIR) for maintenance, persistence,
+    out-of-core search, and the known limitations.
+
+    '

@@ -1,17 +1,19 @@
 extension:
   name: yardstick
   description: Measure-aware SQL implementing Julian Hyde's 'Measures in SQL' paper
-  version: 0.7.0
+  version: 0.8.0
   language: C++
   build: cmake
   license: MIT
   requires_toolchains: rust
   excluded_platforms: wasm_mvp;wasm_eh;wasm_threads
+  opt_in_platforms: osx_amd64
   maintainers:
   - sidequery
 repo:
   github: sidequery/yardstick
-  ref: f19d73fa93f2601cfa81ca3ebad841dffcc5f609
+  ref: 9efa62368a9c5c8cb967c5cd56c504618682f215
+  variegata: 9efa62368a9c5c8cb967c5cd56c504618682f215
 docs:
   hello_world: "-- Create a view with measures\nCREATE VIEW sales_v AS\nSELECT\n \
     \   year,\n    region,\n    SUM(amount) AS MEASURE revenue,\n    COUNT(*) AS MEASURE\

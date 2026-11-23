@@ -12,7 +12,8 @@ extension:
   vcpkg_commit: 84bab45d415d22042bd0b9081aea57f362da3f35
 repo:
   github: altertable-ai/duckdb-clickhouse
-  ref: bb11b7ce640de14b9f7565f588bfd3cd08c99266
+  ref: ce337c48c12d24630caeed151b79dc177d48eb86
+  variegata: bb11b7ce640de14b9f7565f588bfd3cd08c99266
 docs:
   hello_world: "INSTALL clickhouse_scanner FROM community;\nLOAD clickhouse_scanner;\n\
     \nCREATE SECRET ch (\n    TYPE clickhouse,\n    HOST 'abc123.eu-west-1.aws.clickhouse.cloud',\n\
